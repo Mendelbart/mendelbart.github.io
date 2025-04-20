@@ -5,10 +5,6 @@
     --border-grey-light: #c4c4c4;
 }
 
-body {
-    font-size: 1rem;
-}
-
 #page {
     max-width: 30rem;
     padding: 1rem;

@@ -2,6 +2,9 @@
 <html>
     <head>
         <title>Hebrew Alphabet Game</title>
+
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0"/>
+
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
         <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+Hebrew:wght@100..900&display=swap" rel="stylesheet">
@@ -12,12 +15,12 @@
 
     <body>
         <div id="page">
-            <h2>Hebrew Alphabet Game</h2>
+            <h2>Hebrew Abjad Game</h2>
+            <div id="score">
+                <span id="scoreCount">0</span>/<span id="scoreTotal">0</span>
+            </div>
 
             <div id="game-container" class="char-serif">
-                <div id="score">
-                    <span id="scoreCount">0</span>/<span id="scoreTotal">0</span>
-                </div>
                 <div id="display-cur" class="char-display">&#x5d0;</div>
                 <div id="display-prev" class="char-display"></div>
                 <span class="eval-heading">Guess</span>
@@ -26,7 +29,7 @@
                     <span class="eval-heading">Solution</span>
                 </div>
                 <div class="input-container">
-                    <input type="text" id="nameInput" placeholder="Glyph Name">
+                    <input type="text" id="nameInput" placeholder="Letter Name">
                 </div>
                 <div class="eval-container" id="nameEval">
                     <span class="eval-field eval-entered"></span>
