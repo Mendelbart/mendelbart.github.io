@@ -1,0 +1,137 @@
+:root {
+    --char-font-weight: 400;
+    --bg-grey-light: #f6f6f6;
+    --bg-grey: #d4d9df;
+    --border-grey-light: #c4c4c4;
+}
+
+body {
+    font-size: 1rem;
+}
+
+#page {
+    max-width: 30rem;
+    padding: 1rem;
+    margin: auto;
+    min-height: 100%;
+}
+
+#game-container {
+    position: relative;
+    width: 100%;
+    display: grid;
+    grid-template-columns: 3fr 4fr;
+    gap: .2em;
+    align-items: stretch;
+    margin-bottom: 2rem;
+}
+
+h2 {
+    font-size: 1.8em;
+}
+
+.range-label {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    margin-bottom: -.2rem;
+}
+
+.range-value {
+    font-weight: bold;
+}
+
+.settings {
+    background: var(--bg-grey-light);
+    --bs-secondary-bg: var(--bg-grey); /* slider background */
+    padding: .4rem .6rem .1rem .6rem;
+}
+
+.settings h4 {
+    font-weight: bold;
+    font-size: 1.2em;
+}
+
+.setting {
+    display: flex;
+    flex-direction: column;
+    border-top: 1px solid var(--border-grey-light);
+    padding: .2rem 0;
+}
+
+.setting .form-check {
+    display: flex;
+    align-items: center;
+    gap: .6em;
+    padding-left: 0;
+}
+
+.setting .form-check label {
+    line-height: 1.25;
+}
+
+.setting .form-check .form-check-input {
+    margin-top: 0;
+    margin-left: 0;
+}
+
+.char-display {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: var(--bg-grey-light);
+    height: 9.5rem;
+    font-size: 8rem;
+
+    font-family: "Noto Serif Hebrew";
+    font-weight: var(--char-font-weight);
+    font-optical-sizing: auto;
+    font-style: normal;
+    font-variation-settings: "wdth" 100;
+}
+
+.eval-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: .25rem;
+}
+
+.eval-field {
+    padding: .22rem;
+    background: var(--bg-grey-light);
+}
+
+.correct .eval-field {
+    background: rgb(188, 250, 188);
+}
+
+.incorrect .eval-field {
+    background: rgb(255, 206, 216);
+}
+
+.eval-solution {
+    text-transform: capitalize;
+}
+
+#eval-headings {
+    grid-column: 2;
+}
+
+.eval-heading {
+    font-size: .8em;
+    font-weight: bold;
+    margin-bottom: -.25rem;
+}
+
+#score {
+    font-weight: bold;
+    position: absolute;
+    top: .1rem;
+    right: .3rem;
+    font-size: 1.2em;
+}
+
+
+.input-container input {
+    width: 100%;
+}
