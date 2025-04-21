@@ -1,13 +1,37 @@
+/**************** FONTS ****************/
+@font-face {
+    font-family: "Noto Serif Hebrew";
+    src: url("assets/NotoSerifHebrew.ttf") format("truetype");
+    font-weight: 100 900;
+    font-stretch: 100%;
+    font-optical-sizing: auto;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: "Noto Sans Hebrew";
+    src: url("assets/NotoSansHebrew.ttf") format("truetype");
+    font-weight: 100 900;
+    font-stretch: 100%;
+    font-optical-sizing: auto;
+    font-style: normal;
+}
+
+/**************** ROOT VARIABLES ****************/
 :root {
     --char-font-weight: 400;
+    --char-font-family: "Noto Serif Hebrew", serif;
+    --char-shift: 0;
     --bg-grey-light: #f6f6f6;
     --bg-grey: #d4d9df;
     --border-grey-light: #c4c4c4;
+    --text-grey: #888a91;
 }
 
+/**************** GAME ****************/
 #page {
     max-width: 30rem;
-    padding: 1rem;
+    padding: 0.5rem 0.8rem;
     margin: auto;
     min-height: 100%;
 }
@@ -16,16 +40,29 @@
     position: relative;
     width: 100%;
     display: grid;
-    grid-template-columns: 3fr 4fr;
+    grid-template-columns: 44% 28% 28%;
     gap: .2em;
     align-items: stretch;
     margin-bottom: 2rem;
 }
 
+
+/**************** HEADER ****************/
 h2 {
     font-size: 1.8em;
 }
 
+#counters {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+}
+
+.counter {
+    font-weight: bold;
+}
+
+/**************** SETTINGS ****************/
 .range-label {
     display: flex;
     flex-direction: row;
@@ -40,12 +77,13 @@ h2 {
 .settings {
     background: var(--bg-grey-light);
     --bs-secondary-bg: var(--bg-grey); /* slider background */
-    padding: .4rem .6rem .1rem .6rem;
+    padding: .3rem .6rem .1rem .6rem;
 }
 
 .settings h4 {
     font-weight: bold;
     font-size: 1.2em;
+    margin-bottom: .2rem;
 }
 
 .setting {
@@ -71,21 +109,51 @@ h2 {
     margin-left: 0;
 }
 
+.setting-labeled {
+    display: flex;
+    flex-direction: row;
+    gap: .6rem;
+    align-items: center;
+}
+
+.setting-labeled .btn {
+    font-size: 0.9em;
+    padding: 0.2em 0.65em;
+    margin: 0.2em 0;
+}
+
+
+/**************** CHAR DISPLAY ****************/
 .char-display {
     display: flex;
     justify-content: center;
     align-items: center;
     background: var(--bg-grey-light);
-    height: 9.5rem;
+    height: 10rem;
     font-size: 8rem;
 
-    font-family: "Noto Serif Hebrew";
+    container-type: size;
+
+    font-family: var(--char-font-family);
     font-weight: var(--char-font-weight);
-    font-optical-sizing: auto;
-    font-style: normal;
-    font-variation-settings: "wdth" 100;
 }
 
+.char-display .char {
+    font-size: min(8rem, 120cqw);
+    padding-bottom: var(--char-shift);
+}
+
+.char-display .char.two-chars {
+    font-size: min(8rem, 70cqw);
+}
+
+#display-entered {
+    color: var(--text-grey);
+}
+
+
+
+/**************** EVAL FIELDS ****************/
 .eval-container {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -97,11 +165,11 @@ h2 {
     background: var(--bg-grey-light);
 }
 
-.correct .eval-field {
+.eval-field.correct {
     background: rgb(188, 250, 188);
 }
 
-.incorrect .eval-field {
+.eval-field.incorrect {
     background: rgb(255, 206, 216);
 }
 
@@ -118,15 +186,6 @@ h2 {
     font-weight: bold;
     margin-bottom: -.25rem;
 }
-
-#score {
-    font-weight: bold;
-    position: absolute;
-    top: .1rem;
-    right: .3rem;
-    font-size: 1.2em;
-}
-
 
 .input-container input {
     width: 100%;

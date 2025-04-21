@@ -2,7 +2,7 @@ const NAMES = ['alef', 'bet', 'gimel', 'dalet', 'he', 'vav', 'zayin', 'chet', 't
 const SOFIT_NAMES = ['kaf', 'mem', 'nun', 'pe', 'tsadi'];
 const ALEF_CHARCODE = 0x5d0;
 
-let letters = {};
+const LETTERS = {};
 let i = 0;
 for (const name of NAMES) {
     obj = {};
@@ -13,12 +13,11 @@ for (const name of NAMES) {
     }
     obj.char = String.fromCharCode(ALEF_CHARCODE + i);
     i += 1;
-    letters[name] = obj;
+    LETTERS[name] = obj;
 }
-console.log(JSON.stringify(letters));
+// console.log(JSON.stringify(LETTERS));
 
 const nameInput = document.getElementById("nameInput");
-const nameEval = document.getElementById("nameEval");
 
 class Game {
     constructor() {
@@ -26,12 +25,19 @@ class Game {
         this.reset_score();
     }
 
+    display_char(id, char = null) {
+        if (char === null) {
+            char = this.sol.char;
+        }
+        document.getElementById("display-" + id).getElementsByClassName('char')[0].innerText = char;
+    }
+
     setup_round() {
         let index = randindex(this.chars);
         this.sol_index = index;
         this.sol = this.chars[index];
         
-        document.getElementById("display-cur").innerText = this.sol.char;
+        this.display_char("cur", this.sol.char);
         nameInput.value = "";
         nameInput.focus();
 
@@ -39,15 +45,41 @@ class Game {
     }
 
     eval_round() {
-        document.getElementById("display-prev").innerText = this.sol.char;
+        this.display_char("sol", this.sol.char);
         let entered = nameInput.value;
-        nameEval.querySelector(".eval-entered").innerText = entered;
-        nameEval.querySelector(".eval-solution").innerText = this.sol.name;
+        this.display_entered_char(entered);
+        const [evalEntered, evalSol] = get_eval_elements(nameInput);
+        console.log(nameInput.nextSibling);
+        evalEntered.innerText = entered;
+        evalSol.innerText = this.sol.name;
 
         let correct = entered.toLowerCase() == this.sol.name;
-        classIfElse(correct, nameEval, "correct", "incorrect");
+        classIfElse(correct, [evalEntered, evalSol], "correct", "incorrect");
+        this.clear_char(correct);
         this.update_score(correct);
+    }
 
+    display_entered_char(value) {
+        value = value.toLowerCase();
+        if (value in LETTERS) {
+            let letter = LETTERS[value];
+            let char = letter.char
+            if (letter.sofitchar) {
+                char += letter.sofitchar;
+            }
+            this.display_char("entered", char);
+            classIfElse(
+                letter.sofitchar,
+                document.getElementById("display-entered").querySelector(".char"),
+                "two-chars"
+            );
+        } else {
+            this.display_char("entered", "");
+            document.getElementById("display-entered").querySelector(".char").classList.remove("two-chars");
+        }
+    }
+
+    clear_char(correct) {
         let removeCleared = this.setting("removeCleared")
         if (correct && removeCleared) {
             this.remove_char(this.sol_index);
@@ -77,13 +109,14 @@ class Game {
     display_score() {
         document.getElementById("scoreCount").innerText = this.points;
         document.getElementById("scoreTotal").innerText = this.total;
+        document.getElementById("symbolCount").innerText = this.chars.length;
     }
 
     generate_chars() {
-        let chars = NAMES.map(name => {return {'name': name, 'char': letters[name].char}})
+        let chars = NAMES.map(name => {return {'name': name, 'char': LETTERS[name].char}})
         if (this.setting("sofit")) {
             chars = chars.concat(
-                SOFIT_NAMES.map(name => {return {'name': name, 'char': letters[name].sofitchar}})
+                SOFIT_NAMES.map(name => {return {'name': name, 'char': LETTERS[name].sofitchar}})
             );
         }
         return chars;
@@ -114,10 +147,17 @@ document.querySelectorAll("input[type=range]").forEach((elem) => {
 });
 
 document.getElementById("fontWeightRange").addEventListener("input", (e) => {
-    document.documentElement.style.setProperty('--char-font-weight', e.target.value);
+    set_global_css_var('char-font-weight', e.target.value);
 });
 
 const game = new Game();
+
+document.querySelectorAll("input[type=text]").forEach((input) => {
+    input.addEventListener("focus", (e) => {
+        e.preventDefault();
+        input.focus({preventScroll: true});
+    });
+});
 
 nameInput.addEventListener("keydown", (e) => {
     if (e.key == "Enter") {
@@ -127,7 +167,37 @@ nameInput.addEventListener("keydown", (e) => {
 
 game.setup_round();
 
+const fonts = {
+    'serif': {family: '"Noto Serif Hebrew", serif', shift: '0'},
+    'sans': {family: '"Noto Sans Hebrew", sans-serif', shift: '0.18em'}
+};
+document.querySelectorAll(".font-input").forEach((elem) => {
+    let font = fonts[elem.value];
+    elem.addEventListener("click", () => {
+        set_global_css_var("char-font-family", font.family);
+        set_global_css_var("char-shift", font.shift);
+    });
+});
 
+
+
+
+
+
+function get_eval_elements(input) {
+    if (typeof input === "string") {
+        input = document.getElementById(input + "Input");
+    }
+    return [input.nextElementSibling, input.nextElementSibling.nextElementSibling];
+}
+
+
+function set_global_css_var(property, value) {
+    if (property.substr(0, 2) != "--") {
+        property = "--" + property;
+    }
+    document.documentElement.style.setProperty(property, value)
+}
 
 function classIfElse(bool, obj, trueclass, falseclass = "") {
     if (!bool) {
@@ -136,8 +206,14 @@ function classIfElse(bool, obj, trueclass, falseclass = "") {
         falseclass = temp;
     }
 
-    obj.classList.remove(...split_classes(falseclass));
-    obj.classList.add(...split_classes(trueclass));
+    if (!Array.isArray(obj)) {
+        obj = [obj];
+    }
+
+    for (const elem of obj) {
+        elem.classList.remove(...split_classes(falseclass));
+        elem.classList.add(...split_classes(trueclass));
+    }
 }
 
 function split_classes(classstr) {
