@@ -1,4 +1,5 @@
 /**************** FONTS ****************/
+/*
 @font-face {
     font-family: "Noto Serif Hebrew";
     src: url("assets/NotoSerifHebrew.ttf") format("truetype");
@@ -15,12 +16,16 @@
     font-stretch: 100%;
     font-optical-sizing: auto;
     font-style: normal;
-}
+}*/
 
 /**************** ROOT VARIABLES ****************/
 :root {
     --char-font-weight: 400;
-    --char-font-family: "Noto Serif Hebrew", serif;
+    --char-font-family: "Noto Serif", serif;
+    --char-font-size: 7.5rem;
+    --char-one-cqw: 120cqw;
+    --char-two-cqw: 70cqw;
+    --char-scale: 1;
     --char-shift: 0;
     --bg-grey-light: #f6f6f6;
     --bg-grey: #d4d9df;
@@ -28,7 +33,7 @@
     --text-grey: #888a91;
 }
 
-/**************** GAME ****************/
+/**************** PAGE ****************/
 #page {
     max-width: 30rem;
     padding: 0.5rem 0.8rem;
@@ -48,18 +53,33 @@
 
 
 /**************** HEADER ****************/
+#heading {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.2rem;
+}
+
 h2 {
     font-size: 1.8em;
+    font-weight: 800;
+    margin-bottom: 0;
 }
 
 #counters {
     display: flex;
     flex-direction: row;
     justify-content: space-between;
+    font-weight: 600;
 }
 
-.counter {
-    font-weight: bold;
+#scriptSelect {
+    width: auto;
+    text-overflow: ellipsis;
+}
+
+label[for="scriptSelect"] {
+    transform: scale(.85) translateY(-.7rem) !important;
 }
 
 /**************** SETTINGS ****************/
@@ -74,23 +94,23 @@ h2 {
     font-weight: bold;
 }
 
-.settings {
+#settings {
     background: var(--bg-grey-light);
     --bs-secondary-bg: var(--bg-grey); /* slider background */
     padding: .3rem .6rem .1rem .6rem;
 }
 
-.settings h4 {
+#settings h4 {
     font-weight: bold;
-    font-size: 1.2em;
-    margin-bottom: .2rem;
+    font-size: 1.3em;
+    margin-bottom: .4rem;
 }
 
 .setting {
     display: flex;
     flex-direction: column;
     border-top: 1px solid var(--border-grey-light);
-    padding: .2rem 0;
+    padding: .3rem 0;
 }
 
 .setting .form-check {
@@ -118,8 +138,13 @@ h2 {
 
 .setting-labeled .btn {
     font-size: 0.9em;
-    padding: 0.2em 0.65em;
+    padding: 0.15em 0.6em;
     margin: 0.2em 0;
+}
+
+.setting-label {
+    text-align: right;
+    min-width: 3.5rem;
 }
 
 
@@ -130,7 +155,6 @@ h2 {
     align-items: center;
     background: var(--bg-grey-light);
     height: 10rem;
-    font-size: 8rem;
 
     container-type: size;
 
@@ -139,12 +163,14 @@ h2 {
 }
 
 .char-display .char {
-    font-size: min(8rem, 120cqw);
+    font-size: calc(var(--char-scale) * min(var(--char-font-size), var(--char-one-cqw)));
     padding-bottom: var(--char-shift);
+    line-height: 0.7em;
+    text-align: center;
 }
 
 .char-display .char.two-chars {
-    font-size: min(8rem, 70cqw);
+    font-size: calc(var(--char-scale) * min(var(--char-font-size), var(--char-two-cqw)));
 }
 
 #display-entered {

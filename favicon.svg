@@ -16,11 +16,11 @@
    xmlns:svg="http://www.w3.org/2000/svg">
    <style>
       text, tspan {
-         fill:rgb(17, 149, 226);
+         fill:rgb(86, 176, 255);
       }
       @media (prefers-color-scheme: dark) {
          text, tspan {
-            fill:rgb(12, 166, 255);
+            fill:rgb(86, 176, 255);
          }
       }
    </style>
