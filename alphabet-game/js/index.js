@@ -2,7 +2,7 @@
 const SCRIPTS = {};
 const TEMPLATES = {
     button: `
-        <input type="{TYPE}" class="btn-check form-input {CLASS}" name="{NAME}" id="{ID}" autocomplete="off" value="{VALUE}" {CHECKED}>
+        <input type="{TYPE}" class="btn-check form-input {CLASS}" name="{NAME}" id="{ID}" autocomplete="off" value="{VALUE}" {CHECKED} {DISABLED}>
         <label class="btn btn-outline-primary" for="{ID}">{DISPLAYNAME}</label>
     `,
 };
@@ -192,9 +192,11 @@ const nameInput = document.getElementById("nameInput");
 const fontButtons = document.getElementById("fontButtons");
 const formsButtons = document.getElementById("formsButtons");
 
-scriptSelect.addEventListener("change", setup_game);
+scriptSelect.addEventListener("change", () => {
+    setup_game(false);
+});
 
-function setup_game() {
+function setup_game(check_url = true) {
     let scripttype = SCRIPTS[scriptSelect.value].type;
     let gamename = scripttype + " Game";
     document.querySelectorAll("h2, title").forEach(elem => {
@@ -202,10 +204,186 @@ function setup_game() {
     });
 
     game.reset();
-    setup_font_buttons();
-    setup_forms_buttons();
+    setup_font_buttons(check_url);
+    setup_forms_buttons(check_url);
     update_font();
     game.start();
+}
+
+function update_font() {
+    const key = get_value("fontButtons");
+    let font = game.fonts()[key];
+    set_global_css_var("--char-font-family", font.family);
+    
+    let shift = 0;
+    if (font.shift) {
+        shift = font.shift + "em";
+    }
+    set_global_css_var("--char-shift", shift);
+    
+    let scale = game.script == "greek" ? 0.85 : 1;
+    set_global_css_var("--char-scale", scale);
+}
+
+function setup_font_buttons(check_url = true) {
+    let html = "";
+    let checked = get_url_param("font");
+    if (!check_url || !checked) {
+        checked = Object.keys(game.fonts())[0];
+    }
+
+    for (const [key, font] of Object.entries(game.fonts())) {
+        html += html_from_template("button", {
+            type: "radio",
+            name: "font-button",
+            checked: key == checked ? "checked" : "",
+            class: "font-button",
+            id: "fontButton" + key,
+            value: key,
+            displayname: font.displayname,
+            disabled: ""
+        });
+    }
+    fontButtons.innerHTML = html;
+
+    fontButtons.querySelectorAll(".font-button").forEach(elem => {
+        elem.addEventListener("change", () => {
+            if (elem.checked) {
+                update_font();
+            }
+        });
+    });
+    update_url_key("font");
+    url_change_listener("font");
+}
+
+function setup_forms_buttons(check_url = true) {
+    let html = "";
+    let forms = get_url_param("forms");
+    if (check_url && forms) {
+        forms = forms.split(",");
+    } else {
+        forms = false;
+    }
+
+    let disabled = game.forms().length == 1;
+
+    for (const [index, form] of Object.entries(game.forms())) {
+        const checked = !forms || forms.includes(form.key);
+        html += html_from_template("button", {
+            type: "checkbox",
+            name: "form-button",
+            checked: checked ? "checked" : "",
+            class: "form-button",
+            id: "formButton" + index,
+            value: form.key,
+            displayname: form.displayname,
+            disabled: disabled ? "disabled" : ""
+        });
+    }
+    formsButtons.innerHTML = html;
+
+    formsButtons.querySelectorAll(".form-button").forEach(elem => {
+        elem.addEventListener("change", () => {
+            game.restart();
+        });
+    });
+    update_url_key("forms");
+    url_change_listener("forms");
+}
+
+
+// --------------- GET VARIABLES -----------------
+const GET_VARS = {
+    "script": {id: "scriptSelect", startup: false},
+    "fontWeight": {id: "fontWeightRange", startup: false},
+    "forms": {id: "formsButtons", startup: true},
+    "font": {id: "fontButtons", startup: true}
+};
+
+const params = new URLSearchParams(location.search);
+for (const [key, data] of Object.entries(GET_VARS)) {
+    if (!data.startup) {
+        if (params.has(key)) {
+            set_value(data.id, params.get(key));
+        } else {
+            update_url_key(key);
+        }
+        url_change_listener(key);
+    }
+}
+
+function url_change_listener(key) {
+    inputs_callback(GET_VARS[key].id, elem => {
+        elem.addEventListener("change", () => {
+            update_url_key(key);
+        });
+    });
+}
+
+function inputs_callback(id, callback) {
+    const elem = document.getElementById(id);
+    if (elem.classList.contains("buttons")) {
+        elem.querySelectorAll("input").forEach(callback);
+    } else {
+        callback(elem);
+    }
+}
+
+function update_url_key(key) {
+    set_url_param(key, get_value(GET_VARS[key].id));
+}
+
+function set_value(id, value) {
+    const elem = document.getElementById(id);
+    if (elem.classList.contains("buttons")) {
+        return set_buttons_value(elem, value);
+    } else {
+        return elem.value = value;
+    }
+}
+
+function get_value(id) {
+    const elem = document.getElementById(id);
+    if (elem.classList.contains("buttons")) {
+        return get_buttons_value(elem);
+    } else {
+        return elem.value;
+    }
+}
+
+function set_buttons_value(container, value) {
+    const values = value.split(",");
+    container.querySelectorAll("input").forEach(elem => {
+        elem.checked = values.includes(elem.value);
+    });
+}
+
+function get_buttons_value(container) {
+    let value = "";
+    container.querySelectorAll("input").forEach(elem => {
+        if (elem.checked) {
+            if (value.length > 0) {
+                value += ","
+            }
+            value += elem.value;
+        }
+    });
+    return value;
+}
+
+function set_url_param(key, value) {
+    const url = new URL(location);
+    url.searchParams.set(key, value);
+    history.pushState({}, "", url);
+}
+
+function get_url_param(key) {
+    const params = new URLSearchParams(location.search);
+    if (params.has(key)) {
+        return params.get(key);
+    }
+    return null;
 }
 
 
@@ -217,12 +395,15 @@ document.querySelectorAll("input[type=range]").forEach((elem) => {
         elem.addEventListener("input", (e) => {
             span.innerText = e.target.value;
         });
+        span.innerText = elem.value;
     }
 });
 
-document.getElementById("fontWeightRange").addEventListener("input", (e) => {
+const fontWeightRange = document.getElementById("fontWeightRange");
+fontWeightRange.addEventListener("input", (e) => {
     set_global_css_var('char-font-weight', e.target.value);
 });
+set_global_css_var('char-font-weight', fontWeightRange.value);
 
 document.querySelectorAll("input[type=text]").forEach((input) => {
     input.addEventListener("focus", (e) => {
@@ -236,70 +417,6 @@ nameInput.addEventListener("keydown", (e) => {
         game.submit();
     }
 });
-
-document.querySelectorAll(".font-input").forEach((elem) => {
-    let font = fonts[elem.value];
-    elem.addEventListener("click", () => {
-        set_global_css_var("char-font-family", font.family);
-        set_global_css_var("char-shift", font.shift);
-    });
-});
-
-formsButtons.addEventListener("click", (e) => {
-    if (e.target.classList.contains("form-button")) {
-        game.restart();
-    }
-});
-
-function update_font(index = 0) {
-    let font = game.fonts()[index];
-    set_global_css_var("--char-font-family", font.family);
-    
-    let shift = game.script == "hebrew" && font.displayname == "Sans" ? "0.18em" : 0;
-    set_global_css_var("--char-shift", shift);
-    
-    let scale = game.script == "greek" ? 0.85 : 1;
-    set_global_css_var("--char-scale", scale);
-}
-
-function setup_font_buttons() {
-    let html = "";
-    for (const [index, font] of Object.entries(game.fonts())) {
-        html += html_from_template("button", {
-            type: "radio",
-            name: "font-button",
-            checked: index == 0 ? "checked" : "",
-            class: "font-button",
-            id: "fontButton" + index,
-            value: index,
-            displayname: font.displayname
-        });
-    }
-    fontButtons.innerHTML = html;
-    fontButtons.querySelectorAll(".font-button").forEach(elem => {
-        elem.addEventListener("change", () => {
-            if (elem.checked) {
-                update_font(elem.value);
-            }
-        })
-    })
-}
-
-function setup_forms_buttons() {
-    let html = "";
-    for (const [index, form] of Object.entries(game.forms())) {
-        html += html_from_template("button", {
-            type: "checkbox",
-            name: "form-button",
-            checked: "checked",
-            class: "form-button",
-            id: "formButton" + index,
-            value: form.key,
-            displayname: form.displayname
-        });
-    }
-    formsButtons.innerHTML = html;
-}
 
 
 // --------------- DOM FUNCTIONS ---------------
