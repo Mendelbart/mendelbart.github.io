@@ -2,11 +2,11 @@
     "hebrew": {
         "type": "Abjad",
         "name": "Hebrew",
-        "fonts": [
-            {"family": "\"Noto Serif Hebrew\", serif", "displayname": "Serif"},
-            {"family": "\"Noto Sans Hebrew\", sans-serif", "displayname": "Sans"},
-            {"family": "\"Noto Rashi Hebrew\"", "displayname": "Rashi"}
-        ],
+        "fonts": {
+            "serif": {"family": "\"Noto Serif Hebrew\", serif", "displayname": "Serif"},
+            "sans": {"family": "\"Noto Sans Hebrew\", sans-serif", "displayname": "Sans", "shift": "0.18"},
+            "rashi": {"family": "\"Noto Rashi Hebrew\"", "displayname": "Rashi"}
+        },
         "forms": [
             {"key": "normal", "displayname": "Normal"},
             {"key": "final", "displayname": "Sofit"}
@@ -39,10 +39,10 @@
     "greek": {
         "type": "Alphabet",
         "name": "Greek",
-        "fonts": [
-            {"family": "\"Noto Serif\", serif", "displayname": "Serif"},
-            {"family": "\"Noto Sans\", sans-serif", "displayname": "Sans"}
-        ],
+        "fonts": {
+            "noto-serif": {"family": "\"Noto Serif\", serif", "displayname": "Noto Serif"},
+            "noto-sans": {"family": "\"Noto Sans\", sans-serif", "displayname": "Noto Sans"}
+        },
         "forms": [
             {"key": "upper", "displayname": "Uppercase"},
             {"key": "lower", "displayname": "Lowercase"},
@@ -78,12 +78,14 @@
     "elder_futhark": {
         "type": "Runic Alphabet",
         "name": "Elder Futhark",
-        "fonts": [
-            {"family": "\"Noto Sans Runic\"", "displayname": "Noto"},
-            {"family": "sans-serif", "displayname": "Default Sans"}
-        ],
+        "fonts": {
+            "junicode": {"family": "Junicode", "displayname": "Junicode", "shift": "-0.33"},
+            "noto": {"family": "\"Noto Sans Runic\"", "displayname": "Noto"},
+            "sans": {"family": "sans-serif", "displayname": "Default Sans"}
+        },
         "forms": [
-            {"key": "normalized", "displayname": "Normalized"}
+            {"key": "normalized", "displayname": "Normalized"},
+            {"key": "variation", "displayname": "Variations"}
         ],
         "letters": [
             {"name": "fehu", "chars": {"normalized": "ᚠ"}, "transliteration": "f", "ipa": "/ɸ/, /f/"},
