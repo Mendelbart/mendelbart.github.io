@@ -127,6 +127,8 @@ label[for="scriptSelect"] {
 .setting .form-check .form-check-input {
     margin-top: 0;
     margin-left: 0;
+    width: 2rem;
+    margin-left: 1.5rem;
 }
 
 .setting-labeled {
