@@ -74,6 +74,7 @@ h2 {
     font-size: 1.8em;
     font-weight: 800;
     margin-bottom: 0;
+    line-height: 1em;
 }
 
 #counters {
@@ -150,8 +151,11 @@ label[for="scriptSelect"] {
 
 .setting-labeled .btn {
     font-size: 0.9em;
-    padding: 0.15em 0.6em;
+    padding: 0.36em 0.6em;
     margin: 0.2em 0;
+    line-height: 1.15em;
+    display: flex;
+    align-items: center;
 }
 
 .setting-label {
@@ -176,7 +180,7 @@ label[for="scriptSelect"] {
 
 .char-display .char {
     font-size: calc(var(--char-scale) * min(var(--char-font-size), var(--char-one-cqw)));
-    padding-bottom: var(--char-shift);
+    margin-bottom: var(--char-shift);
     line-height: 0.7em;
     text-align: center;
 }
