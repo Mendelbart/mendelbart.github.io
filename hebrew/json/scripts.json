@@ -76,16 +76,40 @@
         ]
     },
     "elder_futhark": {
-        "type": "Runes",
+        "type": "Runic Alphabet",
         "name": "Elder Futhark",
         "fonts": [
-            {"family": "\"Noto Sans Runic\", sans", "displayname": "Sans"}
+            {"family": "\"Noto Sans Runic\"", "displayname": "Noto"},
+            {"family": "sans-serif", "displayname": "Default Sans"}
         ],
         "forms": [
-            {"key": "normal", "displayname": "Normal"}
+            {"key": "normalized", "displayname": "Normalized"}
         ],
         "letters": [
-            
+            {"name": "fehu", "chars": {"normalized": "ᚠ"}, "transliteration": "f", "ipa": "/ɸ/, /f/"},
+            {"name": "uruz", "name_alts": ["ur"], "chars": {"normalized": "ᚢ"}, "transliteration": "u", "ipa": "/u(ː)/"},
+            {"name": "thurisaz", "chars": {"normalized": "ᚦ"}, "transliteration": "þ", "ipa": "/θ/, /ð/"},
+            {"name": "ansuz", "chars": {"normalized": "ᚨ"}, "transliteration": "a", "ipa": "/a(ː)/"},
+            {"name": "raido", "chars": {"normalized": "ᚱ"}, "transliteration": "r", "ipa": "/r/"},
+            {"name": "kaunan", "chars": {"normalized": "ᚲ"}, "transliteration": "k (c)", "ipa": "/k/"},
+            {"name": "gebo", "chars": {"normalized": "ᚷ"}, "transliteration": "g", "ipa": "/ɡ/"},
+            {"name": "wunjo", "chars": {"normalized": "ᚹ"}, "transliteration": "w", "ipa": "/w/"},
+            {"name": "hagalaz", "chars": {"normalized": "ᚺ", "variation": "ᚻ"}, "transliteration": "h", "ipa": "/h/"},
+            {"name": "naudiz", "name_alts": ["nauthiz"], "chars": {"normalized": "ᚾ"}, "transliteration": "n", "ipa": "/n/"},
+            {"name": "isaz", "chars": {"normalized": "ᛁ"}, "transliteration": "i", "ipa": "/i(ː)/"},
+            {"name": "jera", "name_alts": ["jeran", "jeraz", "yera"], "chars": {"normalized": "ᛃ"}, "transliteration": "j", "ipa": "/j/"},
+            {"name": "eihaz", "name_alts": ["eiwaz"], "chars": {"normalized": "ᛇ"}, "transliteration": "ï (æ)", "ipa": "/æː/[10]"},
+            {"name": "pertho", "name_alts": ["peorth"], "chars": {"normalized": "ᛈ"}, "transliteration": "p", "ipa": "/p/"},
+            {"name": "algiz", "chars": {"normalized": "ᛉ"}, "transliteration": "z", "ipa": "/z/"},
+            {"name": "sowilo", "chars": {"normalized": "ᛊ"}, "transliteration": "s", "ipa": "/s/"},
+            {"name": "tiwaz", "name_alts": ["teiwaz", "tiewaz"], "chars": {"normalized": "ᛏ"}, "transliteration": "t", "ipa": "/t/"},
+            {"name": "berkanan", "chars": {"normalized": "ᛒ"}, "transliteration": "b", "ipa": "/b/"},
+            {"name": "ehwaz", "chars": {"normalized": "ᛖ"}, "transliteration": "e", "ipa": "/e(ː)/"},
+            {"name": "mannaz", "chars": {"normalized": "ᛗ"}, "transliteration": "m", "ipa": "/m/"},
+            {"name": "laguz", "name_alts": ["laukaz"], "chars": {"normalized": "ᛚ"}, "transliteration": "l", "ipa": "/l/"},
+            {"name": "ingwaz", "chars": {"normalized": "ᛜ", "variation": "ᛝ"}, "transliteration": "ŋ", "ipa": "/ŋ/"},
+            {"name": "dagaz", "chars": {"normalized": "ᛞ"}, "transliteration": "d", "ipa": "/d/"},
+            {"name": "othala", "chars": {"normalized": "ᛟ"}, "transliteration": "o", "ipa": "/o(ː)/"}
         ]
     }
 }
