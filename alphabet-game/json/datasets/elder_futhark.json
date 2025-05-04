@@ -1,0 +1,58 @@
+{
+    "gameName": "ᚠᚢᚦᚨᚱᚲᛚᚨᛁᚲᚨᛉ",
+    "gameNameFont": "noto-runic",
+    "gameNameScale": 1.1,
+    "name": "Elder Futhark",
+    "symbolTerm": "rune",
+    "symbolTermPlural": "runes",
+    "fonts": {
+        "junicode": "Junicode",
+        "noto-runic": "Noto"
+    },
+    "matchEnteredSymbols": {
+        "matchTo": "name",
+        "fromGroups": ["normalized"]
+    },
+    "properties": {
+        "name": {"scoring": "string", "maxDist": 1, "displayname": "Name", "listScoringMode": "best"},
+        "pronunciation": {"scoring": "string", "maxDist": 0, "displayname": "Pronunciation", "listScoringMode": "best"}
+    },
+    "groups": {
+        "normalized": {
+            "displayname": "Normalized",
+            "symbols": {
+                "fehu": {"string": "ᚠ", "group": "normalized", "name": "Fehu", "pronunciation": "f"},
+                "uruz": {"string": "ᚢ", "group": "normalized", "name": ["Uruz", "Ur"], "pronunciation": "u"},
+                "thurisaz": {"string": "ᚦ", "group": "normalized", "name": "Thurisaz", "pronunciation": ["þ", "th", "θ", "ð"]},
+                "ansuz": {"string": "ᚨ", "group": "normalized", "name": "Ansuz", "pronunciation": "a"},
+                "raido": {"string": "ᚱ", "group": "normalized", "name": "Raido", "pronunciation": "r"},
+                "kaunan": {"string": "ᚲ", "group": "normalized", "name": "Kaunan", "pronunciation": "k"},
+                "gebo": {"string": "ᚷ", "group": "normalized", "name": "Gebo", "pronunciation": "g"},
+                "wunjo": {"string": "ᚹ", "group": "normalized", "name": "Wunjo", "pronunciation": "w"},
+                "hagalaz": {"string": "ᚺ", "group": "normalized", "name": "Hagalaz", "pronunciation": "h"},
+                "naudiz": {"string": "ᚾ", "group": "normalized", "name": ["Naudiz", "Nauthiz"], "pronunciation": "n"},
+                "isaz": {"string": "ᛁ", "group": "normalized", "name": "Isaz", "pronunciation": "i"},
+                "jera": {"string": "ᛃ", "group": "normalized", "name": ["Jera", "Jeran", "Jeraz", "Yera"], "pronunciation": "j"},
+                "eihaz": {"string": "ᛇ", "group": "normalized", "name": ["Eihaz", "Eiwaz"], "pronunciation": ["ï", "æ", "ä"]},
+                "pertho": {"string": "ᛈ", "group": "normalized", "name": ["Pertho", "Peorth"], "pronunciation": "p"},
+                "algiz": {"string": "ᛉ", "group": "normalized", "name": "Algiz", "pronunciation": "z"},
+                "sowilo": {"string": "ᛊ", "group": "normalized", "name": "Sowilo", "pronunciation": "s"},
+                "tiwaz": {"string": "ᛏ", "group": "normalized", "name": ["Tiwaz", "Teiwaz", "Tiewaz"], "pronunciation": "t"},
+                "berkanan": {"string": "ᛒ", "group": "normalized", "name": "Berkanan", "pronunciation": "b"},
+                "ehwaz": {"string": "ᛖ", "group": "normalized", "name": "Ehwaz", "pronunciation": "e"},
+                "mannaz": {"string": "ᛗ", "group": "normalized", "name": "Mannaz", "pronunciation": "m"},
+                "laguz": {"string": "ᛚ", "group": "normalized", "name": ["Laguz", "Laukaz"], "pronunciation": "l"},
+                "ingwaz": {"string": "ᛜ", "group": "normalized", "name": "Ingwaz", "pronunciation": ["ŋ", "ng"]},
+                "dagaz": {"string": "ᛞ", "group": "normalized", "name": "Dagaz", "pronunciation": "d"},
+                "othala": {"string": "ᛟ", "group": "normalized", "name": "Othala", "pronunciation": "o"}
+            }
+        },
+        "variations": {
+            "displayname": "Variations",
+            "symbols": {
+                "hagalaz": {"string": "ᚻ", "group": "variations", "name": "Hagalaz", "pronunciation": "h"},
+                "ingwaz": {"string": "ᛝ", "group": "variations", "name": "Ingwaz", "pronunciation": ["ŋ", "ng"]}
+            }
+        }
+    }
+}

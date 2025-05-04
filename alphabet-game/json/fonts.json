@@ -1,0 +1,9 @@
+{
+    "noto-sans-hebrew": {"family": "Noto Sans Hebrew", "shift": 0.18},
+    "noto-serif-hebrew": {"family": "Noto Serif Hebrew"},
+    "noto-rashi-hebrew": {"family": "Noto Rashi Hebrew"},
+    "noto-serif": {"family": "Noto Serif", "scale": 0.85},
+    "noto-sans": {"family": "Noto Sans", "scale": 0.85},
+    "noto-runic": {"family": "Noto Sans Runic"},
+    "junicode": {"family": "Junicode", "shift": -0.33}
+}

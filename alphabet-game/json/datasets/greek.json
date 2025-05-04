@@ -1,0 +1,79 @@
+{
+    "gameName": "Παιχνίδι Aλφάβητο",
+    "name": "Greek",
+    "symbolTerm": "letter",
+    "symbolTermPlural": "letters",
+    "fonts": {
+        "noto-serif": "Noto Serif",
+        "noto-sans": "Noto Sans",
+        "junicode": "Junicode"
+    },
+    "properties": {
+        "name": {"scoring": "string", "maxDist": 1, "displayname": "Name", "listScoringMode": "best"}
+    },
+    "matchEnteredSymbols": {
+        "matchTo": "name",
+        "fromGroups": ["upper", "lower"]
+    },
+    "groups": {
+        "upper": {
+            "displayname": "Uppercase",
+            "symbols": {
+                "alpha": {"string": "Α", "name": "Alpha"},
+                "beta": {"string": "Β", "name": "Beta"},
+                "gamma": {"string": "Γ", "name": "Gamma"},
+                "delta": {"string": "Δ", "name": "Delta"},
+                "epsilon": {"string": "Ε", "name": "Epsilon"},
+                "zeta": {"string": "Ζ", "name": "Zeta"},
+                "eta": {"string": "Η", "name": "Eta"},
+                "theta": {"string": "Θ", "name": "Theta"},
+                "iota": {"string": "Ι", "name": "Iota"},
+                "kappa": {"string": "Κ", "name": "Kappa"},
+                "lambda": {"string": "Λ", "name": "Lambda"},
+                "mu": {"string": "Μ", "name": "Mu"},
+                "nu": {"string": "Ν", "name": "Nu"},
+                "xi": {"string": "Ξ", "name": "Xi"},
+                "omicron": {"string": "Ο", "name": "Omicron"},
+                "pi": {"string": "Π", "name": "Pi"},
+                "rho": {"string": "Ρ", "name": "Rho"},
+                "sigma": {"string": "Σ", "name": "Sigma"},
+                "tau": {"string": "Τ", "name": "Tau"},
+                "upsilon": {"string": "Υ", "name": "Upsilon"},
+                "phi": {"string": "Φ", "name": "Phi"},
+                "chi": {"string": "Χ", "name": "Chi"},
+                "psi": {"string": "Ψ", "name": "Psi"},
+                "omega": {"string": "Ω", "name": "Omega"}
+            }
+        },
+        "lower": {
+            "displayname": "Lowercase",
+            "symbols": {
+                "alpha": {"string": "α", "name": "Alpha"},
+                "beta": {"string": "β", "name": "Beta"},
+                "gamma": {"string": "γ", "name": "Gamma"},
+                "delta": {"string": "δ", "name": "Delta"},
+                "epsilon": {"string": "ε", "name": "Epsilon"},
+                "zeta": {"string": "ζ", "name": "Zeta"},
+                "eta": {"string": "η", "name": "Eta"},
+                "theta": {"string": "θ", "name": "Theta"},
+                "iota": {"string": "ι", "name": "Iota"},
+                "kappa": {"string": "κ", "name": "Kappa"},
+                "lambda": {"string": "λ", "name": "Lambda"},
+                "mu": {"string": "μ", "name": "Mu"},
+                "nu": {"string": "ν", "name": "Nu"},
+                "xi": {"string": "ξ", "name": "Xi"},
+                "omicron": {"string": "ο", "name": "Omicron"},
+                "pi": {"string": "π", "name": "Pi"},
+                "rho": {"string": "ρ", "name": "Rho"},
+                "sigma": {"string": "σ", "name": "Sigma"},
+                "sigma_final": {"string": "ς", "name": "Sigma"},
+                "tau": {"string": "τ", "name": "Tau"},
+                "upsilon": {"string": "υ", "name": "Upsilon"},
+                "phi": {"string": "φ", "name": "Phi"},
+                "chi": {"string": "χ", "name": "Chi"},
+                "psi": {"string": "ψ", "name": "Psi"},
+                "omega": {"string": "Ω", "name": "Omega"}
+            }
+        }
+    }
+}

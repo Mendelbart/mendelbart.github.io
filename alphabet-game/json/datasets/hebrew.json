@@ -1,0 +1,59 @@
+{
+    "gameName": ["משחק אלפבית", "מִשְׂחַק אָלֶפְבֵּית"],
+    "gameNameFont": "noto-sans-hebrew",
+    "name": "Hebrew",
+    "symbolTerm": "letter",
+    "symbolTermPlural": "letters",
+    "rtl": true,
+    "fonts": {
+        "noto-serif-hebrew": "Serif",
+        "noto-sans-hebrew": "Sans",
+        "noto-rashi-hebrew": "Rashi"
+    },
+    "matchEnteredSymbols": {
+        "matchTo": "name",
+        "fromGroups": ["normal", "sofit"]
+    },
+    "properties": {
+        "name": {"scoring": "string", "maxDist": 1, "displayname": "Name", "listScoringMode": "best"}
+    },
+    "groups": {
+        "normal": {
+            "displayname": "Normal",
+            "symbols": {
+                "alef": {"string": "א", "name": ["Alef", "Aleph"]},
+                "bet": {"string": "ב", "name": "Bet"},
+                "gimel": {"string": "ג", "name": "Gimel"},
+                "dalet": {"string": "ד", "name": "Dalet"},
+                "he": {"string": "ה", "name": "He"},
+                "vav": {"string": "ו", "name": "Vav"},
+                "zayin": {"string": "ז", "name": "Zayin"},
+                "chet": {"string": "ח", "name": "Chet"},
+                "tet": {"string": "ט", "name": "Tet"},
+                "yod": {"string": "י", "name": "Yod"},
+                "kaf": {"string": "כ", "name": "Kaf"},
+                "lamed": {"string": "ל", "name": "Lamed"},
+                "mem": {"string": "מ", "name": "Mem"},
+                "nun": {"string": "נ", "name": "Nun"},
+                "samekh": {"string": "ס", "name": "Samekh"},
+                "ayin": {"string": "ע", "name": "Ayin"},
+                "pe": {"string": "פ", "name": "Pe"},
+                "tsadi": {"string": "צ", "name": "Tsadi"},
+                "qof": {"string": "ק", "name": "Qof"},
+                "resh": {"string": "ר", "name": "Resh"},
+                "shin": {"string": "ש", "name": "Shin"},
+                "tav": {"string": "ת", "name": "Tav"}
+            }
+        },
+        "sofit": {
+            "displayname": "Sofit",
+            "symbols": {
+                "kaf": {"string": "ך", "name": "Kaf"},
+                "mem": {"string": "ם", "name": "Mem"},
+                "nun": {"string": "ן", "name": "Nun"},
+                "pe": {"string": "ף", "name": "Pe"},
+                "tsadi": {"string": "ץ", "name": "Tsadi"}
+            }
+        }
+    }
+}

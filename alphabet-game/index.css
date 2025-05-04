@@ -1,23 +1,4 @@
 /**************** FONTS ****************/
-/*
-@font-face {
-    font-family: "Noto Serif Hebrew";
-    src: url("assets/NotoSerifHebrew.ttf") format("truetype");
-    font-weight: 100 900;
-    font-stretch: 100%;
-    font-optical-sizing: auto;
-    font-style: normal;
-}
-
-@font-face {
-    font-family: "Noto Sans Hebrew";
-    src: url("assets/NotoSansHebrew.ttf") format("truetype");
-    font-weight: 100 900;
-    font-stretch: 100%;
-    font-optical-sizing: auto;
-    font-style: normal;
-}*/
-
 @font-face {
     font-family: Junicode;
     src: url("assets/Junicode.woff2") format("woff2");
@@ -30,51 +11,182 @@
 
 /**************** ROOT VARIABLES ****************/
 :root {
-    --char-font-weight: 400;
-    --char-font-family: "Noto Serif", serif;
-    --char-font-size: 7.5rem;
-    --char-one-cqw: 120cqw;
-    --char-two-cqw: 70cqw;
-    --char-scale: 1;
-    --char-shift: 0;
-    --bg-grey-light: #f6f6f6;
-    --bg-grey: #d4d9df;
-    --border-grey-light: #c4c4c4;
-    --text-grey: #888a91;
+    --symbol-font-weight: 400;
+    --symbol-font-family: "Noto Serif", serif;
+    --symbol-font-size: 7.5rem;
+    --symbol-one-cqw: 120cqw;
+    --symbol-two-cqw: 70cqw;
+    --symbol-scale: 1;
+    --symbol-shift: 0;
+    --game-name-scale: 1;
+
+    --bg-grey-light: #f4f4f4;
+    --bg-grey: #c3cbd5;
+    --border-grey-light: #c9cdd0;
+    --border-blue-light: #69beff;
+    --bs-border-color: var(--border-grey-light);
+    --blue: #0c8aea;
+
+    --bg-light-red: rgb(255, 206, 216);
+    --bg-light-yellow: rgb(255, 244, 152);
+    --bg-light-green: rgb(188, 250, 188);
+
+    --text-grey: #888c91;
+    --bs-font-sans-serif: "Ubuntu Sans";
+    --game-max-width: 30rem;
+
+    --button-green: hsl(146, 100%, 40%);
+    --button-green-active: hsl(146, 100%, 36%);
+    --button-red: hsl(343, 100%, 47%);
+    --button-red-active: hsl(343, 100%, 43%);
+    --button-grey: hsl(212, 8%, 54%);
+    --button-grey-active: hsl(212, 8%, 50%);
+}
+
+.btn-outline-primary {
+    border-radius: 0;
+    --bs-btn-active-bg: var(--blue);
+    --bs-btn-active-border-color: var(--blue);
+    --bs-btn-color: var(--blue);
+    --bs-btn-border-color: var(--blue);
+    --bs-btn-hover-bg: var(--blue);
+    --bs-btn-hover-border-color: var(--blue);
+}
+
+.form-check-input:checked {
+    background-color: var(--blue);
+    border-color: var(--blue);
+}
+
+.form-range::-moz-range-thumb {
+    background: var(--blue);
+}
+
+.hidden {
+    display: none;
 }
 
 /**************** PAGE ****************/
 #page {
     max-width: 30rem;
-    padding: 0.5rem 0.8rem;
     margin: auto;
-    min-height: 100%;
+    padding: 0.5rem 0.8rem;
+    min-height: 100vh;
+    position: relative;
 }
 
-#game-container {
-    position: relative;
+#game-symbols, #game-inputs {
     width: 100%;
     display: grid;
-    grid-template-columns: 44% 28% 28%;
+    --gap: .2em;
+    grid-template-columns: 40% repeat(2, calc(30% - var(--gap)));
     gap: .2em;
     align-items: stretch;
-    margin-bottom: 2rem;
+    margin-bottom: .2em;
 }
 
+
+/**************** NEW GAME DIALOGUE ****************/
+.heading-with-button {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: .3rem 0 .5rem;
+}
+
+.heading-with-button h2 {
+    flex-grow: 1;
+    text-wrap: nowrap;
+}
+
+#last-game-heading, #game-heading {
+    border-bottom: 1px solid var(--border-grey-light);
+}
+
+#game-heading {
+    margin-bottom: .5rem;
+}
+
+.heading-with-button.rtl {
+    flex-direction: row-reverse;
+}
+
+.heading-with-button.rtl h2 {
+    text-align: right;
+}
+
+.game-name {
+    font-size: calc(var(--game-name-scale) * 1em);
+}
+
+.heading-with-button .symbol-button {
+    font-size: 2.8rem;
+    line-height: 0;
+    width: 2.2rem;
+    display: flex;
+    justify-content: center;
+}
+
+.symbol-button {
+    cursor: pointer;
+    user-select: none;
+}
+
+.play-button {
+    color: var(--button-green);
+}
+.play-button:active {
+    color: var(--button-green-active);
+}
+.stop-button {
+    color: var(--button-red);
+}
+.stop-button:active {
+    color: var(--button-red-active);
+}
+.pause-button {
+    color: var(--button-grey);
+    transform: scale(.84);
+}
+.pause-button:active {
+    color: var(--button-grey-active);
+}
+
+#score-display {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 7.5rem;
+    border-bottom: 1px solid var(--border-grey-light);
+}
+
+#score-display .score-label {
+    font-size: 1.6rem;
+    font-weight: 500;
+    margin-right: 1.5rem;
+}
+
+#score-display-value {
+    font-size: 3.5rem;
+    font-weight: 750;
+}
+
+#last-game-score {
+    margin-bottom: 0.3rem;
+}
 
 /**************** HEADER ****************/
-#heading {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 0.2rem;
-}
-
 h2 {
-    font-size: 1.8em;
-    font-weight: 800;
+    font-size: 1.8rem;
+    font-weight: 750;
     margin-bottom: 0;
     line-height: 1em;
+}
+
+h4 {
+    font-weight: bold;
+    font-size: 1.3rem;
+    margin-bottom: .4rem;
 }
 
 #counters {
@@ -82,15 +194,6 @@ h2 {
     flex-direction: row;
     justify-content: space-between;
     font-weight: 600;
-}
-
-#scriptSelect {
-    width: auto;
-    text-overflow: ellipsis;
-}
-
-label[for="scriptSelect"] {
-    transform: scale(.85) translateY(-.7rem) !important;
 }
 
 /**************** SETTINGS ****************/
@@ -105,16 +208,11 @@ label[for="scriptSelect"] {
     font-weight: bold;
 }
 
-#settings {
+#game-font-settings {
+    margin-top: 2rem;
     background: var(--bg-grey-light);
     --bs-secondary-bg: var(--bg-grey); /* slider background */
     padding: .3rem .6rem .1rem .6rem;
-}
-
-#settings h4 {
-    font-weight: bold;
-    font-size: 1.3em;
-    margin-bottom: .4rem;
 }
 
 .setting {
@@ -124,6 +222,18 @@ label[for="scriptSelect"] {
     padding: .3rem 0;
 }
 
+.setting.no-border-top {
+    border-top: none;
+}
+
+.invalid-setting {
+    background: var(--bg-light-red);
+}
+
+.form-select:focus, .form-check-input:focus {
+    box-shadow: none;
+}
+
 .setting .form-check {
     display: flex;
     align-items: center;
@@ -131,15 +241,15 @@ label[for="scriptSelect"] {
     padding-left: 0;
 }
 
-.setting .form-check label {
+.form-check label {
     line-height: 1.25;
 }
 
 .setting .form-check .form-check-input {
     margin-top: 0;
     margin-left: 0;
-    width: 2rem;
-    margin-left: 1.5rem;
+    width: 2.2rem;
+    margin-left: 3.3rem;
 }
 
 .setting-labeled {
@@ -150,9 +260,9 @@ label[for="scriptSelect"] {
 }
 
 .setting-labeled .btn {
-    font-size: 0.9em;
-    padding: 0.36em 0.6em;
-    margin: 0.2em 0;
+    font-size: 0.9rem;
+    padding: 0.3rem 0.55rem;
+    margin: 0.2rem 0;
     line-height: 1.15em;
     display: flex;
     align-items: center;
@@ -160,12 +270,53 @@ label[for="scriptSelect"] {
 
 .setting-label {
     text-align: right;
-    min-width: 3.5rem;
+    min-width: 5.5rem;
+}
+
+#dataset-setting {
+    padding: 0;
+    margin-top: .3rem;
+}
+
+#datasetSelect {
+    height: calc(3rem + calc(var(--bs-border-width) * 2));
+    min-height: calc(3rem + calc(var(--bs-border-width) * 2));
+    padding-top: 1.35rem;
+    border-radius: 0;
+    border-width: 0 1px;
+}
+
+#datasetSelect ~ label {
+    transform: scale(.85) translateY(-.7rem) translateX(.15rem)
+}
+
+#datasetSelectContainer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border: 1px solid var(--border-grey-light);
+    border-width: 1px 1px 1px 0;
+}
+
+#totalSymbolCountContainer {
+    text-align: right;
+    text-wrap: nowrap;
+    padding: 0 1rem;
+}
+
+.capitalize {
+    text-transform: capitalize;
+}
+.lowercase {
+    text-transform: lowercase;
+}
+.uppercase {
+    text-transform: uppercase;
 }
 
 
 /**************** CHAR DISPLAY ****************/
-.char-display {
+.symbol-display {
     display: flex;
     justify-content: center;
     align-items: center;
@@ -174,22 +325,23 @@ label[for="scriptSelect"] {
 
     container-type: size;
 
-    font-family: var(--char-font-family);
-    font-weight: var(--char-font-weight);
+    font-family: var(--symbol-font-family);
+    font-weight: var(--symbol-font-weight);
 }
 
-.char-display .char {
-    font-size: calc(var(--char-scale) * min(var(--char-font-size), var(--char-one-cqw)));
-    margin-bottom: var(--char-shift);
+.symbol-display .symbol {
+    font-size: calc(var(--symbol-scale) * min(var(--symbol-font-size), var(--symbol-one-cqw)));
+    margin-bottom: var(--symbol-shift);
     line-height: 0.7em;
     text-align: center;
+    text-wrap: nowrap;
 }
 
-.char-display .char.two-chars {
-    font-size: calc(var(--char-scale) * min(var(--char-font-size), var(--char-two-cqw)));
+.symbol-display .symbol.two-symbols {
+    font-size: calc(var(--symbol-scale) * min(var(--symbol-font-size), var(--symbol-two-cqw)));
 }
 
-#display-entered {
+#guessed-symbol {
     color: var(--text-grey);
 }
 
@@ -208,15 +360,15 @@ label[for="scriptSelect"] {
 }
 
 .eval-field.correct {
-    background: rgb(188, 250, 188);
+    background: var(--bg-light-green);
 }
 
 .eval-field.incorrect {
-    background: rgb(255, 206, 216);
+    background: var(--bg-light-red);
 }
 
-.eval-solution {
-    text-transform: capitalize;
+.eval-field.almost-correct {
+    background: var(--bg-light-yellow);
 }
 
 #eval-headings {
@@ -224,11 +376,24 @@ label[for="scriptSelect"] {
 }
 
 .eval-heading {
-    font-size: .8em;
-    font-weight: bold;
-    margin-bottom: -.25rem;
+    font-size: 1em;
+    font-weight: 600;
+    margin-bottom: -.5rem;
+    transform: translateX(-10%) scale(.8);
 }
 
-.input-container input {
-    width: 100%;
+.game-input {
+    padding: .1rem .3rem;
+    border-style: solid;
+    border-color: var(--border-grey-light);
+    border-width: 2px;
+}
+
+.game-input:focus {
+    outline: none;
+    border-color: var(--border-blue-light);
+}
+
+.game-input::placeholder {
+    color: var(--text-grey);
 }
