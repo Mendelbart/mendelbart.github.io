@@ -282,6 +282,9 @@ class Game {
 function _grade_string(guess, sol, maxDist) {
     const dist = levDist(sol.toLowerCase(), guess.toLowerCase());
     if (dist <= maxDist) {
+        if (maxDist == 0) {
+            return [1, true];
+        }
         return [Math.pow(2, -dist / maxDist), true];
     }
 
