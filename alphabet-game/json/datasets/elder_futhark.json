@@ -1,5 +1,5 @@
 {
-    "gameName": "ᚠᚢᚦᚨᚱᚲᛚᚨᛁᚲᚨᛉ",
+    "gameName": ["ᚠᚢᚦᚨᚱᚲᛚᚨᛁᚲᚨᛉ", "fuþarklaikaʀ"],
     "gameNameFont": "noto-runic",
     "gameNameScale": 1.1,
     "name": "Elder Futhark",
@@ -11,7 +11,7 @@
     },
     "matchEnteredSymbols": {
         "matchTo": "name",
-        "fromGroups": ["normalized"]
+        "fromGroups": ["normalized", "variations"]
     },
     "properties": {
         "name": {"scoring": "string", "maxDist": 1, "displayname": "Name", "listScoringMode": "best"},

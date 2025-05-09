@@ -14,9 +14,7 @@
     --symbol-font-weight: 400;
     --symbol-font-family: "Noto Serif", serif;
     --symbol-font-size: 7.5rem;
-    --symbol-one-cqw: 120cqw;
-    --symbol-two-cqw: 70cqw;
-    --symbol-scale: 1;
+    --symbol-font-scale: 1;
     --symbol-shift: 0;
     --game-name-scale: 1;
 
@@ -120,7 +118,7 @@
 }
 
 .heading-with-button .symbol-button {
-    font-size: 2.8rem;
+    font-size: 2.6rem;
     line-height: 0;
     width: 2.2rem;
     display: flex;
@@ -322,6 +320,7 @@ h4 {
     align-items: center;
     background: var(--bg-grey-light);
     height: 10rem;
+    padding: 0 1rem;
 
     container-type: size;
 
@@ -330,19 +329,24 @@ h4 {
 }
 
 .symbol-display .symbol {
-    font-size: calc(var(--symbol-scale) * min(var(--symbol-font-size), var(--symbol-one-cqw)));
-    margin-bottom: var(--symbol-shift);
-    line-height: 0.7em;
+    --symbol-scale: 1;
+    font-size: calc(var(--symbol-font-scale) * var(--symbol-font-size));
+    transform: scale(var(--symbol-scale)) translateY(var(--symbol-shift));
+    line-height: 1em;
     text-align: center;
     text-wrap: nowrap;
 }
 
-.symbol-display .symbol.two-symbols {
-    font-size: calc(var(--symbol-scale) * min(var(--symbol-font-size), var(--symbol-two-cqw)));
-}
-
 #guessed-symbol {
     color: var(--text-grey);
+}
+
+#guessed-symbol, #previous-symbol {
+    --symbol-font-size: 6.5rem;
+}
+
+#current-symbol {
+    --symbol-font-size: 7.5rem;
 }
 
 

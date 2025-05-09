@@ -72,7 +72,7 @@
                 "phi": {"string": "φ", "name": "Phi"},
                 "chi": {"string": "χ", "name": "Chi"},
                 "psi": {"string": "ψ", "name": "Psi"},
-                "omega": {"string": "Ω", "name": "Omega"}
+                "omega": {"string": "ω", "name": "Omega"}
             }
         }
     }

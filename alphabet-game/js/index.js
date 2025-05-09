@@ -13,7 +13,6 @@ const html_templates = {
                <span class="eval-field eval-entered"></span>
                <span class="eval-field eval-solution"></span>`
 }
-const fonts = {};
 
 async function get_dataset(key) {
     if (key in _datasets_cache) {
@@ -56,10 +55,6 @@ const groupsButtons = document.getElementById("groupsButtons");
     } 
     fontWeightRange.addEventListener("input", update_font_weight);
     update_font_weight();
-
-    window.addEventListener("popstate", () => {
-        location.reload();
-    })
 })();
 
 
@@ -81,27 +76,38 @@ const groupsButtons = document.getElementById("groupsButtons");
     });
 
     document.getElementById("pause-game-button").addEventListener("click", () => {
-        show_dialogue_or_game("dialogue");
+        toggle_dialogue(true);
     });
     document.getElementById("stop-game-button").addEventListener("click", () => {
-        const url = new URL(window.location);
-        url.searchParams.set("play", false);
-        window.location.href = url.toString();
+        hide(document.getElementById("last-game-score"));
+        toggle_dialogue(true);
     });
     document.getElementById("resume-game-button").addEventListener("click", () => {
-        show_dialogue_or_game("game");
+        toggle_dialogue(false);
         game.focus();
     });
     document.querySelectorAll(".current-score").forEach(elem => {
         elem.addEventListener("click", () => {
-            game.scoreStringMode = game.scoreStringMode == "percent" ? "ratio" : "percent";
+            game.settings.scoreStringMode = game.settings.scoreStringMode == "percent" ? "ratio" : "percent";
             game.display_score();
         });
+    });
+    window.addEventListener("popstate", () => {
+        read_url_settings();
     });
 
     const allfonts = await fetch("./json/fonts.json").then(response => response.json());
 
-    if (url_settings_exist()) {
+    read_url_settings();
+
+    function read_url_settings() {
+        if (!url_settings_exist()) {
+            select_dataset(datasetSelect.value);
+            hide(document.getElementById("last-game-score"));
+            toggle_dialogue(true);
+            return;
+        }
+        
         const [datasetKey, groupKeys, propertyKeys, settings, play] = parse_settings_from_url();
         datasetSelect.value = datasetKey;
         select_dataset(datasetKey);
@@ -120,11 +126,9 @@ const groupsButtons = document.getElementById("groupsButtons");
         if (play) {
             new_game(datasetKey, groupKeys, propertyKeys, settings);
         } else {
-            show_dialogue_or_game("dialogue");
+            hide(document.getElementById("last-game-score"));
+            toggle_dialogue(true);
         }
-    } else {
-        select_dataset(datasetSelect.value);
-        show_dialogue_or_game("dialogue");
     }
 
     async function new_game(datasetKey, groupKeys, propertyKeys, settings) {
@@ -142,11 +146,11 @@ const groupsButtons = document.getElementById("groupsButtons");
 
         setup_font_buttons(dataset.fonts, allfonts);
 
-        show_dialogue_or_game("game");
+        toggle_dialogue(false, false);
         game.new_round();
 
         show(document.getElementById("last-game-score"));
-        document.querySelector("#score-display .score-label").innerText = "Current Score:";
+        // document.querySelector("#score-display .score-label").innerText = "Current Score:";
         show(document.getElementById("resume-game-button"));
 
         write_settings_to_url(datasetKey, groupKeys, propertyKeys, settings);
@@ -226,8 +230,12 @@ function write_settings_to_url(datasetKey, groupKeys, propertyKeys, settings, pl
     }
     url.searchParams.set("play", play);
 
-    history.pushState({}, "", url);
+    update_url(url);
 }
+
+function update_url(url) {
+    history.pushState({}, "", url);
+};
 
 function parse_settings_from_url() {
     const params = new URLSearchParams(window.location.search);
@@ -254,6 +262,8 @@ function match_type(str, matched) {
         return str === "true" || str === "1";
     } else if (typeof matched === "number") {
         return Number(str);
+    } else if (typeof matched === "string") {
+        return String(str);
     }
 
     return str;
@@ -261,10 +271,25 @@ function match_type(str, matched) {
 
 
 
-function show_dialogue_or_game(show) {
-    show_game = show === "game";
-    classIfElse(show_game, document.getElementById("game-dialogue"), "hidden");
-    classIfElse(!show_game, document.getElementById("game-container"), "hidden");
+function toggle_dialogue(show_dialogue, update_url_play = true) {
+    const dialogue = document.getElementById("game-dialogue");
+    const gameContainer = document.getElementById("game-container");
+    if (show_dialogue) {
+        hide(gameContainer);
+        show(dialogue);
+    } else {
+        hide(dialogue);
+        show(gameContainer);
+    }
+
+    if (update_url_play) {
+        const play = !show_dialogue;
+        const url = new URL(location);
+        if (!url.searchParams.has("play") || play !== match_type(url.searchParams.get("play"), play)) {
+            url.searchParams.set("play", play);
+            update_url(url);
+        }
+    }
 }
 
 function get_game_settings() {
@@ -302,9 +327,9 @@ function create_game_instance(dataset, groupKeys, propertyKeys, settings) {
     }
 
     const onFinish = () => {
-        show_dialogue_or_game("dialogue");
+        toggle_dialogue(true);
         hide(document.getElementById("resume-game-button"));
-        document.querySelector("#score-display .score-label").innerText = "Final Score:";
+        // document.querySelector("#score-display .score-label").innerText = "Final Score:";
     };
 
     return game = new Game(inputs, symbols, gameProperties, guessedDisplaySymbols, onFinish, settings);
@@ -429,7 +454,7 @@ function select_options_html(data, selected = null, disabled = null) {
 function update_font(font) {
     set_global_css_var("--symbol-font-family", font.family);
     set_global_css_var("--symbol-shift", font.shift ? font.shift + "em" : 0);
-    set_global_css_var("--symbol-scale", font.scale ? font.scale : 1);
+    set_global_css_var("--symbol-font-scale", font.scale ? font.scale : 1);
 }
 
 function button_group_inner_html(data, type, btnclass, idprefix, checked = null, disabled = null) {
@@ -523,62 +548,6 @@ function setup_font_buttons(fonts, allfonts, checked = null) {
     });
 }
 
-function update_url_key(key) {
-    set_url_param(key, get_value(URL_VARS[key].id));
-}
-
-function set_value(id, value) {
-    const elem = document.getElementById(id);
-    if (elem.classList.contains("buttons")) {
-        return set_buttons_value(elem, value);
-    } else {
-        return elem.value = value;
-    }
-}
-
-function get_value(id) {
-    const elem = document.getElementById(id);
-    if (elem.classList.contains("buttons")) {
-        return get_buttons_value(elem);
-    } else {
-        return elem.value;
-    }
-}
-
-function set_buttons_value(container, value) {
-    const values = value.split(",");
-    container.querySelectorAll("input").forEach(elem => {
-        elem.checked = values.includes(elem.value);
-    });
-}
-
-function get_buttons_value(container) {
-    let value = "";
-    container.querySelectorAll("input").forEach(elem => {
-        if (elem.checked) {
-            if (value.length > 0) {
-                value += ","
-            }
-            value += elem.value;
-        }
-    });
-    return value;
-}
-
-function set_url_param(key, value) {
-    const url = new URL(location);
-    url.searchParams.set(key, value);
-    history.pushState({}, "", url);
-}
-
-function get_url_param(key) {
-    const params = new URLSearchParams(location.search);
-    if (params.has(key)) {
-        return params.get(key);
-    }
-    return null;
-}
-
 // --------------- DOM FUNCTIONS ---------------
 function html_from_template(key, data) {
     let html = html_templates[key];
@@ -605,28 +574,34 @@ function set_global_css_var(property, value) {
     if (property.substr(0, 2) != "--") {
         property = "--" + property;
     }
-    document.documentElement.style.setProperty(property, value)
+    document.documentElement.style.setProperty(property, value);
+}
+
+function forEachElement(elements, callback) {
+    if (elements instanceof Node) {
+        callback(elements);
+        return;
+    }
+    for (const element of elements) {
+        callback(element);
+    }
 }
 
 function classIfElse(bool, elements, trueclass, falseclass = "") {
     if (!bool) {
-        let temp = trueclass;
+        const temp = trueclass;
         trueclass = falseclass;
         falseclass = temp;
     }
 
-    if (elements instanceof Node) {
-        elements = [elements];
-    }
-
-    for (const elem of Object.values(elements)) {
+    forEachElement(elements, elem => {
         if (falseclass.length > 0) {
             elem.classList.remove(...split_classes(falseclass));
         }
         if (trueclass.length > 0) {
             elem.classList.add(...split_classes(trueclass));
         }
-    }
+    });
 }
 
 function addClass(elements, classes) {
@@ -637,10 +612,15 @@ function removeClass(elements, classes) {
 }
 
 function show(elements) {
+    forEachElement(elements, elem => {
+        elem.style.display = "";
+    });
     removeClass(elements, "hidden");
 }
 function hide(elements) {
-    addClass(elements, "hidden");
+    forEachElement(elements, elem => {
+        elem.style.display = "none";
+    });
 }
 
 function split_classes(classstr) {

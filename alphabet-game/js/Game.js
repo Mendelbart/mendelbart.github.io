@@ -51,7 +51,8 @@ class Game {
     }
 
     static process_settings(settings) {
-        settings = Object.assign(Game.defaultSettings, settings);
+        const defaultSettings = Object.assign({}, Game.defaultSettings);
+        settings = Object.assign(defaultSettings, settings);
         if (settings.maxTries == "infty") {
             settings.maxTries = Infinity;
         } else {
@@ -61,10 +62,11 @@ class Game {
     }
 
     remove_inputs() {
-        for (const input of Object.values(this.inputs)) {
+        for (const [key, input] of Object.entries(this.inputs)) {
             input.nextElementSibling.remove();
             input.nextElementSibling.remove();
             input.remove();
+            delete this.inputs[key];
         }
     }
 
@@ -227,12 +229,24 @@ class Game {
     }
 
     display_symbol(id, symbol) {
-        document
-            .getElementById(id + "-symbol")
-            .getElementsByClassName('symbol')[0].innerHTML = symbol;
+        const container = document.getElementById(id + "-symbol");
+        const symbolElement = container.querySelector('.symbol');
+        symbolElement.innerHTML = symbol;
+        symbolElement.style.setProperty("--symbol-scale", 1);
+        const [symbolWidth, symbolHeight] = element_size(symbolElement);
+        const [containerWidth, containerHeight] = element_size(container);
+
+        const scale = Math.min(containerWidth / symbolWidth, containerHeight / symbolHeight);
+        if (scale < 1) {
+            symbolElement.style.setProperty("--symbol-scale", scale);
+        }
     }
 
     display_guess_matching_symbols() {
+        if (!(this.guessedDisplaySymbols.matchTo in this.inputs)) {
+            return;
+        }
+
         const value = this.inputs[this.guessedDisplaySymbols.matchTo].value.toLowerCase();
         if (value in this.guessedDisplaySymbols.symbols) {
             this.display_symbol("guessed", this.guessedDisplaySymbols.symbols[value]);
@@ -257,7 +271,7 @@ class Game {
             }
             return percent_string(numerator / denominator);
         } else { // scoreStringMode = "ratio"
-            return floor(numerator, 1) + "/" + denominator;
+            return floor(numerator, 1, 2) + "/" + denominator;
         }
     }
 
@@ -280,7 +294,7 @@ class Game {
 
 
 function _grade_string(guess, sol, maxDist) {
-    const dist = levDist(sol.toLowerCase(), guess.toLowerCase());
+    const dist = levDist(normalize_string(sol), normalize_string(guess));
     if (dist <= maxDist) {
         if (maxDist == 0) {
             return [1, true];
@@ -360,8 +374,8 @@ function percent_string(x, digits = 0) {
     return Math.floor(x * Math.pow(10, digits + 2)) / Math.pow(10, digits) + "%"
 }
 
-function floor(x, digits = 0) {
-    const digits_multiplier = Math.pow(10, digits);
+function floor(x, digits = 0, factor = 1) {
+    const digits_multiplier = Math.pow(10, digits) * factor;
     return Math.floor(x * digits_multiplier) / digits_multiplier;
 }
 
@@ -371,4 +385,24 @@ function one_true(arr) {
 
 function all_true(arr) {
     return arr.reduce((bool, elem) => bool && elem, true);
+}
+
+function normalize_string(str) {
+    return str.trim().toLowerCase();
+}
+
+
+
+function element_size(element, with_padding = false) {
+    const computedStyle = getComputedStyle(element);
+
+    let width = element.clientWidth;
+    let height = element.clientHeight;
+
+    if (!with_padding) {
+        width -= parseFloat(computedStyle.paddingLeft) + parseFloat(computedStyle.paddingRight),
+        height -= parseFloat(computedStyle.paddingTop) + parseFloat(computedStyle.paddingBottom)
+    }
+
+    return [width, height];
 }

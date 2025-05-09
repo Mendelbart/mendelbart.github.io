@@ -3,12 +3,12 @@
     <head>
         <title>Alphabet Game</title>
 
-        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0"/>
+        <meta name="viewport" content="width=device-width"/>
 
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
         <link href="https://fonts.googleapis.com/css2?family=Noto+Rashi+Hebrew:wght@100..900&family=Noto+Sans+Hebrew:wght@100..900&family=Noto+Sans+Runic&family=Noto+Sans:ital,wght@0,100..900&family=Noto+Serif+Hebrew:wght@100..900&family=Noto+Serif:ital,wght@0,100..900&family=Ubuntu+Sans:ital,wght@0,100..900&display=swap" rel="stylesheet">
-        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@40,550,1,0&icon_names=pause,play_arrow,stop" />
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@40,550,1,0&icon_names=pause,play_arrow,resume,stop" />
 
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-SgOJa3DmI69IUzQ2PVdRZhwQ+dy64/BUtbMJw1MZ8t5HZApcHrRKUc4W0kG879m7" crossorigin="anonymous">
         <link href="index.css" type="text/css" rel="stylesheet">
@@ -21,20 +21,20 @@
                 <div id="last-game-score" class="hidden">
                     <div id="last-game-heading" class="heading-with-button game-name-heading">
                         <h2><span class="game-name"></span></h2>
-                        <span class="material-symbols-rounded play-button symbol-button" id="resume-game-button">
-                            play_arrow
+                        <span class="material-symbols-outlined play-button symbol-button" id="resume-game-button">
+                            resume
                         </span>
                     </div>
                     <div id="score-display">
-                        <label class="score-label">Current Score:</label>
+                        <label class="score-label">Score:</label>
                         <span class="current-score" id="score-display-value"></span>
                     </div>
                 </div>
 
                 <div id="new-game-settings">
                     <div id="new-game-heading" class="heading-with-button">
-                        <h2>Start New Game</h2>
-                        <span class="material-symbols-rounded play-button symbol-button" id="new-game-button">
+                        <h2>New Game</h2>
+                        <span class="material-symbols-outlined play-button symbol-button" id="new-game-button">
                             play_arrow
                         </span>
                     </div>
@@ -65,7 +65,7 @@
                             <input type="radio" class="btn-check form-input tries-button" name="tries" id="triesButton3" autocomplete="off" value="3" checked>
                             <label class="btn btn-outline-primary" for="triesButton3">Three</label>
                             <input type="radio" class="btn-check form-input tries-button" name="tries" id="triesButton5" autocomplete="off" value="5">
-                            <label class="btn btn-outline-primary" for="triesButton2">Five</label>
+                            <label class="btn btn-outline-primary" for="triesButton5">Five</label>
                             <input type="radio" class="btn-check form-input tries-button" name="tries" id="triesButtonInfty" autocomplete="off" value="infty">
                             <label class="btn btn-outline-primary" for="triesButtonInfty">Infinite</label>
                         </div>
@@ -93,10 +93,10 @@
             <div id="game-container" class="hidden">
                 <div id="game-heading" class="heading-with-button game-name-heading">
                     <h2><span class="game-name"></span></h2>
-                    <span class="material-symbols-rounded stop-button symbol-button" id="stop-game-button">
+                    <span class="material-symbols-outlined stop-button symbol-button" id="stop-game-button">
                         stop
                     </span>
-                    <span class="material-symbols-rounded pause-button symbol-button" id="pause-game-button">
+                    <span class="material-symbols-outlined pause-button symbol-button" id="pause-game-button">
                         pause
                     </span>
                 </div>
