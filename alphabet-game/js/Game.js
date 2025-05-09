@@ -51,8 +51,7 @@ class Game {
     }
 
     static process_settings(settings) {
-        const defaultSettings = Object.assign({}, Game.defaultSettings);
-        settings = Object.assign(defaultSettings, settings);
+        settings = Object.assign({}, Game.defaultSettings, settings);
         if (settings.maxTries == "infty") {
             settings.maxTries = Infinity;
         } else {
@@ -233,8 +232,8 @@ class Game {
         const symbolElement = container.querySelector('.symbol');
         symbolElement.innerHTML = symbol;
         symbolElement.style.setProperty("--symbol-scale", 1);
-        const [symbolWidth, symbolHeight] = element_size(symbolElement);
-        const [containerWidth, containerHeight] = element_size(container);
+        const [symbolWidth, symbolHeight] = element_size(symbolElement, true);
+        const [containerWidth, containerHeight] = element_size(container, false);
 
         const scale = Math.min(containerWidth / symbolWidth, containerHeight / symbolHeight);
         if (scale < 1) {

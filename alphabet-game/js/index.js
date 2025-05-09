@@ -214,6 +214,20 @@ const groupsButtons = document.getElementById("groupsButtons");
     }
 })();
 
+function update_heading_scale() {
+    const heading_elem = document.getElementById("game-heading");
+    const heading_maxwidth = parseFloat(heading_elem.clientWidth);
+    const heading_width = parseFloat(heading_elem.scrollWidth);
+    const heading_h2_width = parseFloat(heading_elem.querySelector("h2").clientWidth);
+
+    let scale = 1 - (heading_width - heading_maxwidth) / heading_h2_width;
+    scale *= 1.2; // for some reason it gets way too small otherwise
+    if (scale > 1) {
+        scale = 1;
+    }
+    set_global_css_var("--heading-scale", scale);
+}
+
 function url_settings_exist() {
     const params = new URLSearchParams(window.location.search);
     return params.has("dataset") && params.has("groups") && params.has("properties");
@@ -280,6 +294,7 @@ function toggle_dialogue(show_dialogue, update_url_play = true) {
     } else {
         hide(dialogue);
         show(gameContainer);
+        update_heading_scale();
     }
 
     if (update_url_play) {
