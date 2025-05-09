@@ -1,9 +1,39 @@
 {
-    "noto-serif-hebrew": {"family": "Noto Serif Hebrew", "scale": 1.15},
-    "noto-sans-hebrew": {"family": "Noto Sans Hebrew", "shift": -0.09, "scale": 1.15},
-    "noto-rashi-hebrew": {"family": "Noto Rashi Hebrew", "scale": 1.15},
-    "noto-serif": {"family": "Noto Serif", "scale": 0.9},
-    "noto-sans": {"family": "Noto Sans", "scale": 0.9},
-    "noto-runic": {"family": "Noto Sans, Noto Sans Runic", "scale": 1.15},
-    "junicode": {"family": "Junicode", "shift": 0.16, "scale": 1.15}
+    "noto-serif-hebrew": {
+        "displayname": "Noto Serif Hebrew",
+        "family": "Noto Serif Hebrew, serif",
+        "scale": 1.15
+    },
+    "noto-sans-hebrew": {
+        "family": "Noto Sans Hebrew, sans-serif",
+        "displayname": "Noto Sans Hebrew",
+        "shift": -0.09,
+        "scale": 1.15
+    },
+    "noto-rashi-hebrew": {
+        "family": "Noto Rashi Hebrew, serif",
+        "displayname": "Noto Rashi Hebrew",
+        "scale": 1.15
+    },
+    "noto-serif": {
+        "family": "Noto Serif, serif",
+        "displayname": "Noto Serif",
+        "scale": 0.9
+    },
+    "noto-sans": {
+        "family": "Noto Sans, sans-serif",
+        "displayname": "Noto Sans Hebrew",
+        "scale": 0.9
+    },
+    "noto-runic": {
+        "family": "Noto Sans, Noto Sans Runic, sans-serif",
+        "displayname": "Noto Sans Runic",
+        "scale": 1.15
+    },
+    "junicode": {
+        "family": "Junicode, serif",
+        "displayname": "Junicode",
+        "shift": 0.16,
+        "scale": 1.15
+    }
 }

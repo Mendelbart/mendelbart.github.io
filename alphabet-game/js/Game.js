@@ -1,5 +1,3 @@
-// --------------- GAME CLASS -----------------
-/** Game class */
 class Game {
     symbols;
     properties;
@@ -7,6 +5,7 @@ class Game {
     settings;
     triesBySymbol;
     scoreBySymbol;
+    clearedAtTries;
     symbolKeys;
     currentSymbolIndex = null;
     previousSymbolIndex = null;
@@ -14,10 +13,14 @@ class Game {
     symbolsHitCount = 0;
     roundsScore = 0;
     rounds = 0;
+    symbolsCount;
+    clearedCount = 0;
+    timeStart;
+    timeInterval;
 
     static defaultSettings = {
         symbolsOrder: "random",     // "random", "shuffled" or "sorted"
-        scoreMode: "rounds",        // "rounds" or "symbols"
+        scoreMode: "symbols",       // "rounds" or "symbols"
         scoreStringMode: "ratio",   // "ratio" or "percent"
         maxTries: "3",              // integer or "infty"
         removeCleared: true
@@ -33,6 +36,8 @@ class Game {
         this.settings = Game.process_settings(settings);
         this.triesBySymbol = objectMap(symbols, () => 0);
         this.scoreBySymbol = objectMap(symbols, () => 0);
+        this.clearedAtTries = objectMap(symbols, () => 0);
+        this.symbolsCount = Object.keys(symbols).length;
 
         this.symbolKeys = Object.keys(symbols);
         if (this.settings.symbolsOrder == "shuffled") {
@@ -46,18 +51,39 @@ class Game {
         this.roundsScore = 0;
         this.rounds = 0;
 
+        this.timeStart = Date.now();
+        this.setupTimeInterval();
+
         this.display_symbols_left()
         this.display_score();
     }
 
     static process_settings(settings) {
+        const scoreModeSet = "scoreMode" in settings;
+
         settings = Object.assign({}, Game.defaultSettings, settings);
         if (settings.maxTries == "infty") {
             settings.maxTries = Infinity;
         } else {
             settings.maxTries = parseInt(settings.maxTries);
         }
+
+        if (!scoreModeSet) {
+            settings.scoreMode = settings.maxTries == Infinity ? "rounds" : "symbols";
+        }
+
         return settings;
+    }
+
+    setupTimeInterval() {
+        this.timeInterval = setInterval((game) => {
+            game.display_current_time();
+        }, 1000, this);
+        this.display_current_time();
+    }
+    
+    clearTimeInterval() {
+        clearInterval(this.timeInterval);
     }
 
     remove_inputs() {
@@ -70,6 +96,7 @@ class Game {
     }
 
     cleanup() {
+        this.clearTimeInterval();
         this.remove_inputs();
         for (const id of ["current", "guessed", "previous"]) {
             this.display_symbol(id, "");
@@ -78,6 +105,7 @@ class Game {
 
     finish() {
         this.cleanup();
+        this.displayStats();
         this.onFinish();
     }
 
@@ -123,7 +151,7 @@ class Game {
 
         this.display_previous_symbols();
 
-        this.update_score(symbol_key, score);
+        this.update_score(symbol_key, score, cleared);
         this.display_score();
 
         const remove_current_symbol =
@@ -132,7 +160,7 @@ class Game {
         this.new_round(remove_current_symbol);
     }
 
-    update_score(symbol_key, score) {
+    update_score(symbol_key, score, cleared) {
         const tries = (this.triesBySymbol[symbol_key] += 1);
         if (tries == 1) {
             this.symbolsHitCount += 1;
@@ -147,6 +175,11 @@ class Game {
 
         this.roundsScore += score;
         this.rounds += 1;
+
+        if (cleared && this.clearedAtTries[symbol_key] == 0) {
+            this.clearedAtTries[symbol_key] = tries;
+            this.clearedCount += 1;
+        }
     }
 
     grade_inputs() {
@@ -254,9 +287,16 @@ class Game {
         }
     }
 
-    score_string() {
+    score_string(scoreMode = null, scoreStringMode = null) {
+        if (!scoreMode) {
+            scoreMode = this.settings.scoreMode;
+        }
+        if (!scoreStringMode) {
+            scoreStringMode = this.settings.scoreStringMode;
+        }
+
         let numerator, denominator;
-        if (this.settings.scoreMode == "rounds") {
+        if (scoreMode == "rounds") {
             numerator = this.roundsScore;
             denominator = this.rounds;
         } else { // scoreMode = "symbols"
@@ -264,7 +304,7 @@ class Game {
             denominator = this.symbolsHitCount;
         }
 
-        if (this.settings.scoreStringMode == "percent") {
+        if (scoreStringMode == "percent") {
             if (denominator == 0) {
                 return percent_string(0);
             }
@@ -289,6 +329,55 @@ class Game {
         this.symbolKeys.splice(index, 1);
         this.display_symbols_left();
     }
+
+    time_string(seconds_digits = 0) {
+        return format_time(Date.now() - this.timeStart, seconds_digits);
+    }
+
+    display_current_time() {
+        const string = this.time_string();
+        document.querySelectorAll(".current-time").forEach(elem => {
+            elem.innerText = string;
+        });
+    }
+
+    pause() {
+        this.timePaused = Date.now();
+        this.clearTimeInterval();
+        this.displayStats();
+    }
+
+    resume() {
+        this.timeStart += Date.now() - this.timePaused;
+        this.setupTimeInterval();
+    }
+
+    seenCount() {
+        return count_where(this.triesBySymbol, x => x > 0);
+    }
+
+    averageTries() {
+        if (this.clearedCount == 0) {
+            return 0;
+        }
+
+        return Object.values(this.clearedAtTries).reduce((acc, val) => acc + val, 0) / this.clearedCount;
+    }
+
+    displayStats() {
+        document.getElementById("stat-score").innerText =
+            this.score_string(this.settings.scoreMode, "ratio") +
+            " (" + this.score_string(this.settings.scoreMode, "percent") + ")";
+        document.getElementById("stat-time").innerText = this.time_string(2);
+        document.getElementById("stat-cleared").innerText = this.clearedCount +  "/" + this.symbolsCount;
+        document.getElementById("stat-seen").innerText = this.seenCount() + "/" + this.symbolsCount;
+        document.getElementById("stat-tries").innerText = floor(this.averageTries(), 2);
+    }
+}
+
+function count_where(arr, callback) {
+    arr = Object.values(arr);
+    return arr.reduce((acc, val) => callback(val) ? acc + 1: acc, 0);
 }
 
 
@@ -377,6 +466,25 @@ function floor(x, digits = 0, factor = 1) {
     const digits_multiplier = Math.pow(10, digits) * factor;
     return Math.floor(x * digits_multiplier) / digits_multiplier;
 }
+
+function ceil(x, ...args) {
+    return -floor(-x, ...args);
+}
+
+function format_time(milliseconds, seconds_digits = 0) {
+    let seconds = Math.floor(milliseconds / 1000);
+    milliseconds -= seconds * 1000;
+    const minutes = Math.floor(seconds / 60);
+    seconds -= minutes * 60;
+
+    let string = String(minutes).padStart(2, 0) + ":" + String(seconds).padStart(2, 0);
+    if (seconds_digits > 0) {
+        string += "." + String(Math.floor(milliseconds * Math.pow(10, seconds_digits - 3))).padStart(seconds_digits, 0);
+    }
+
+    return string;
+}
+
 
 function one_true(arr) {
     return arr.reduce((bool, elem) => bool || elem, false);

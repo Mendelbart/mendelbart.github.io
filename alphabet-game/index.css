@@ -54,6 +54,10 @@
     --bs-btn-hover-border-color: var(--blue);
 }
 
+.btn-group {
+    border-radius: 0;   
+}
+
 .form-check-input:checked {
     background-color: var(--blue);
     border-color: var(--blue);
@@ -109,7 +113,7 @@ h4 {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: .3rem 0 .5rem;
+    padding: .3rem 0;
     gap: .3rem;
     font-size: calc(var(--heading-scale) * 1.7rem);
 }
@@ -118,9 +122,10 @@ h4 {
     flex-grow: 1;
     text-wrap: nowrap;
     font-size: 1em;
+    overflow: hidden;
 }
 
-#last-game-heading, #game-heading {
+#game-stats-heading, #game-heading {
     border-bottom: 1px solid var(--border-grey-light);
 }
 
@@ -171,6 +176,9 @@ h4 {
 .pause-button:active {
     color: var(--button-grey-active);
 }
+#restart-game-button {
+    font-weight: 600;
+}
 
 #score-display {
     display: flex;
@@ -191,16 +199,34 @@ h4 {
     font-weight: 750;
 }
 
-#last-game-score {
+#game-stats-container {
     margin-bottom: 0.3rem;
 }
 
 /**************** HEADER ****************/
 #counters {
-    display: flex;
-    flex-direction: row;
-    justify-content: space-between;
     font-weight: 600;
+    position: relative;
+    height: 1.5em;
+}
+
+#counters .counters:first-child {
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+
+#counters .counter:nth-child(2) {
+    transform: translateX(-50%);
+    position: absolute;
+    left: 50%;
+    top: 0;
+}
+
+#counters .counter:last-child {
+    position: absolute;
+    right: 0;
+    top: 0;
 }
 
 /**************** SETTINGS ****************/
@@ -222,30 +248,58 @@ h4 {
     padding: .3rem .6rem .1rem .6rem;
 }
 
-.setting {
+.settings-grid {
+    display: grid;
+    grid-template-columns: 1fr 3fr;
+    align-items: stretch;
+    justify-content: stretch;
+    gap: 0;
+    margin-top: -1px;
+}
+
+.settings-grid .grid-left-label {
     display: flex;
-    flex-direction: column;
+    justify-content: right;
+    align-items: center;
+    padding-left: .5rem;
+}
+
+.settings-grid .grid-left-label::after {
+    content: ':';
+}
+
+.settings-grid .wide-setting {
+    grid-column: span 2;
+}
+
+.settings-grid > * {
     border-top: 1px solid var(--border-grey-light);
-    padding: .3rem 0;
-    overflow-x: hidden;
+    padding: .2rem .3rem;
 }
 
-.setting.no-border-top {
-    border-top: none;
-}
-
-.setting .btn-group {
+.settings-grid .btn-group {
     overflow-x: scroll;
-    -ms-overflow-style: none;
-    scrollbar-width: none;
+    max-width: 100%;
+    justify-content: left;
+    padding-right: .4rem;
+}
+.settings-grid .form-switch {
+    display: flex;
+    justify-content: right;
+    padding: .4rem .3rem;
+    margin: 0;
+    align-items: center;
 }
 
-.setting .btn {
-    text-wrap: nowrap;
+.settings-grid .form-check-input {
+    margin-top: 0;
 }
 
-.setting .btn-group::-webkit-scrollbar {
-    display: none;
+.settings-grid .form-check-label {
+    line-height: 1.15em;
+    display: flex;
+    justify-content: left;
+    align-items: center;
 }
 
 .invalid-setting {
@@ -256,48 +310,16 @@ h4 {
     box-shadow: none;
 }
 
-.setting .form-check {
-    display: flex;
-    align-items: center;
-    gap: .6em;
-    padding-left: 0;
-}
-
-.form-check label {
-    line-height: 1.25;
-}
-
-.setting .form-check .form-check-input {
-    margin-top: 0;
-    margin-left: 0;
-    width: 2.2rem;
-    margin-left: 3.3rem;
-}
-
-.setting-labeled {
-    display: flex;
-    flex-direction: row;
-    gap: .6rem;
-    align-items: center;
-}
-
-.setting-labeled .btn {
+.settings-grid .btn {
     font-size: 0.9rem;
-    padding: 0.3rem 0.55rem;
+    padding: 0.3rem 0.55rem 0.25rem;
     margin: 0.2rem 0;
     line-height: 1.15em;
     display: flex;
     align-items: center;
-}
-
-#new-game-settings .setting-label {
-    text-align: right;
-    min-width: 5.5rem;
-}
-
-#dataset-setting {
-    padding: 0;
-    margin-top: .3rem;
+    justify-content: center;
+    text-wrap: nowrap;
+    flex-grow: 0;
 }
 
 #datasetSelect {
@@ -334,6 +356,14 @@ h4 {
 }
 .uppercase {
     text-transform: uppercase;
+}
+
+#game-stats {
+    grid-template-columns: 1fr 1fr;
+}
+
+#game-stats .grid-left-label {
+    font-weight: 600;
 }
 
 
@@ -373,12 +403,6 @@ h4 {
 
 
 /**************** EVAL FIELDS ****************/
-.eval-container {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: .25rem;
-}
-
 .eval-field {
     padding: .25rem .35rem;
     background: var(--bg-grey-light);
@@ -405,22 +429,23 @@ h4 {
 .eval-heading {
     font-size: 1em;
     font-weight: 600;
-    margin-bottom: -.5rem;
+    margin-bottom: -.4rem;
     transform: translateX(-10%) scale(.8);
+    color: #333;
 }
 
-.game-input {
+input[type=text] {
     padding: .1rem .3rem;
     border-style: solid;
     border-color: var(--border-grey-light);
     border-width: 2px;
 }
 
-.game-input:focus {
+input[type=text]:focus {
     outline: none;
     border-color: var(--border-blue-light);
 }
 
-.game-input::placeholder {
+input[type=text]::placeholder {
     color: var(--text-grey);
 }

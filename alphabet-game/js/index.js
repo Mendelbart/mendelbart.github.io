@@ -71,20 +71,36 @@ const groupsButtons = document.getElementById("groupsButtons");
     document.getElementById("new-game-button").addEventListener("click", () => {
         const [groupKeys, propertyKeys, settings, valid] = get_game_settings();
         if (valid) {
-            new_game(datasetSelect.value, groupKeys, propertyKeys, settings);
+            new_game(datasetSelect.value, groupKeys, propertyKeys, settings, true);
         }
     });
 
     document.getElementById("pause-game-button").addEventListener("click", () => {
+        game.pause();
         toggle_dialogue(true);
     });
     document.getElementById("stop-game-button").addEventListener("click", () => {
-        hide(document.getElementById("last-game-score"));
+        game.cleanup();
+        hide(document.getElementById("game-stats-container"));
         toggle_dialogue(true);
     });
     document.getElementById("resume-game-button").addEventListener("click", () => {
         toggle_dialogue(false);
+        game.resume();
         game.focus();
+    });
+    document.querySelectorAll("#current-time, #current-time-alt").forEach(elem => {
+        elem.addEventListener("click", () => {
+            toggle_shown(
+                elem.id == "current-time",
+                document.getElementById("current-time-alt"),
+                document.getElementById("current-time")
+            );
+        });
+    });
+    document.getElementById("restart-game-button").addEventListener("click", () => {
+        set_url_play(true);
+        execute_url_settings();
     });
     document.querySelectorAll(".current-score").forEach(elem => {
         elem.addEventListener("click", () => {
@@ -93,22 +109,14 @@ const groupsButtons = document.getElementById("groupsButtons");
         });
     });
     window.addEventListener("popstate", () => {
-        read_url_settings();
+        execute_url_settings();
     });
 
     const allfonts = await fetch("./json/fonts.json").then(response => response.json());
 
-    read_url_settings();
+    execute_url_settings();
 
-    function read_url_settings() {
-        if (!url_settings_exist()) {
-            select_dataset(datasetSelect.value);
-            hide(document.getElementById("last-game-score"));
-            toggle_dialogue(true);
-            return;
-        }
-        
-        const [datasetKey, groupKeys, propertyKeys, settings, play] = parse_settings_from_url();
+    function set_settings(datasetKey, groupKeys, propertyKeys, settings) {
         datasetSelect.value = datasetKey;
         select_dataset(datasetKey);
         set_button_group_values("groupsButtons", groupKeys);
@@ -122,16 +130,28 @@ const groupsButtons = document.getElementById("groupsButtons");
         if ("removeCleared" in settings) {
             document.getElementById("removeClearedSwitch").checked = settings.removeCleared;
         }
+    }
+
+    function execute_url_settings() {
+        if (!url_settings_exist()) {
+            select_dataset(datasetSelect.value);
+            hide(document.getElementById("game-stats-container"));
+            toggle_dialogue(true);
+            return;
+        }
+        
+        const [datasetKey, groupKeys, propertyKeys, settings, play] = parse_settings_from_url();
+        set_settings(datasetKey, groupKeys, propertyKeys, settings);
 
         if (play) {
-            new_game(datasetKey, groupKeys, propertyKeys, settings);
+            new_game(datasetKey, groupKeys, propertyKeys, settings, false);
         } else {
-            hide(document.getElementById("last-game-score"));
+            hide(document.getElementById("game-stats-container"));
             toggle_dialogue(true);
         }
     }
 
-    async function new_game(datasetKey, groupKeys, propertyKeys, settings) {
+    async function new_game(datasetKey, groupKeys, propertyKeys, settings, write_to_url) {
         if (game) {
             game.cleanup();
         }
@@ -139,37 +159,57 @@ const groupsButtons = document.getElementById("groupsButtons");
         const dataset = await get_dataset(datasetKey);
 
         set_dataset_terms(document.getElementById("game-container"), dataset, true);
-        set_dataset_terms(document.getElementById("last-game-score"), dataset, true);
+        set_dataset_terms(document.getElementById("game-stats-container"), dataset, true);
     
         game = create_game_instance(dataset, groupKeys, propertyKeys, settings);
-        game_input_enter_listeners(game);
+        game_input_listeners(game);
 
         setup_font_buttons(dataset.fonts, allfonts);
 
         toggle_dialogue(false, false);
         game.new_round();
 
-        show(document.getElementById("last-game-score"));
+        show(document.getElementById("game-stats-container"));
         // document.querySelector("#score-display .score-label").innerText = "Current Score:";
         show(document.getElementById("resume-game-button"));
+        hide(document.getElementById("restart-game-button"));
 
-        write_settings_to_url(datasetKey, groupKeys, propertyKeys, settings);
+        if (write_to_url) {
+            write_settings_to_url(datasetKey, groupKeys, propertyKeys, settings, true);
+        }
     }
 
-    function game_input_enter_listeners(game) {
+    function game_input_listeners(game) {
         const input_keys = Object.keys(game.inputs);
+        const inputs_length = input_keys.length;
         for (const [i, key] of Object.entries(input_keys)) {
             const input = game.inputs[key];
-            if (i == Object.keys(game.inputs).length - 1) {
+            if (i == input_keys.length - 1) {
+                // Focus on next input on Enter
                 input.addEventListener("keydown", event => {
                     if (event.key == "Enter") {
                         game.submit_round();
                     }
                 });
             } else {
+                // Submit if it's the last input
                 input.addEventListener("keydown", event => {
                     if (event.key == "Enter") {
                         input.nextElementSibling.nextElementSibling.nextElementSibling.focus();
+                    }
+                });
+            }
+
+            // Focus on previous input on Backspace if current was empty.
+            if (i > 0) {
+                input.addEventListener("keydown", event => {
+                    if (event.key == "Backspace") {
+                        input.isEmpty = event.target.value === "";
+                    }
+                });
+                input.addEventListener("keyup", event => {
+                    if (event.key == "Backspace" && input.isEmpty) {
+                        input.previousElementSibling.previousElementSibling.previousElementSibling.focus();
                     }
                 });
             }
@@ -214,17 +254,19 @@ const groupsButtons = document.getElementById("groupsButtons");
     }
 })();
 
-function update_heading_scale() {
-    const heading_elem = document.getElementById("game-heading");
-    const heading_maxwidth = parseFloat(heading_elem.clientWidth);
-    const heading_width = parseFloat(heading_elem.scrollWidth);
-    const heading_h2_width = parseFloat(heading_elem.querySelector("h2").clientWidth);
-
-    let scale = 1 - (heading_width - heading_maxwidth) / heading_h2_width;
-    scale *= 1.2; // for some reason it gets way too small otherwise
-    if (scale > 1) {
-        scale = 1;
+function toggle_shown(showfirst, first, second) {
+    if (showfirst) {
+        hide(second);
+        show(first);
+    } else {
+        hide(first);
+        show(second);
     }
+}
+
+function update_heading_scale() {
+    const h2 = document.querySelector("#game-heading h2");
+    const scale = Math.min(1, h2.clientWidth / h2.scrollWidth);
     set_global_css_var("--heading-scale", scale);
 }
 
@@ -233,7 +275,7 @@ function url_settings_exist() {
     return params.has("dataset") && params.has("groups") && params.has("properties");
 }
 
-function write_settings_to_url(datasetKey, groupKeys, propertyKeys, settings, play = true) {
+function write_settings_to_url(datasetKey, groupKeys, propertyKeys, settings, play) {
     const url = new URL(location);
 
     url.searchParams.set("dataset", datasetKey);
@@ -283,27 +325,23 @@ function match_type(str, matched) {
     return str;
 }
 
-
-
 function toggle_dialogue(show_dialogue, update_url_play = true) {
-    const dialogue = document.getElementById("game-dialogue");
-    const gameContainer = document.getElementById("game-container");
-    if (show_dialogue) {
-        hide(gameContainer);
-        show(dialogue);
-    } else {
-        hide(dialogue);
-        show(gameContainer);
-        update_heading_scale();
-    }
+    toggle_shown(
+        show_dialogue,
+        document.getElementById("game-dialogue"),
+        document.getElementById("game-container")
+    );
 
     if (update_url_play) {
-        const play = !show_dialogue;
-        const url = new URL(location);
-        if (!url.searchParams.has("play") || play !== match_type(url.searchParams.get("play"), play)) {
-            url.searchParams.set("play", play);
-            update_url(url);
-        }
+        set_url_play(!show_dialogue);
+    }
+}
+
+function set_url_play(play) {
+    const url = new URL(location);
+    if (!url.searchParams.has("play") || play !== match_type(url.searchParams.get("play"), play)) {
+        url.searchParams.set("play", play);
+        update_url(url);
     }
 }
 
@@ -344,6 +382,7 @@ function create_game_instance(dataset, groupKeys, propertyKeys, settings) {
     const onFinish = () => {
         toggle_dialogue(true);
         hide(document.getElementById("resume-game-button"));
+        show(document.getElementById("restart-game-button"));
         // document.querySelector("#score-display .score-label").innerText = "Final Score:";
     };
 
@@ -470,6 +509,10 @@ function update_font(font) {
     set_global_css_var("--symbol-font-family", font.family);
     set_global_css_var("--symbol-shift", font.shift ? font.shift + "em" : 0);
     set_global_css_var("--symbol-font-scale", font.scale ? font.scale : 1);
+    document.getElementById("fontWeightRange").value = font.weight ? font.weight : 400;
+    document.getElementById("fontWeightRange").dispatchEvent(new Event('input', {
+        bubbles: true,
+    }));
 }
 
 function button_group_inner_html(data, type, btnclass, idprefix, checked = null, disabled = null) {
@@ -547,18 +590,26 @@ function setup_properties_buttons(dataset, checked = null, disabled = null) {
 
 function setup_font_buttons(fonts, allfonts, checked = null) {
     if (!checked) {
-        checked = Object.keys(fonts)[0];
+        checked = fonts[0].key;
     }
+
+    fonts_dict = {};
+    for (const font of fonts) {
+        fonts_dict[font.key] = Object.assign({}, allfonts[font.key], font);
+    }
+
+    fontNames = objectMap(fonts_dict, font => font.displayname);
+
     document.getElementById("fontButtons").innerHTML = button_group_inner_html(
-        fonts, "radio", "font-button", "fontButton", checked, false
+        fontNames, "radio", "font-button", "fontButton", checked, false
     );
 
     document.querySelectorAll("#fontButtons .font-button").forEach(elem => {
         elem.addEventListener("change", (e) => {
-            update_font(allfonts[e.target.value]);
+            update_font(fonts_dict[e.target.value]);
         });
         if (elem.checked) {
-            update_font(allfonts[elem.value]);
+            update_font(fonts_dict[elem.value]);
         }
     });
 }

@@ -3,11 +3,11 @@
     "name": "Greek",
     "symbolTerm": "letter",
     "symbolTermPlural": "letters",
-    "fonts": {
-        "noto-serif": "Noto Serif",
-        "noto-sans": "Noto Sans",
-        "junicode": "Junicode"
-    },
+    "fonts": [
+        {"key": "noto-serif"},
+        {"key": "noto-sans"},
+        {"key": "junicode"}
+    ],
     "properties": {
         "name": {"scoring": "string", "maxDist": 1, "displayname": "Name", "listScoringMode": "best"}
     },

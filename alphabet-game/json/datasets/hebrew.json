@@ -5,11 +5,11 @@
     "symbolTerm": "letter",
     "symbolTermPlural": "letters",
     "rtl": true,
-    "fonts": {
-        "noto-serif-hebrew": "Serif",
-        "noto-sans-hebrew": "Sans",
-        "noto-rashi-hebrew": "Rashi"
-    },
+    "fonts": [
+        {"key" : "noto-serif-hebrew", "displayname": "Serif"},
+        {"key" : "noto-sans-hebrew", "displayname": "Sans"},
+        {"key" : "noto-rashi-hebrew", "displayname": "Rashi"}
+    ],
     "matchEnteredSymbols": {
         "matchTo": "name",
         "fromGroups": ["normal", "sofit"]
