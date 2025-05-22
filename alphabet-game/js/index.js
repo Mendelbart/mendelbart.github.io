@@ -72,7 +72,7 @@ const groupsButtons = document.getElementById("groupsButtons");
     document.getElementById("new-game-button").addEventListener("click", () => {
         const [groupKeys, propertyKeys, settings, seed, valid] = get_game_settings();
         if (valid) {
-            new_game(datasetSelect.value, groupKeys, propertyKeys, settings, seed, true);
+            new_game(datasetSelect.value, groupKeys, propertyKeys, settings, seed);
         }
     });
 
@@ -99,60 +99,20 @@ const groupsButtons = document.getElementById("groupsButtons");
             );
         });
     });
-    document.getElementById("restart-game-button").addEventListener("click", () => {
-        set_url_play(true);
-        execute_url_settings();
-    });
     document.querySelectorAll(".current-score").forEach(elem => {
         elem.addEventListener("click", () => {
             game.settings.scoreStringMode = game.settings.scoreStringMode == "percent" ? "ratio" : "percent";
             game.display_score();
         });
     });
-    window.addEventListener("popstate", () => {
-        execute_url_settings();
-    });
 
     const allfonts = await fetch("./json/fonts.json").then(response => response.json());
 
-    execute_url_settings();
+    select_dataset(datasetSelect.value);
+    hide(document.getElementById("game-stats-container"));
+    toggle_dialogue(true);
 
-    function set_settings(datasetKey, groupKeys, propertyKeys, settings) {
-        datasetSelect.value = datasetKey;
-        select_dataset(datasetKey);
-        set_button_group_values("groupsButtons", groupKeys);
-        set_button_group_values("propertiesButtons", propertyKeys);
-        if ("symbolsOrder" in settings) {
-            set_button_group_values("orderButtons", settings.symbolsOrder);
-        }
-        if ("maxTries" in settings) {
-            set_button_group_values("triesButtons", settings.maxTries);
-        }
-        if ("removeCleared" in settings) {
-            document.getElementById("removeClearedSwitch").checked = settings.removeCleared;
-        }
-    }
-
-    function execute_url_settings() {
-        if (!url_settings_exist()) {
-            select_dataset(datasetSelect.value);
-            hide(document.getElementById("game-stats-container"));
-            toggle_dialogue(true);
-            return;
-        }
-        
-        const [datasetKey, groupKeys, propertyKeys, settings, play] = parse_settings_from_url();
-        set_settings(datasetKey, groupKeys, propertyKeys, settings);
-
-        if (play) {
-            new_game(datasetKey, groupKeys, propertyKeys, settings, null, false);
-        } else {
-            hide(document.getElementById("game-stats-container"));
-            toggle_dialogue(true);
-        }
-    }
-
-    async function new_game(datasetKey, groupKeys, propertyKeys, settings, seed, write_to_url) {
+    async function new_game(datasetKey, groupKeys, propertyKeys, settings, seed) {
         if (game) {
             game.cleanup();
         }
@@ -173,11 +133,6 @@ const groupsButtons = document.getElementById("groupsButtons");
         show(document.getElementById("game-stats-container"));
         // document.querySelector("#score-display .score-label").innerText = "Current Score:";
         show(document.getElementById("resume-game-button"));
-        hide(document.getElementById("restart-game-button"));
-
-        if (write_to_url) {
-            write_settings_to_url(datasetKey, groupKeys, propertyKeys, settings, true);
-        }
     }
 
     function game_input_listeners(game) {
@@ -271,79 +226,12 @@ function update_heading_scale() {
     set_global_css_var("--heading-scale", scale);
 }
 
-function url_settings_exist() {
-    const params = new URLSearchParams(window.location.search);
-    return params.has("dataset") && params.has("groups") && params.has("properties");
-}
-
-function write_settings_to_url(datasetKey, groupKeys, propertyKeys, settings, play) {
-    const url = new URL(location);
-
-    url.searchParams.set("dataset", datasetKey);
-    url.searchParams.set("groups", groupKeys);
-    url.searchParams.set("properties", propertyKeys);
-    for (const [key, value] of Object.entries(settings)) {
-        url.searchParams.set(key, value);
-    }
-    url.searchParams.set("play", play);
-
-    update_url(url);
-}
-
-function update_url(url) {
-    history.pushState({}, "", url);
-};
-
-function parse_settings_from_url() {
-    const params = new URLSearchParams(window.location.search);
-
-    const datasetKey =  params.get("dataset"); 
-    const groupKeys = params.get("groups").split(",");
-    const propertyKeys = params.get("properties").split(",");
-
-    const settings = {};
-    for (const [key, default_value] of Object.entries(Game.defaultSettings)) {
-        if (params.has(key)) {
-            settings[key] = match_type(params.get(key), default_value);
-        }
-    }
-    const play = match_type(params.get("play"), true);
-
-    return [datasetKey, groupKeys, propertyKeys, settings, play];
-}
-
-function match_type(str, matched) {
-    if (Array.isArray(matched)) {
-        return str.split(",");
-    } else if (typeof matched === "boolean") {
-        return str === "true" || str === "1";
-    } else if (typeof matched === "number") {
-        return Number(str);
-    } else if (typeof matched === "string") {
-        return String(str);
-    }
-
-    return str;
-}
-
-function toggle_dialogue(show_dialogue, update_url_play = true) {
+function toggle_dialogue(show_dialogue) {
     toggle_shown(
         show_dialogue,
         document.getElementById("game-dialogue"),
         document.getElementById("game-container")
     );
-
-    if (update_url_play) {
-        set_url_play(!show_dialogue);
-    }
-}
-
-function set_url_play(play) {
-    const url = new URL(location);
-    if (!url.searchParams.has("play") || play !== match_type(url.searchParams.get("play"), play)) {
-        url.searchParams.set("play", play);
-        update_url(url);
-    }
 }
 
 function get_game_settings() {
@@ -381,7 +269,6 @@ function create_game_instance(dataset, groupKeys, propertyKeys, settings, seed =
     const onFinish = () => {
         toggle_dialogue(true);
         hide(document.getElementById("resume-game-button"));
-        show(document.getElementById("restart-game-button"));
         // document.querySelector("#score-display .score-label").innerText = "Final Score:";
     };
 
