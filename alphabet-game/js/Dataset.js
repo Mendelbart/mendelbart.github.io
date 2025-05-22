@@ -24,7 +24,7 @@ class Dataset {
         this.matchEnteredSymbolsTo = data.matchEnteredSymbolsTo;
 
         if (data.symbols) {
-            this.symbols = this.buildSymbols(data.symbols, data.defaultGroup);
+            this.symbols = this.buildSymbols(data.symbols, data.defaultGroup, !!data.autoGroup);
             this.matchedDisplayStrings = this.buildMatchedDisplayStrings(data.matchPropertyForDisplay || this.propertyKeys[0]);
         }
     }
@@ -46,7 +46,7 @@ class Dataset {
         return strs;
     }
 
-    buildSymbols(symbols, defaultGroup) {
+    buildSymbols(symbols, defaultGroup, autoGroup) {
         const result = {};
         for (const [key, symbol] of Object.entries(symbols)) {
             if ("mult" in symbol) {
@@ -59,6 +59,9 @@ class Dataset {
                 for (const [index, string] of Object.entries(symbol.string)) {
                     const multsymbol = Object.assign({}, symbol);
                     multsymbol.string = string;
+                    if (autoGroup) {
+                        multsymbol.group = this.groupKeys[index];
+                    }
                     result[key + "_" + this.groupKeys[index]] = this.processSymbol(multsymbol);
                 }
             } else {
@@ -116,10 +119,10 @@ class Dataset {
     guessedDisplaySymbols() {
         const symbols = {};
         for (const symbol of Object.values(this.symbols)) {
-            let keys = symbol[this.matchEnteredSymbolsTo].solutions;
+            let keys = symbol[this.matchEnteredSymbolsTo].solutions.flat();
 
             for (const k of keys) {
-                const key = k[0].toLowerCase();
+                const key = k.toLowerCase();
                 if (key in symbols) {
                     symbols[key] += symbol.string;
                 } else {

@@ -17,6 +17,7 @@
         "sofit": "Sofit"
     },
     "defaultGroup": "normal",
+    "autoGroup": true,
     "symbols": {
         "alef": {"string": "א", "name": [["Alef", "Aleph"]]},
         "bet": {"string": "ב", "name": "Bet"},

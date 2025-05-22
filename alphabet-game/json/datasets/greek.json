@@ -8,13 +8,14 @@
         {"key": "junicode"}
     ],
     "properties": {
-        "name": {"type": "string", "maxDist": 1, "displayName": "Name", "listScoringMode": "best"}
+        "name": {"type": "istring", "maxDist": 1, "displayName": "Name", "listScoringMode": "best"}
     },
     "matchEnteredSymbolsTo": "name",
     "groups": {
         "upper": "Uppercase",
         "lower": "Lowercase"
     },
+    "autoGroup": true,
     "symbols": {
         "alpha": {"string": ["Α", "α"], "name": "Alpha"},
         "beta": {"string": ["Β", "β"], "name": "Beta"},
@@ -31,8 +32,8 @@
         "nu": {"string": ["Ν", "ν"], "name": [["Nu", "Nü"]]},
         "xi": {"string": ["Ξ", "ξ"], "name": "Xi"},
         "omicron": {"string": ["Ο", "ο"], "name": [["Omicron", "Omikron"]]},
-        "pi": {"string": "Π", "name": "Pi"},
-        "rho": {"string": "Ρ", "name": "Rho"},
+        "pi": {"string": ["Π", "π"], "name": "Pi"},
+        "rho": {"string": ["Ρ", "ρ"], "name": "Rho"},
         "sigma": {"string": ["Σ", "σ"], "name": "Sigma"},
         "sigma_final": {"string": "ς", "name": "Sigma", "group": "lower"},
         "tau": {"string": ["Τ", "τ"], "name": "Tau"},
