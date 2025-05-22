@@ -1,59 +1,44 @@
 {
-    "gameName": ["משחק אלפבית", "מִשְׂחַק אָלֶפְבֵּית"],
-    "gameNameFont": "noto-sans-hebrew",
+    "gameName": {"string": ["משחק אלפבית", "מִשְׂחַק אָלֶפְבֵּית"], "font": "noto-sans-hebrew"},
     "name": "Hebrew",
-    "symbolTerm": "letter",
-    "symbolTermPlural": "letters",
+    "terms": {"symbol": "letter", "symbols": "letters"},
     "rtl": true,
     "fonts": [
-        {"key" : "noto-serif-hebrew", "displayname": "Serif"},
-        {"key" : "noto-sans-hebrew", "displayname": "Sans"},
-        {"key" : "noto-rashi-hebrew", "displayname": "Rashi"}
+        {"key" : "noto-serif-hebrew", "displayName": "Serif"},
+        {"key" : "noto-sans-hebrew", "displayName": "Sans"},
+        {"key" : "noto-rashi-hebrew", "displayName": "Rashi"}
     ],
-    "matchEnteredSymbols": {
-        "matchTo": "name",
-        "fromGroups": ["normal", "sofit"]
-    },
+    "matchEnteredSymbolsTo": "name",
     "properties": {
-        "name": {"scoring": "string", "maxDist": 1, "displayname": "Name", "listScoringMode": "best"}
+        "name": {"type": "istring", "maxDist": 1, "displayName": "Name"}
     },
     "groups": {
-        "normal": {
-            "displayname": "Normal",
-            "symbols": {
-                "alef": {"string": "א", "name": ["Alef", "Aleph"]},
-                "bet": {"string": "ב", "name": "Bet"},
-                "gimel": {"string": "ג", "name": "Gimel"},
-                "dalet": {"string": "ד", "name": "Dalet"},
-                "he": {"string": "ה", "name": "He"},
-                "vav": {"string": "ו", "name": "Vav"},
-                "zayin": {"string": "ז", "name": "Zayin"},
-                "chet": {"string": "ח", "name": "Chet"},
-                "tet": {"string": "ט", "name": "Tet"},
-                "yod": {"string": "י", "name": "Yod"},
-                "kaf": {"string": "כ", "name": "Kaf"},
-                "lamed": {"string": "ל", "name": "Lamed"},
-                "mem": {"string": "מ", "name": "Mem"},
-                "nun": {"string": "נ", "name": "Nun"},
-                "samekh": {"string": "ס", "name": "Samekh"},
-                "ayin": {"string": "ע", "name": "Ayin"},
-                "pe": {"string": "פ", "name": "Pe"},
-                "tsadi": {"string": "צ", "name": "Tsadi"},
-                "qof": {"string": "ק", "name": "Qof"},
-                "resh": {"string": "ר", "name": "Resh"},
-                "shin": {"string": "ש", "name": "Shin"},
-                "tav": {"string": "ת", "name": "Tav"}
-            }
-        },
-        "sofit": {
-            "displayname": "Sofit",
-            "symbols": {
-                "kaf": {"string": "ך", "name": "Kaf"},
-                "mem": {"string": "ם", "name": "Mem"},
-                "nun": {"string": "ן", "name": "Nun"},
-                "pe": {"string": "ף", "name": "Pe"},
-                "tsadi": {"string": "ץ", "name": "Tsadi"}
-            }
-        }
+        "normal": "Normal",
+        "sofit": "Sofit"
+    },
+    "defaultGroup": "normal",
+    "symbols": {
+        "alef": {"string": "א", "name": [["Alef", "Aleph"]]},
+        "bet": {"string": "ב", "name": "Bet"},
+        "gimel": {"string": "ג", "name": "Gimel"},
+        "dalet": {"string": "ד", "name": "Dalet"},
+        "he": {"string": "ה", "name": "He"},
+        "vav": {"string": "ו", "name": "Vav"},
+        "zayin": {"string": "ז", "name": "Zayin"},
+        "chet": {"string": "ח", "name": "Chet"},
+        "tet": {"string": "ט", "name": "Tet"},
+        "yod": {"string": "י", "name": "Yod"},
+        "kaf": {"string": ["כ", "ך"], "name": "Kaf"},
+        "lamed": {"string": "ל", "name": "Lamed"},
+        "mem": {"string": ["מ", "ם"], "name": "Mem"},
+        "nun": {"string": ["נ", "ן"], "name": "Nun"},
+        "samekh": {"string": "ס", "name": "Samekh"},
+        "ayin": {"string": "ע", "name": "Ayin"},
+        "pe": {"string": ["פ", "ף"], "name": "Pe"},
+        "tsadi": {"string": ["צ", "ץ"], "name": "Tsadi"},
+        "qof": {"string": "ק", "name": "Qof"},
+        "resh": {"string": "ר", "name": "Resh"},
+        "shin": {"string": "ש", "name": "Shin"},
+        "tav": {"string": "ת", "name": "Tav"}
     }
 }

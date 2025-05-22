@@ -35,14 +35,17 @@
                         <label for="stat-time" class="grid-left-label">Time</label>
                         <div id="stat-time"></div>
 
-                        <label for="stat-cleared" class="grid-left-label"><span>Cleared <span class="symbol-term-plural capitalize"></span></span></label>
-                        <div id="stat-cleared"></div>
+                        <label for="stat-rounds" class="grid-left-label hidden">Rounds</label>
+                        <div id="stat-rounds" class="hidden"></div>
 
-                        <label for="stat-seen" class="grid-left-label"><span>Seen <span class="symbol-term-plural capitalize"></span></span></label>
-                        <div id="stat-seen"></div>
+                        <label for="stat-cleared" class="grid-left-label hidden"><span>Cleared <span class="symbol-term-plural capitalize"></span></span></label>
+                        <div id="stat-cleared" class="hidden"></div>
 
-                        <label for="stat-tries" class="grid-left-label">Avg Tries To Clear</label>
-                        <div id="stat-tries"></div>
+                        <label for="stat-seen" class="grid-left-label hidden"><span>Seen <span class="symbol-term-plural capitalize"></span></span></label>
+                        <div id="stat-seen" class="hidden"></div>
+
+                        <label for="stat-tries" class="grid-left-label hidden">Avg Tries To Clear</label>
+                        <div id="stat-tries" class="hidden"></div>
                     </div>
                 </div>
 
@@ -97,6 +100,11 @@
                             <input class="form-check-input" type="checkbox" role="switch" id="removeClearedSwitch" checked>
                         </div>
                         <label class="form-check-label" for="removeClearedSwitch"><span>Remove correctly guessed <span class="symbol-term-plural"></span></span></label>
+
+                        <label class="grid-left-label" for="seedInput">Seed</label>
+                        <div class="grid-input-container">
+                            <input type="text" id="seedInput">
+                        </div>
                     </div>
                 </div>
             </div>
@@ -159,6 +167,7 @@
         </div>
 
         <script type="text/javascript" src="js/levenshtein.js"></script>
+        <script type="text/javascript" src="js/Dataset.js"></script>
         <script type="text/javascript" src="js/Game.js"></script>
         <script type="text/javascript" src="js/index.js"></script>
     </body>

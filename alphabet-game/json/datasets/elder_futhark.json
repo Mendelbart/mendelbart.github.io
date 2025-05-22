@@ -1,58 +1,51 @@
 {
-    "gameName": ["ᚠᚢᚦᚨᚱᚲᛚᚨᛁᚲᚨᛉ", "fuþarklaikaʀ"],
-    "gameNameFont": "noto-runic",
-    "gameNameScale": 1.1,
+    "gameName": {"string": ["ᚠᚢᚦᚨᚱᚲᛚᚨᛁᚲᚨᛉ", "fuþarklaikaʀ"], "font": "noto-runic", "scale": 1.1},
     "name": "Elder Futhark",
-    "symbolTerm": "rune",
-    "symbolTermPlural": "runes",
+    "terms": {"symbol": "rune", "symbols": "runes"},
     "fonts": [
         {"key": "junicode"},
-        {"key": "noto-runic", "displayname": "Noto"}
+        {"key": "noto-runic", "displayName": "Noto"}
     ],
-    "matchEnteredSymbols": {
-        "matchTo": "name",
-        "fromGroups": ["normalized", "variations"]
-    },
-    "properties": {
-        "name": {"scoring": "string", "maxDist": 1, "displayname": "Name", "listScoringMode": "best"},
-        "pronunciation": {"scoring": "string", "maxDist": 0, "displayname": "Pronunciation", "listScoringMode": "best"}
-    },
     "groups": {
-        "normalized": {
-            "displayname": "Normalized",
-            "symbols": {
-                "fehu": {"string": "ᚠ", "name": "Fehu", "pronunciation": "f"},
-                "uruz": {"string": "ᚢ", "name": ["Uruz", "Ur"], "pronunciation": "u"},
-                "thurisaz": {"string": "ᚦ", "name": "Thurisaz", "pronunciation": ["þ", "th", "θ", "ð"]},
-                "ansuz": {"string": "ᚨ", "name": "Ansuz", "pronunciation": "a"},
-                "raido": {"string": "ᚱ", "name": "Raido", "pronunciation": "r"},
-                "kaunan": {"string": "ᚲ", "name": "Kaunan", "pronunciation": "k"},
-                "gebo": {"string": "ᚷ", "name": "Gebo", "pronunciation": "g"},
-                "wunjo": {"string": "ᚹ", "name": "Wunjo", "pronunciation": "w"},
-                "hagalaz": {"string": "ᚺ", "name": "Hagalaz", "pronunciation": "h"},
-                "naudiz": {"string": "ᚾ", "name": ["Naudiz", "Nauthiz"], "pronunciation": "n"},
-                "isaz": {"string": "ᛁ", "name": "Isaz", "pronunciation": "i"},
-                "jera": {"string": "ᛃ", "name": ["Jera", "Jeran", "Jeraz", "Yera"], "pronunciation": "j"},
-                "eihaz": {"string": "ᛇ", "name": ["Eihaz", "Eiwaz"], "pronunciation": ["ï", "æ", "ä"]},
-                "pertho": {"string": "ᛈ", "name": ["Pertho", "Peorth"], "pronunciation": "p"},
-                "algiz": {"string": "ᛉ", "name": "Algiz", "pronunciation": "z"},
-                "sowilo": {"string": "ᛊ", "name": "Sowilo", "pronunciation": "s"},
-                "tiwaz": {"string": "ᛏ", "name": ["Tiwaz", "Teiwaz", "Tiewaz"], "pronunciation": "t"},
-                "berkanan": {"string": "ᛒ", "name": "Berkanan", "pronunciation": "b"},
-                "ehwaz": {"string": "ᛖ", "name": "Ehwaz", "pronunciation": "e"},
-                "mannaz": {"string": "ᛗ", "name": "Mannaz", "pronunciation": "m"},
-                "laguz": {"string": "ᛚ", "name": ["Laguz", "Laukaz"], "pronunciation": "l"},
-                "ingwaz": {"string": "ᛜ", "name": "Ingwaz", "pronunciation": ["ŋ", "ng"]},
-                "dagaz": {"string": "ᛞ", "name": "Dagaz", "pronunciation": "d"},
-                "othala": {"string": "ᛟ", "name": "Othala", "pronunciation": "o"}
-            }
-        },
-        "variations": {
-            "displayname": "Variations",
-            "symbols": {
-                "hagalaz": {"string": "ᚻ", "name": "Hagalaz", "pronunciation": "h"},
-                "ingwaz": {"string": "ᛝ", "name": "Ingwaz", "pronunciation": ["ŋ", "ng"]}
-            }
-        }
+        "normalized": "Normalized",
+        "variations": "Variations"
+    },
+    "defaultGroup": "normalized",
+    "properties": {
+        "name": {"type": "istring", "maxDist": 1, "displayName": "Name", "listScoringMode": "best"},
+        "pronunciation": {"type": "string", "maxDist": 0, "displayName": "Pronunciation", "listScoringMode": "best"}
+    },
+    "matchEnteredSymbolsTo": "name",
+    "symbols": {
+        "fehu": {"string": "ᚠ", "name": "Fehu", "pronunciation": "f"},
+        "uruz": {"string": "ᚢ", "name": [["Uruz", "Ur"]], "pronunciation": "u"},
+        "thurisaz": {"string": "ᚦ", "name": "Thurisaz", "pronunciation": {"display": "þ (/θ/ or /ð/)", "solutions": [["th", "ð", "θ", "þ"]]}},
+        "ansuz": {"string": "ᚨ", "name": "Ansuz", "pronunciation": "a"},
+        "raido": {"string": "ᚱ", "name": "Raido", "pronunciation": "r"},
+        "kaunan": {"string": "ᚲ", "name": "Kaunan", "pronunciation": "k"},
+        "gebo": {"string": "ᚷ", "name": "Gebo", "pronunciation": "g"},
+        "wunjo": {"string": "ᚹ", "name": "Wunjo", "pronunciation": "w"},
+        "hagalaz": {"name": "Hagalaz", "pronunciation": "h", "mult": [
+            {"string": "ᚺ"},
+            {"string": "ᚻ", "group": "variations"}
+        ]},
+        "naudiz": {"string": "ᚾ", "name": [["Naudiz", "Nauthiz"]], "pronunciation": "n"},
+        "isaz": {"string": "ᛁ", "name": "Isaz", "pronunciation": "i"},
+        "jera": {"string": "ᛃ", "name": [["Jera", "Jeran", "Jeraz", "Yera"]], "pronunciation": "j"},
+        "eihaz": {"string": "ᛇ", "name": [["Eihaz", "Eiwaz"]], "pronunciation": {"display": "ï or æ", "solutions": [["ï", "ä", "æ"]]}},
+        "pertho": {"string": "ᛈ", "name": [["Pertho", "Peorth"]], "pronunciation": "p"},
+        "algiz": {"string": "ᛉ", "name": "Algiz", "pronunciation": {"display": "z or ʀ", "solutions": [["z", "ʀ", "R"]]}},
+        "sowilo": {"string": "ᛊ", "name": "Sowilo", "pronunciation": "s"},
+        "tiwaz": {"string": "ᛏ", "name": [["Tiwaz", "Teiwaz", "Tiewaz"]], "pronunciation": "t"},
+        "berkanan": {"string": "ᛒ", "name": "Berkanan", "pronunciation": "b"},
+        "ehwaz": {"string": "ᛖ", "name": "Ehwaz", "pronunciation": "e"},
+        "mannaz": {"string": "ᛗ", "name": "Mannaz", "pronunciation": "m"},
+        "laguz": {"string": "ᛚ", "name": [["Laguz", "Laukaz"]], "pronunciation": "l"},
+        "ingwaz": {"name": "Ingwaz", "pronunciation": {"display": "ŋ (ng)", "solutions": [["ng", "ŋ"]]}, "mult": [
+            {"string": "ᛜ"},
+            {"string": "ᛝ", "group": "variations"}
+        ]},
+        "dagaz": {"string": "ᛞ", "name": "Dagaz", "pronunciation": "d"},
+        "othala": {"string": "ᛟ", "name": "Othala", "pronunciation": "o"}
     }
 }

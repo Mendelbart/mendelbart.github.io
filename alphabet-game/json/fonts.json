@@ -1,38 +1,38 @@
 {
     "noto-serif-hebrew": {
-        "displayname": "Noto Serif Hebrew",
+        "displayName": "Noto Serif Hebrew",
         "family": "Noto Serif Hebrew, serif",
         "scale": 1.15
     },
     "noto-sans-hebrew": {
         "family": "Noto Sans Hebrew, sans-serif",
-        "displayname": "Noto Sans Hebrew",
+        "displayName": "Noto Sans Hebrew",
         "shift": -0.09,
         "scale": 1.15
     },
     "noto-rashi-hebrew": {
         "family": "Noto Rashi Hebrew, serif",
-        "displayname": "Noto Rashi Hebrew",
+        "displayName": "Noto Rashi Hebrew",
         "scale": 1.15
     },
     "noto-serif": {
         "family": "Noto Serif, serif",
-        "displayname": "Noto Serif",
+        "displayName": "Noto Serif",
         "scale": 0.9
     },
     "noto-sans": {
         "family": "Noto Sans, sans-serif",
-        "displayname": "Noto Sans Hebrew",
+        "displayName": "Noto Sans Hebrew",
         "scale": 0.9
     },
     "noto-runic": {
         "family": "Noto Sans, Noto Sans Runic, sans-serif",
-        "displayname": "Noto Sans Runic",
+        "displayName": "Noto Sans Runic",
         "scale": 1.15
     },
     "junicode": {
         "family": "Junicode, serif",
-        "displayname": "Junicode",
+        "displayName": "Junicode",
         "shift": 0.16,
         "scale": 1.15
     }

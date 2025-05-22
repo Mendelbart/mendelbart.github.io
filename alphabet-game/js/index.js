@@ -19,7 +19,8 @@ async function get_dataset(key) {
         return _datasets_cache[key];
     }
 
-    dataset = await fetch(datasets_metadata[key].file).then(response => response.json());
+    let dataset = await fetch(datasets_metadata[key].file).then(response => response.json());
+    dataset = new Dataset(dataset);
     _datasets_cache[key] = dataset;
     return dataset;
 }
@@ -69,9 +70,9 @@ const groupsButtons = document.getElementById("groupsButtons");
         select_dataset(datasetSelect.value);
     });
     document.getElementById("new-game-button").addEventListener("click", () => {
-        const [groupKeys, propertyKeys, settings, valid] = get_game_settings();
+        const [groupKeys, propertyKeys, settings, seed, valid] = get_game_settings();
         if (valid) {
-            new_game(datasetSelect.value, groupKeys, propertyKeys, settings, true);
+            new_game(datasetSelect.value, groupKeys, propertyKeys, settings, seed, true);
         }
     });
 
@@ -144,14 +145,14 @@ const groupsButtons = document.getElementById("groupsButtons");
         set_settings(datasetKey, groupKeys, propertyKeys, settings);
 
         if (play) {
-            new_game(datasetKey, groupKeys, propertyKeys, settings, false);
+            new_game(datasetKey, groupKeys, propertyKeys, settings, null, false);
         } else {
             hide(document.getElementById("game-stats-container"));
             toggle_dialogue(true);
         }
     }
 
-    async function new_game(datasetKey, groupKeys, propertyKeys, settings, write_to_url) {
+    async function new_game(datasetKey, groupKeys, propertyKeys, settings, seed, write_to_url) {
         if (game) {
             game.cleanup();
         }
@@ -161,7 +162,7 @@ const groupsButtons = document.getElementById("groupsButtons");
         set_dataset_terms(document.getElementById("game-container"), dataset, true);
         set_dataset_terms(document.getElementById("game-stats-container"), dataset, true);
     
-        game = create_game_instance(dataset, groupKeys, propertyKeys, settings);
+        game = create_game_instance(dataset, groupKeys, propertyKeys, settings, seed);
         game_input_listeners(game);
 
         setup_font_buttons(dataset.fonts, allfonts);
@@ -229,20 +230,20 @@ const groupsButtons = document.getElementById("groupsButtons");
 
     function set_dataset_terms(container, dataset, setGameName = false) {
         container.querySelectorAll(".symbol-term-plural").forEach(elem => {
-            elem.innerText = dataset.symbolTermPlural;
+            elem.innerText = dataset.terms.symbols;
         });
         container.querySelectorAll(".symbol-term").forEach(elem => {
-            elem.innerText = dataset.symbolTerm;
+            elem.innerText = dataset.terms.symbol;
         });
         if (setGameName) {
             container.querySelectorAll(".game-name").forEach(elem => {
                 let fontFamily = null;
-                if (dataset.gameNameFont) {
-                    fontFamily = allfonts[dataset.gameNameFont].family;
+                if (dataset.gameName.font) {
+                    fontFamily = allfonts[dataset.gameName.font].family;
                 }
-                gameNameScale = dataset.gameNameScale ? dataset.gameNameScale : 1;
+                gameNameScale = dataset.gameName.scale ? dataset.gameName.scale : 1;
                 set_global_css_var("--game-name-scale", gameNameScale);
-                setup_gamename_heading(elem, dataset.gameName, fontFamily);
+                setup_gamename_heading(elem, dataset.gameName.string, fontFamily);
             });
         
             classIfElse(
@@ -367,17 +368,15 @@ function get_game_settings() {
     settings.symbolsOrder = get_button_group_values("orderButtons")[0];
     settings.removeCleared = document.getElementById("removeClearedSwitch").checked;
 
-    return [groupKeys, propertyKeys, settings, valid];
+    const seed = document.getElementById("seedInput").value;
+
+    return [groupKeys, propertyKeys, settings, seed, valid];
 }
 
-function create_game_instance(dataset, groupKeys, propertyKeys, settings) {
-    const inputs = create_game_inputs(dataset.properties, propertyKeys);
-    const gameProperties = cloneObjectKeys(dataset.properties, propertyKeys);
-    const symbols = get_active_symbols(dataset, groupKeys);
-    const guessedDisplaySymbols = {
-        matchTo: dataset.matchEnteredSymbols.matchTo,
-        symbols: guessed_display_symbols(dataset),
-    }
+function create_game_instance(dataset, groupKeys, propertyKeys, settings, seed = null) {
+    const gameProperties = dataset.propertiesFromKeys(propertyKeys);
+    const symbolKeys = dataset.symbolKeysFromGroups(groupKeys);
+    const inputs = create_game_inputs(gameProperties);
 
     const onFinish = () => {
         toggle_dialogue(true);
@@ -386,19 +385,15 @@ function create_game_instance(dataset, groupKeys, propertyKeys, settings) {
         // document.querySelector("#score-display .score-label").innerText = "Final Score:";
     };
 
-    return game = new Game(inputs, symbols, gameProperties, guessedDisplaySymbols, onFinish, settings);
+    return game = new Game(inputs, dataset, symbolKeys, gameProperties, onFinish, settings, seed);
 }
 
-function create_game_inputs(properties, keys = null) {
-    if (!keys) {
-        keys = Object.keys(properties);
-    }
-
+function create_game_inputs(properties) {
     const inputs = {};
     const inputsContainer = document.getElementById("game-inputs");
 
-    for (const key of keys) {
-        const html = html_from_template("inputRow", {placeholder: properties[key].displayname});
+    for (const [key, property] of Object.entries(properties)) {
+        const html = html_from_template("inputRow", {placeholder: property.displayName});
         inputsContainer.insertAdjacentHTML("beforeend", html);
         inputs[key] = nth_child(inputsContainer, -3);
 
@@ -453,38 +448,6 @@ function setup_gamename_heading(element, gameName, fontFamily) {
 }
 
 
-function get_active_symbols(dataset, groupKeys) {
-    const symbols = {};
-    for (const groupkey of groupKeys) {
-        for (const [key, symbol] of Object.entries(dataset.groups[groupkey].symbols)) {
-            symbols[key + "_" + groupkey] = symbol;
-        }
-    }
-    return symbols;
-}
-
-function guessed_display_symbols(dataset) {
-    const symbols = {};
-    for (const groupkey of dataset.matchEnteredSymbols.fromGroups) {
-        for (const symbol of Object.values(dataset.groups[groupkey].symbols)) {
-            let keys = symbol[dataset.matchEnteredSymbols.matchTo];
-            if (!Array.isArray(keys)) {
-                keys = [keys];
-            }
-            for (let key of keys) {
-                key = key.toLowerCase();
-                if (key in symbols) {
-                    symbols[key] += symbol.string;
-                } else {
-                    symbols[key] = symbol.string;
-                }
-            }
-        }
-    }
-    return symbols;
-}
-
-
 // --------------- GAME SETUP FUNCTIONS -----------------
 function select_options_html(data, selected = null, disabled = null) {
     if (!selected) {
@@ -494,10 +457,10 @@ function select_options_html(data, selected = null, disabled = null) {
         disabled = [];
     }
     let html = "";
-    for (const [value, displayname] of Object.entries(data)) {
+    for (const [value, displayName] of Object.entries(data)) {
         html += html_from_template("option", {
             value: value,
-            displayname: displayname,
+            displayName: displayName,
             selected: selected.includes(value),
             disabled: disabled.includes(value)
         });
@@ -531,14 +494,14 @@ function button_group_inner_html(data, type, btnclass, idprefix, checked = null,
     }
     
     let html = "";
-    for (const [i, [value, displayname]] of Object.entries(Object.entries(data))) {
+    for (const [i, [value, displayName]] of Object.entries(Object.entries(data))) {
         html += html_from_template("button", {
             type: type,
             class: btnclass,
             name: idprefix,
             id: idprefix + i,
             value: value,
-            displayname: displayname,
+            displayName: displayName,
             disabled: disabled.includes(value),
             checked: checked.includes(value)
         });
@@ -552,8 +515,7 @@ function setup_groups_buttons(dataset, checked, disabled) {
         checked = Object.keys(dataset.groups);
     }
     groupsButtons.innerHTML = button_group_inner_html(
-        objectMap(dataset.groups, group => group.displayname),
-        "checkbox", "group-button", "groupButton", checked, disabled
+        dataset.groups, "checkbox", "group-button", "groupButton", checked, disabled
     );
     groupsButtons.querySelectorAll(".group-button").forEach(elem => {
         elem.addEventListener("change", () => {
@@ -564,13 +526,7 @@ function setup_groups_buttons(dataset, checked, disabled) {
 }
 
 function get_active_symbolcount(dataset) {
-    let count = 0;
-    groupsButtons.querySelectorAll(".group-button").forEach(elem => {
-        if (elem.checked) {
-            count += Object.keys(dataset.groups[elem.value].symbols).length;
-        }
-    });
-    return count;
+    return dataset.symbolKeysFromGroups(get_button_group_values("groupsButtons")).length;
 }
 
 function update_symbolcount(dataset) {
@@ -583,7 +539,7 @@ function setup_properties_buttons(dataset, checked = null, disabled = null) {
         checked = Object.keys(dataset.properties);
     }
     document.getElementById("propertiesButtons").innerHTML = button_group_inner_html(
-        objectMap(dataset.properties, property => property.displayname),
+        objectMap(dataset.properties, property => property.displayName),
         "checkbox", "property-button", "propertyButton", checked, disabled
     );
 }
@@ -598,7 +554,7 @@ function setup_font_buttons(fonts, allfonts, checked = null) {
         fonts_dict[font.key] = Object.assign({}, allfonts[font.key], font);
     }
 
-    fontNames = objectMap(fonts_dict, font => font.displayname);
+    fontNames = objectMap(fonts_dict, font => font.displayName);
 
     document.getElementById("fontButtons").innerHTML = button_group_inner_html(
         fontNames, "radio", "font-button", "fontButton", checked, false
@@ -702,51 +658,6 @@ function nth_child(container, n) {
         return children[children.length + n];
     } else {
         return children[n];
-    }
-}
-
-// --------------- RANDOM FUNCTIONS -----------------
-function randint(min, max = null) {
-    if (max === null) {
-        max = min;
-        min = 0;
-    }
-
-    return Math.floor(Math.random() * (max - min) + min);
-}
-
-function randbool() {
-    return Math.random() >= 0.5;
-}
-
-function randelem(arr, keys = null) {
-    if (keys) {
-        return arr[randelem(keys)];
-    }
-    if (Array.isArray(arr)) {
-        return arr[randindex(arr)];
-    }
-
-    return arr[randelem(Object.keys(arr))];
-}
-
-function randindex(arr) {
-    return randint(arr.length);
-}
-
-function shuffle(array) {
-    let currentIndex = array.length;
-  
-    // While there remain elements to shuffle...
-    while (currentIndex != 0) {
-  
-      // Pick a remaining element...
-      let randomIndex = Math.floor(Math.random() * currentIndex);
-      currentIndex--;
-  
-      // And swap it with the current element.
-      [array[currentIndex], array[randomIndex]] = [
-        array[randomIndex], array[currentIndex]];
     }
 }
 

@@ -1,14 +1,12 @@
 class Game {
-    symbols;
+    dataset;
     properties;
-    guessedDisplaySymbols;
     settings;
     triesBySymbol;
     scoreBySymbol;
     clearedAtTries;
     symbolKeys;
     currentSymbolIndex = null;
-    previousSymbolIndex = null;
     symbolsScore = 0;
     symbolsHitCount = 0;
     roundsScore = 0;
@@ -17,8 +15,9 @@ class Game {
     clearedCount = 0;
     timeStart;
     timeInterval;
+    rand;
 
-    static defaultSettings = {
+    static defaultSettings =     {
         symbolsOrder: "random",     // "random", "shuffled" or "sorted"
         scoreMode: "symbols",       // "rounds" or "symbols"
         scoreStringMode: "ratio",   // "ratio" or "percent"
@@ -26,25 +25,29 @@ class Game {
         removeCleared: true
     };
 
-    constructor(inputs, symbols, properties, guessedDisplaySymbols, onFinish, settings = null) {
+    constructor(inputs, dataset, symbolKeys, properties, onFinish, settings = null, seed = null) {
         this.inputs = inputs;
-        this.symbols = symbols;
+        this.dataset = dataset;
+        this.symbolKeys = symbolKeys;
         this.properties = properties;
-        this.guessedDisplaySymbols = guessedDisplaySymbols;
+        this.guessedDisplaySymbols = dataset.guessedDisplaySymbols();
         this.onFinish = onFinish;
-
-        this.settings = Game.process_settings(settings);
-        this.triesBySymbol = objectMap(symbols, () => 0);
-        this.scoreBySymbol = objectMap(symbols, () => 0);
-        this.clearedAtTries = objectMap(symbols, () => 0);
-        this.symbolsCount = Object.keys(symbols).length;
-
-        this.symbolKeys = Object.keys(symbols);
-        if (this.settings.symbolsOrder == "shuffled") {
-            shuffle(this.symbolKeys);
+        if (seed) {
+            this.rand = seeded_prng(seed);
+        } else {
+            this.rand = Math.random;
         }
 
-        this.previousSymbolIndex = null;
+        this.process_settings(settings);
+        this.triesBySymbol = Object.fromEntries(symbolKeys.map(key => [key, 0]));
+        this.scoreBySymbol = Object.fromEntries(symbolKeys.map(key => [key, 0]));
+        this.clearedAtTries = Object.fromEntries(symbolKeys.map(key => [key, 0]));
+        this.symbolsCount = symbolKeys.length;
+
+        if (this.settings.symbolsOrder == "shuffled") {
+            shuffle(this.symbolKeys, this.rand);
+        }
+
         this.currentSymbolIndex = null;
         this.symbolsScore = 0;
         this.symbolsHitCount = 0;
@@ -58,7 +61,7 @@ class Game {
         this.display_score();
     }
 
-    static process_settings(settings) {
+    process_settings(settings) {
         const scoreModeSet = "scoreMode" in settings;
 
         settings = Object.assign({}, Game.defaultSettings, settings);
@@ -72,7 +75,7 @@ class Game {
             settings.scoreMode = settings.maxTries == Infinity ? "rounds" : "symbols";
         }
 
-        return settings;
+        this.settings = settings;
     }
 
     setupTimeInterval() {
@@ -109,15 +112,8 @@ class Game {
         this.onFinish();
     }
 
-    _symbol_by_index(index) {
-        return this.symbols[this.symbolKeys[index]];
-    }
-
     current_symbol() {
-        return this._symbol_by_index(this.currentSymbolIndex);
-    }
-    previous_symbol() {
-        return this._symbol_by_index(this.previousSymbolIndex);
+        return this.dataset.getSymbol(this.symbolKeys[this.currentSymbolIndex]);
     }
 
     choose_new_symbol(remove_current = false) {
@@ -125,11 +121,9 @@ class Game {
             this.remove_symbol(this.currentSymbolIndex);
         }
 
-        this.previousSymbolIndex = this.currentSymbolIndex;
-
         let newindex;
         if (this.settings.symbolsOrder == "random") {
-            newindex = randindex(this.symbolKeys);
+            newindex = Math.floor(this.rand() * this.symbolKeys.length);
         } else {
             if (this.currentSymbolIndex === null) {
                 newindex = 0;
@@ -203,13 +197,7 @@ class Game {
     }
 
     grade_input(key, guess) {
-        const solutions = this.current_symbol()[key];
-        const property = this.properties[key];
-        if (property.scoring == "string") {
-            return grade_string(guess, solutions, property.maxDist, property.listScoringMode);
-        } else if (property.scoring == "integer") {
-            return grade_integer(guess, solutions);
-        }
+        return this.current_symbol()[key].grade(guess);
     }
 
     display_input(key, guess, score) {
@@ -217,7 +205,7 @@ class Game {
         const solutions = this.current_symbol()[key];
         const [guess_eval, sol_eval] = this.get_eval_elements(input);
         guess_eval.innerText = guess;
-        sol_eval.innerText = solution_to_string(solutions);
+        sol_eval.innerText = solutions.display;
 
         const displays = [guess_eval, sol_eval];
         
@@ -275,13 +263,17 @@ class Game {
     }
 
     display_guess_matching_symbols() {
-        if (!(this.guessedDisplaySymbols.matchTo in this.inputs)) {
+        const key = this.dataset.matchEnteredSymbolsTo;
+        if (!(key in this.inputs)) {
             return;
         }
 
-        const value = this.inputs[this.guessedDisplaySymbols.matchTo].value.toLowerCase();
-        if (value in this.guessedDisplaySymbols.symbols) {
-            this.display_symbol("guessed", this.guessedDisplaySymbols.symbols[value]);
+        let value = this.inputs[key].value;
+        if (this.dataset.properties[key].type == "istring") {
+            value = value.toLowerCase();
+        }
+        if (value in this.guessedDisplaySymbols) {
+            this.display_symbol("guessed", this.guessedDisplaySymbols[value]);
         } else {
             this.display_symbol("guessed", "");
         }
@@ -369,93 +361,13 @@ class Game {
             this.score_string(this.settings.scoreMode, "ratio") +
             " (" + this.score_string(this.settings.scoreMode, "percent") + ")";
         document.getElementById("stat-time").innerText = this.time_string(2);
-        document.getElementById("stat-cleared").innerText = this.clearedCount +  "/" + this.symbolsCount;
-        document.getElementById("stat-seen").innerText = this.seenCount() + "/" + this.symbolsCount;
-        document.getElementById("stat-tries").innerText = floor(this.averageTries(), 2);
+        document.getElementById("stat-cleared").innerText = this.clearedCount +  "/" + this.seenCount();
     }
 }
 
 function count_where(arr, callback) {
     arr = Object.values(arr);
     return arr.reduce((acc, val) => callback(val) ? acc + 1: acc, 0);
-}
-
-
-function _grade_string(guess, sol, maxDist) {
-    const dist = levDist(normalize_string(sol), normalize_string(guess));
-    if (dist <= maxDist) {
-        if (maxDist == 0) {
-            return [1, true];
-        }
-        return [Math.pow(2, -dist / maxDist), true];
-    }
-
-    return [0, false];
-}
-
-function _grade_list(list, scoringMode, grade_func) {
-    if (scoringMode !== "best" && scoringMode !== "average") {
-        console.error('listScoringMode parameter can only be "best" or "average".');
-    }
-    const matchAll = scoringMode === "average";
-
-    let total_score = 0;
-    let total_passed = matchAll;
-
-    for (const elem of list) {
-        const [score, passed] = grade_func(elem);
-        if (matchAll) {
-            total_passed &&= passed;
-            total_score += score;
-        } else {
-            total_passed ||= passed;
-            if (total_score < score) {
-                total_score = score;
-            }
-        }
-    }
-
-    if (matchAll) {
-        total_score /= list.length;
-    }
-    return [total_score, total_passed];
-}
-
-function _grade_string_list(guesses, sols, maxDist, scoringMode) {
-    if (scoringMode !== "best" && scoringMode !== "average") {
-        console.error('listScoringMode parameter can only be "best" or "average".');
-    }
-
-    guesses = guesses.split(/,\s*/g);
-
-    return _grade_list(
-        sols, scoringMode,
-        (sol) => _grade_list(
-            guesses, "best",
-            (guess) => _grade_string(guess, sol, maxDist)
-        )
-    )
-}
-
-function grade_string(guess, sol, maxDist, listScoringMode) {
-    if (Array.isArray(sol)) {
-        return _grade_string_list(guess, sol, maxDist, listScoringMode);
-    }
-    return _grade_string(guess, sol, maxDist);
-}
-
-function grade_integer(guess, sol) {
-    return parseInt(guess) === parseInt(sol) ? [1, true] : [0, false];
-}
-
-function solution_to_string(solutions) {
-    if (typeof solutions === "string") {
-        return solutions;
-    }
-    if (Array.isArray(solutions)) {
-        return solutions.join(", ");
-    }
-    return String(solutions);
 }
 
 function percent_string(x, digits = 0) {
@@ -512,4 +424,69 @@ function element_size(element, with_padding = false) {
     }
 
     return [width, height];
+}
+
+
+function cyrb128(str) {
+    let h1 = 1779033703, h2 = 3144134277,
+        h3 = 1013904242, h4 = 2773480762;
+    for (let i = 0, k; i < str.length; i++) {
+        k = str.charCodeAt(i);
+        h1 = h2 ^ Math.imul(h1 ^ k, 597399067);
+        h2 = h3 ^ Math.imul(h2 ^ k, 2869860233);
+        h3 = h4 ^ Math.imul(h3 ^ k, 951274213);
+        h4 = h1 ^ Math.imul(h4 ^ k, 2716044179);
+    }
+    h1 = Math.imul(h3 ^ (h1 >>> 18), 597399067);
+    h2 = Math.imul(h4 ^ (h2 >>> 22), 2869860233);
+    h3 = Math.imul(h1 ^ (h3 >>> 17), 951274213);
+    h4 = Math.imul(h2 ^ (h4 >>> 19), 2716044179);
+    h1 ^= (h2 ^ h3 ^ h4), h2 ^= h1, h3 ^= h1, h4 ^= h1;
+    return [h1>>>0, h2>>>0, h3>>>0, h4>>>0];
+}
+
+function sfc32(a, b, c, d) {
+    return function() {
+        a |= 0; b |= 0; c |= 0; d |= 0;
+        const t = (a + b | 0) + d | 0;
+        d = d + 1 | 0;
+        a = b ^ b >>> 9;
+        b = c + (c << 3) | 0;
+        c = (c << 21 | c >>> 11);
+        c = c + t | 0;
+        return (t >>> 0) / 4294967296;
+    }
+}
+
+function seeded_prng(seed) {
+    return sfc32(...cyrb128(seed));
+}
+
+function randint(min, max = null) {
+    if (max === null) {
+        max = min;
+        min = 0;
+    }
+
+    return Math.floor(Math.random() * (max - min) + min);
+}
+
+function randindex(arr) {
+    return randint(arr.length);
+}
+
+function shuffle(array, rand = Math.random) {
+    let currentIndex = array.length;
+  
+    // While there remain elements to shuffle...
+    while (currentIndex != 0) {
+  
+      // Pick a remaining element...
+      let randomIndex = Math.floor(rand() * currentIndex);
+      currentIndex--;
+  
+      // And swap it with the current element.
+      [array[currentIndex], array[randomIndex]] = [
+        array[randomIndex], array[currentIndex]];
+    }
 }
