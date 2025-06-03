@@ -4,7 +4,7 @@
     "name": "Chemical Elements",
     "terms": {"symbol": "element", "symbols": "elements"},
     "fonts": [
-        {"key": "noto-sans", "weight": 700, "scale": 0.8}
+        {"key": "noto-sans", "weight": 700, "scale": 0.7}
     ],
     "properties": {
         "name": {"type": "istring", "maxDist": 1, "displayName": "Name"},
