@@ -208,9 +208,9 @@ class SymbolEntry {
 
     _distance(guess, sol) {
         if (this.type == "integer") {
-            return parseInt(guess) - parseInt(sol);
+            return Math.abs(parseInt(guess) - parseInt(sol));
         } else if (this.type == "real") {
-            return parseFloat(guess) - parseFloat(sol);
+            return Math.abs(parseFloat(guess) - parseFloat(sol));
         } else if (this.type == "string" || this.type == "istring"){
             guess = guess.trim();
             sol = sol.trim();
