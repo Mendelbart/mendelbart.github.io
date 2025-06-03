@@ -8,7 +8,7 @@
         {"key": "junicode"}
     ],
     "properties": {
-        "name": {"type": "istring", "maxDist": 1, "displayName": "Name", "listScoringMode": "best"}
+        "name": {"type": "istring", "maxDist": 1, "displayName": "Name"}
     },
     "matchEnteredSymbolsTo": "name",
     "groups": {

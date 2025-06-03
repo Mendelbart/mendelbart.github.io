@@ -1,9 +1,12 @@
 // --------------- CONSTANTS -----------------
-const datasets_metadata = {
-    hebrew: {name: "Hebrew", file: "./json/datasets/hebrew.json"},
+const DATASETS_METADATA = {
+    elements: {name: "Atomic Elements", file: "./json/datasets/elements.json"},
+    cyrillic: {name: "Cyrillic", file: "./json/datasets/cyrillic.json"},
+    elder_futhark: {name: "Elder Futhark", file: "./json/datasets/elder_futhark.json"},
     greek: {name: "Greek", file: "./json/datasets/greek.json"},
-    elder_futhark: {name: "Elder Futhark", file: "./json/datasets/elder_futhark.json"}
+    hebrew: {name: "Hebrew", file: "./json/datasets/hebrew.json"},
 }
+const DEFAULT_DATASET = "hebrew";
 const _datasets_cache = {};
 const html_templates = {
     option: `<option value="{VALUE}" {SELECTED}>{DISPLAYNAME}</option>`,
@@ -11,7 +14,9 @@ const html_templates = {
              <label class="btn btn-outline-primary" for="{ID}">{DISPLAYNAME}</label>`,
     inputRow: `<input type="text" class="game-input" placeholder="{PLACEHOLDER}">
                <span class="eval-field eval-entered"></span>
-               <span class="eval-field eval-solution"></span>`
+               <span class="eval-field eval-solution"></span>`,
+    filter: `<label class="grid-left-label filter-label" for="{ID}">{DISPLAYNAME}</label>
+            <div class="btn-group filter-group" role="group" id="{ID}">{BUTTONS}</div>`
 }
 
 async function get_dataset(key) {
@@ -19,7 +24,7 @@ async function get_dataset(key) {
         return _datasets_cache[key];
     }
 
-    let dataset = await fetch(datasets_metadata[key].file).then(response => response.json());
+    let dataset = await fetch(DATASETS_METADATA[key].file).then(response => response.json());
     dataset = new Dataset(dataset);
     _datasets_cache[key] = dataset;
     return dataset;
@@ -64,7 +69,8 @@ const groupsButtons = document.getElementById("groupsButtons");
     let game = null;
 
     datasetSelect.innerHTML = select_options_html(
-        objectMap(datasets_metadata, data => data.name)
+        objectMap(DATASETS_METADATA, data => data.name),
+        DEFAULT_DATASET
     );
     datasetSelect.addEventListener("change", () => {
         select_dataset(datasetSelect.value);
