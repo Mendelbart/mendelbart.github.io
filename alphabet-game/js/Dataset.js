@@ -82,7 +82,7 @@ class Dataset {
     processSymbol(...args) {
         const symbol = Object.assign({}, ...args);
         for (const [key, value] of Object.entries(symbol)) {
-            if (key !== "string" && key !== "group") {
+            if (key in this.properties) {
                 symbol[key] = SymbolEntry.fromData(
                     this.properties[key].type,
                     value,

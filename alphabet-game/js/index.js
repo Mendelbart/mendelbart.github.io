@@ -127,7 +127,7 @@ const groupsButtons = document.getElementById("groupsButtons");
 
         setup_font_buttons(dataset.fonts, allfonts);
 
-        toggle_dialogue(false, false);
+        toggle_dialogue(false);
         game.new_round();
 
         show(document.getElementById("game-stats-container"));
