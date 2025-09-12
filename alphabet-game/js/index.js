@@ -1,3 +1,6 @@
+import { DOMHelper } from './helpers.js';
+import { Dataset } from "./Dataset.js";
+
 // --------------- CONSTANTS -----------------
 const DATASETS_METADATA = {
     elements: {name: "Atomic Elements", file: "./json/datasets/elements.json"},
@@ -37,15 +40,10 @@ const groupsButtons = document.getElementById("groupsButtons");
 (function() {
     // Range Value Span
     document.querySelectorAll("input[type=range]").forEach((elem) => {
-        if (!elem.id) {
-            return;
-        }
+        if (!elem.id) return;
 
         let span = document.querySelector(`label[for="${elem.id}"] .range-value`);
-
-        if (!span) {
-            return;
-        }
+        if (!span) return;
 
         const update_elem = () => {
             span.innerText = elem.value;
@@ -54,7 +52,7 @@ const groupsButtons = document.getElementById("groupsButtons");
         update_elem();
     });
 
-    // update fontWeightrange
+    // update fontWeightRange
     const fontWeightRange = document.getElementById("fontWeightRange");
     const update_font_weight = () => {
         set_global_css_var('symbol-font-weight', fontWeightRange.value);
@@ -88,7 +86,7 @@ const groupsButtons = document.getElementById("groupsButtons");
     });
     document.getElementById("stop-game-button").addEventListener("click", () => {
         game.cleanup();
-        hide(document.getElementById("game-stats-container"));
+        DOMHelper.hide(document.getElementById("game-stats-container"));
         toggle_dialogue(true);
     });
     document.getElementById("resume-game-button").addEventListener("click", () => {
@@ -98,8 +96,8 @@ const groupsButtons = document.getElementById("groupsButtons");
     });
     document.querySelectorAll("#current-time, #current-time-alt").forEach(elem => {
         elem.addEventListener("click", () => {
-            toggle_shown(
-                elem.id == "current-time",
+            DOMHelper.toggleShown(
+                elem.id === "current-time",
                 document.getElementById("current-time-alt"),
                 document.getElementById("current-time")
             );
@@ -107,15 +105,15 @@ const groupsButtons = document.getElementById("groupsButtons");
     });
     document.querySelectorAll(".current-score").forEach(elem => {
         elem.addEventListener("click", () => {
-            game.settings.scoreStringMode = game.settings.scoreStringMode == "percent" ? "ratio" : "percent";
+            game.settings.scoreStringMode = game.settings.scoreStringMode === "percent" ? "ratio" : "percent";
             game.display_score();
         });
     });
 
     const allfonts = await fetch("./json/fonts.json").then(response => response.json());
 
-    select_dataset(datasetSelect.value);
-    hide(document.getElementById("game-stats-container"));
+    await select_dataset(datasetSelect.value);
+    DOMHelper.hide(document.getElementById("game-stats-container"));
     toggle_dialogue(true);
 
     async function new_game(datasetKey, groupKeys, propertyKeys, settings, seed) {
@@ -136,27 +134,26 @@ const groupsButtons = document.getElementById("groupsButtons");
         toggle_dialogue(false);
         game.new_round();
 
-        show(document.getElementById("game-stats-container"));
+        DOMHelper.show(document.getElementById("game-stats-container"));
         // document.querySelector("#score-display .score-label").innerText = "Current Score:";
-        show(document.getElementById("resume-game-button"));
+        DOMHelper.show(document.getElementById("resume-game-button"));
     }
 
     function game_input_listeners(game) {
         const input_keys = Object.keys(game.inputs);
-        const inputs_length = input_keys.length;
-        for (const [i, key] of Object.entries(input_keys)) {
+        for (const [i, key] of input_keys.entries()) {
             const input = game.inputs[key];
-            if (i == input_keys.length - 1) {
+            if (i === input_keys.length - 1) {
                 // Focus on next input on Enter
                 input.addEventListener("keydown", event => {
-                    if (event.key == "Enter") {
+                    if (event.key === "Enter") {
                         game.submit_round();
                     }
                 });
             } else {
                 // Submit if it's the last input
                 input.addEventListener("keydown", event => {
-                    if (event.key == "Enter") {
+                    if (event.key === "Enter") {
                         input.nextElementSibling.nextElementSibling.nextElementSibling.focus();
                     }
                 });
@@ -165,12 +162,12 @@ const groupsButtons = document.getElementById("groupsButtons");
             // Focus on previous input on Backspace if current was empty.
             if (i > 0) {
                 input.addEventListener("keydown", event => {
-                    if (event.key == "Backspace") {
+                    if (event.key === "Backspace") {
                         input.isEmpty = event.target.value === "";
                     }
                 });
                 input.addEventListener("keyup", event => {
-                    if (event.key == "Backspace" && input.isEmpty) {
+                    if (event.key === "Backspace" && input.isEmpty) {
                         input.previousElementSibling.previousElementSibling.previousElementSibling.focus();
                     }
                 });
@@ -202,12 +199,12 @@ const groupsButtons = document.getElementById("groupsButtons");
                 if (dataset.gameName.font) {
                     fontFamily = allfonts[dataset.gameName.font].family;
                 }
-                gameNameScale = dataset.gameName.scale ? dataset.gameName.scale : 1;
+                const gameNameScale = dataset.gameName.scale ? dataset.gameName.scale : 1;
                 set_global_css_var("--game-name-scale", gameNameScale);
                 setup_gamename_heading(elem, dataset.gameName.string, fontFamily);
             });
         
-            classIfElse(
+            DOMHelper.classIfElse(
                 dataset.rtl,
                 container.getElementsByClassName("game-name-heading"),
                 "rtl"
@@ -216,16 +213,6 @@ const groupsButtons = document.getElementById("groupsButtons");
     }
 })();
 
-function toggle_shown(showfirst, first, second) {
-    if (showfirst) {
-        hide(second);
-        show(first);
-    } else {
-        hide(first);
-        show(second);
-    }
-}
-
 function update_heading_scale() {
     const h2 = document.querySelector("#game-heading h2");
     const scale = Math.min(1, h2.clientWidth / h2.scrollWidth);
@@ -233,7 +220,7 @@ function update_heading_scale() {
 }
 
 function toggle_dialogue(show_dialogue) {
-    toggle_shown(
+    DOMHelper.toggleShown(
         show_dialogue,
         document.getElementById("game-dialogue"),
         document.getElementById("game-container")
@@ -244,16 +231,16 @@ function get_game_settings() {
     const settings = {};
     let valid = true;
 
-    removeClass(document.getElementsByClassName("invalid-setting"), "invalid-setting");
+    DOMHelper.removeClass(document.getElementsByClassName("invalid-setting"), "invalid-setting");
 
     const groupKeys = get_button_group_values("groupsButtons");
-    if (groupKeys.length == 0) {
+    if (groupKeys.length === 0) {
         document.getElementById("groupsButtons").parentElement.classList.add("invalid-setting");
         valid = false;
     }
 
     const propertyKeys = get_button_group_values("propertiesButtons");
-    if (propertyKeys.length == 0) {
+    if (propertyKeys.length === 0) {
         document.getElementById("propertiesButtons").parentElement.classList.add("invalid-setting");
         valid = false;
     }
@@ -274,11 +261,11 @@ function create_game_instance(dataset, groupKeys, propertyKeys, settings, seed =
 
     const onFinish = () => {
         toggle_dialogue(true);
-        hide(document.getElementById("resume-game-button"));
+        DOMHelper.hide(document.getElementById("resume-game-button"));
         // document.querySelector("#score-display .score-label").innerText = "Final Score:";
     };
 
-    return game = new Game(inputs, dataset, symbolKeys, gameProperties, onFinish, settings, seed);
+    return new Game(inputs, dataset, symbolKeys, gameProperties, onFinish, settings, seed);
 }
 
 function create_game_inputs(properties) {
@@ -288,7 +275,7 @@ function create_game_inputs(properties) {
     for (const [key, property] of Object.entries(properties)) {
         const html = html_from_template("inputRow", {placeholder: property.displayName});
         inputsContainer.insertAdjacentHTML("beforeend", html);
-        inputs[key] = nth_child(inputsContainer, -3);
+        inputs[key] = DOMHelper.nthChildNode(inputsContainer, -3);
 
         // Prevent Auto Scroll on phones
         inputs[key].addEventListener("focus", (e) => {
@@ -331,7 +318,7 @@ function setup_gamename_heading(element, gameName, fontFamily) {
         element.innerText = gameName[0];
         element.onclick = () => {
             let index = Number(element.dataset.gameNameIndex) + 1;
-            if (index == gameName.length) {
+            if (index === gameName.length) {
                 index = 0;
             }
             element.dataset.gameNameIndex = index;
@@ -423,8 +410,7 @@ function get_active_symbolcount(dataset) {
 }
 
 function update_symbolcount(dataset) {
-    const count = get_active_symbolcount(dataset);
-    document.getElementById("totalSymbolCount").innerText = count;
+    document.getElementById("totalSymbolCount").innerText = get_active_symbolcount(dataset);
 }
 
 function setup_properties_buttons(dataset, checked = null, disabled = null) {
@@ -442,12 +428,12 @@ function setup_font_buttons(fonts, allfonts, checked = null) {
         checked = fonts[0].key;
     }
 
-    fonts_dict = {};
+    const fonts_dict = {};
     for (const font of fonts) {
         fonts_dict[font.key] = Object.assign({}, allfonts[font.key], font);
     }
 
-    fontNames = objectMap(fonts_dict, font => font.displayName);
+    const fontNames = objectMap(fonts_dict, font => font.displayName);
 
     document.getElementById("fontButtons").innerHTML = button_group_inner_html(
         fontNames, "radio", "font-button", "fontButton", checked, false
@@ -474,7 +460,7 @@ function html_from_template(key, data) {
         }
         html = html.replaceAll(`{${key.toUpperCase()}}`, value);
     }
-    html = html.replaceAll(/\{[A-Z]+\}/g, "");
+    html = html.replaceAll(/\{[A-Z]+}/g, "");
     return html;
 }
 
@@ -485,73 +471,15 @@ function get_eval_elements(input) {
     return [input.nextElementSibling, input.nextElementSibling.nextElementSibling];
 }
 
+/**
+ * @param {string} property
+ * @param value
+ */
 function set_global_css_var(property, value) {
-    if (property.substr(0, 2) != "--") {
+    if (property.slice(0, 2) !== "--") {
         property = "--" + property;
     }
     document.documentElement.style.setProperty(property, value);
-}
-
-function forEachElement(elements, callback) {
-    if (elements instanceof Node) {
-        callback(elements);
-        return;
-    }
-    for (const element of elements) {
-        callback(element);
-    }
-}
-
-function classIfElse(bool, elements, trueclass, falseclass = "") {
-    if (!bool) {
-        const temp = trueclass;
-        trueclass = falseclass;
-        falseclass = temp;
-    }
-
-    forEachElement(elements, elem => {
-        if (falseclass.length > 0) {
-            elem.classList.remove(...split_classes(falseclass));
-        }
-        if (trueclass.length > 0) {
-            elem.classList.add(...split_classes(trueclass));
-        }
-    });
-}
-
-function addClass(elements, classes) {
-    classIfElse(true, elements, classes);
-}
-function removeClass(elements, classes) {
-    classIfElse(false, elements, classes);
-}
-
-function show(elements) {
-    forEachElement(elements, elem => {
-        elem.style.display = "";
-    });
-    removeClass(elements, "hidden");
-}
-function hide(elements) {
-    forEachElement(elements, elem => {
-        elem.style.display = "none";
-    });
-}
-
-function split_classes(classstr) {
-    if (!classstr) {
-        return [];
-    }
-    return classstr.split(" ");
-}
-
-function nth_child(container, n) {
-    children = container.children;
-    if (n < 0) {
-        return children[children.length + n];
-    } else {
-        return children[n];
-    }
 }
 
 function capitalize(str) {

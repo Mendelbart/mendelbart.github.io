@@ -12,7 +12,7 @@ function morseCharData(morse) {
     let beats = 0;
     for (let i = 0; i < morse.length; i++) {
         starts.push(beats);
-        if (morse.charCodeAt(i) == 45) { // "-": 45, ".": 46
+        if (morse.charCodeAt(i) === 45) { // "-": 45, ".": 46
             beats += 3;
         } else {
             beats += 1;
@@ -73,7 +73,7 @@ function setup_morse_button(container, text) {
     button.playMorse = morsePlayFunc(button);
     button.stopMorse = morseStopFunc(button);
     button.toggleMorse = function() {
-        if (this.dataset.playing == "false") {
+        if (this.dataset.playing === "false") {
             this.playMorse();
         } else {
             this.stopMorse();
@@ -85,7 +85,7 @@ function setup_morse_button(container, text) {
 
 function morsePlayFunc(btn) {
     return function() {
-        if (btn.dataset.playing == "true") {
+        if (btn.dataset.playing === "true") {
             return;
         }
 
@@ -105,7 +105,7 @@ function morsePlayFunc(btn) {
 
 function morseStopFunc(btn) {
     return function() {
-        if (btn.dataset.playing == "false") {
+        if (btn.dataset.playing === "false") {
             return;
         }
 

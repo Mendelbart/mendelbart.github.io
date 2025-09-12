@@ -13,6 +13,8 @@
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-SgOJa3DmI69IUzQ2PVdRZhwQ+dy64/BUtbMJw1MZ8t5HZApcHrRKUc4W0kG879m7" crossorigin="anonymous">
         <link href="index.css" type="text/css" rel="stylesheet">
         <link rel="icon" href="/favicon.svg">
+
+        <script type="module" defer src="js/index.js"></script>
     </head>
 
     <body>
@@ -28,21 +30,6 @@
                     <div id="game-stats" class="settings-grid">
                         <label for="stat-score" class="grid-left-label">Score</label>
                         <div id="stat-score"></div>
-
-                        <label for="stat-time" class="grid-left-label">Time</label>
-                        <div id="stat-time"></div>
-
-                        <label for="stat-rounds" class="grid-left-label hidden">Rounds</label>
-                        <div id="stat-rounds" class="hidden"></div>
-
-                        <label for="stat-cleared" class="grid-left-label hidden"><span>Cleared <span class="symbol-term-plural capitalize"></span></span></label>
-                        <div id="stat-cleared" class="hidden"></div>
-
-                        <label for="stat-seen" class="grid-left-label hidden"><span>Seen <span class="symbol-term-plural capitalize"></span></span></label>
-                        <div id="stat-seen" class="hidden"></div>
-
-                        <label for="stat-tries" class="grid-left-label hidden">Avg Tries To Clear</label>
-                        <div id="stat-tries" class="hidden"></div>
                     </div>
                 </div>
 
@@ -61,46 +48,6 @@
 
                         <div id="totalSymbolCountContainer">
                             <span id="totalSymbolCount"></span> <span class="symbol-term-plural"></span>
-                        </div>
-                    </div>
-
-                    <div class="settings-grid">
-                        <label class="grid-left-label" for="propertiesButtons">Properties</label>
-                        <div class="btn-group" role="group" id="propertiesButtons"></div>
-    
-                        <label class="grid-left-label" for="groupsButtons">Groups</label>
-                        <div class="btn-group" role="group" id="groupsButtons"></div>
-    
-                        <label class="grid-left-label" for="triesButtons">Tries</label>
-                        <div class="btn-group" role="group" id="triesButtons">
-                            <input type="radio" class="btn-check form-input tries-button" name="tries" id="triesButton1" autocomplete="off" value="1">
-                            <label class="btn btn-outline-primary" for="triesButton1">One</label>
-                            <input type="radio" class="btn-check form-input tries-button" name="tries" id="triesButton3" autocomplete="off" value="3" checked>
-                            <label class="btn btn-outline-primary" for="triesButton3">Three</label>
-                            <input type="radio" class="btn-check form-input tries-button" name="tries" id="triesButton5" autocomplete="off" value="5">
-                            <label class="btn btn-outline-primary" for="triesButton5">Five</label>
-                            <input type="radio" class="btn-check form-input tries-button" name="tries" id="triesButtonInfty" autocomplete="off" value="infty">
-                            <label class="btn btn-outline-primary" for="triesButtonInfty">Infinite</label>
-                        </div>
-    
-                        <label class="grid-left-label" for="orderButtons">Order</label>
-                        <div class="btn-group" role="group" id="orderButtons">
-                            <input type="radio" class="btn-check form-input order-button" name="order" id="orderButtonRandom" autocomplete="off" value="random" checked>
-                            <label class="btn btn-outline-primary" for="orderButtonRandom">Random</label>
-                            <input type="radio" class="btn-check form-input order-button" name="order" id="orderButtonShuffled" autocomplete="off" value="shuffled">
-                            <label class="btn btn-outline-primary" for="orderButtonShuffled">Shuffled</label>
-                            <input type="radio" class="btn-check form-input order-button" name="order" id="orderButtonSorted" autocomplete="off" value="sorted">
-                            <label class="btn btn-outline-primary" for="orderButtonSorted">Sorted</label>
-                        </div>
-    
-                        <div class="form-check form-switch">
-                            <input class="form-check-input" type="checkbox" role="switch" id="removeClearedSwitch" checked>
-                        </div>
-                        <label class="form-check-label" for="removeClearedSwitch"><span>Remove correctly guessed <span class="symbol-term-plural"></span></span></label>
-
-                        <label class="grid-left-label" for="seedInput">Seed</label>
-                        <div class="grid-input-container">
-                            <input type="text" id="seedInput">
                         </div>
                     </div>
                 </div>
@@ -159,13 +106,9 @@
                             </label>
                             <input type="range" class="form-range" min="100" max="900" step=1 value="400" id="fontWeightRange">
                         </div>
-                </div>    
+                    </div>
+                </div>
             </div>
         </div>
-
-        <script type="text/javascript" src="js/levenshtein.js"></script>
-        <script type="text/javascript" src="js/Dataset.js"></script>
-        <script type="text/javascript" src="js/Game.js"></script>
-        <script type="text/javascript" src="js/index.js"></script>
     </body>
 </html>

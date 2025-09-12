@@ -8,15 +8,16 @@
         {"key": "noto-sans"},
         {"key": "junicode"}
     ],
+    "prototypes": [
+        {"keys": ["string"], "objects": {"upper": {"case": "upper"}, "lower": {"case": "lower"}}}
+    ],
+    "filters": {
+        "case": {"property": "case", "label": "Case", "options": {"upper": "Uppercase", "lower": "Lowercase"}}
+    },
     "properties": {
         "transl": {"type": "istring", "maxDist": 0, "displayName": "Name"}
     },
     "matchEnteredSymbolsTo": "transl",
-    "groups": {
-        "upper": "Uppercase",
-        "lower": "Lowercase"
-    },
-    "autoGroup": true,
     "symbols": [
         {"string": ["А", "а"], "transl": "a", "ipa": "/a/"},
         {"string": ["Б", "б"], "transl": "b", "ipa": "/b/"},

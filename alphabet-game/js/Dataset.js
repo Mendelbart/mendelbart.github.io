@@ -1,141 +1,259 @@
-class Dataset {
-    name
-    gameName
-    terms
-    fonts
-    groups
-    properties
-    symbols
-    propertyKeys
-    groupKeys
-    matchedDisplayStrings
-    matchEnteredSymbolsTo
-    symbolKeysByGroups
+import { RadioGroupSetting } from "./Setting.js";
 
+export class Dataset {
     constructor(data) {
-        this.name = data.name;
-        this.gameName = data.gameName;
-        this.terms = data.terms;
-        this.fonts = data.fonts;
-        this.groups = data.groups;
-        this.properties = data.properties;
-        this.propertyKeys = Object.keys(this.properties);
-        this.groupKeys = Object.keys(this.groups);
-        this.matchEnteredSymbolsTo = data.matchEnteredSymbolsTo;
+        this.data = data;
+        this.settings = {};
+        this.settingsLabels = {};
+        this.filters = this.data.filters ?? {};
+        this.locales = this.data.locales ?? {};
+        this.setupLocaleSetting();
+        this.setupFilterSettings();
+        this.preprocessSymbols();
+    }
 
-        if (data.symbols) {
-            this.symbols = this.buildSymbols(data.symbols, data.defaultGroup, !!data.autoGroup);
-            this.matchedDisplayStrings = this.buildMatchedDisplayStrings(data.matchPropertyForDisplay || this.propertyKeys[0]);
+    getSettings() {
+        return Settings.fromSettingsLabelContents(
+            this.settings,
+            this.settingsLabels
+        )
+    }
+
+    filterSettingKey(filterKey) {
+        return "filter_" + filterKey;
+    }
+
+    setupFilterSettings() {
+        for (const [filterKey, filterData] of Object.entries(this.data.filters)) {
+            const key = this.filterSettingKey(filterKey);
+            this.settings[key] = ButtonGroupSetting.create(
+                filterData.options,
+                filterData.defaults ?? Object.keys(filterData.options)
+            );
+            this.settingsLabels[key] = filterData.label ?? filterKey;
         }
     }
 
-    getSymbol(key) {
-        return this.symbols[key];
+    hasLocales() {
+        return Object.keys(this.locales).length === 0;
     }
 
-    buildMatchedDisplayStrings(property) {
-        const strs = {};
-        for (const symbol of Object.values(this.symbols)) {
-            const key = symbol[property];
-            if (!(key in strs)) {
-                strs[key] = "";
-            }
-
-            strs[key] += symbol.string;
+    setupLocaleSetting() {
+        if (!this.hasLocales()) {
+            return;
         }
-        return strs;
-    }
-
-    buildSymbols(symbols, defaultGroup, autoGroup) {
-        const result = {};
-        for (const [key, symbol] of Object.entries(symbols)) {
-            if ("mult" in symbol) {
-                const multsymbol = Object.assign({}, symbol);    
-                delete multsymbol.mult;
-                for (const [multkey, multdata] of Object.entries(symbol.mult)) {
-                    result[key + "_" + multkey] = this.processSymbol(multsymbol, multdata);
-                }
-            } else if (Array.isArray(symbol.string)) {
-                for (const [index, string] of Object.entries(symbol.string)) {
-                    const multsymbol = Object.assign({}, symbol);
-                    multsymbol.string = string;
-                    if (autoGroup) {
-                        multsymbol.group = this.groupKeys[index];
-                    }
-                    result[key + "_" + this.groupKeys[index]] = this.processSymbol(multsymbol);
-                }
-            } else {
-                result[key] = this.processSymbol(symbol);
-            }
-        }
-
-        if (defaultGroup) {
-            for (const symbol of Object.values(result)) {
-                if (!("group" in symbol)) {
-                    symbol.group = defaultGroup;
-                }
-            }
-        }
-        return result;
-    }
-
-    processSymbol(...args) {
-        const symbol = Object.assign({}, ...args);
-        for (const [key, value] of Object.entries(symbol)) {
-            if (key in this.properties) {
-                symbol[key] = SymbolEntry.fromData(
-                    this.properties[key].type,
-                    value,
-                    this.properties[key].maxDist
-                );
-            }
-        }
-        return symbol;
-    }
-
-    symbolKeysByGroupDict() {
-        const result = {};
-        for (const [key, symbol] of Object.entries(this.symbols)) {
-            if (!(symbol.group in result)) {
-                result[symbol.group] = [];
-            }
-            result[symbol.group].push(key);
-        }
-        return result;
-    }
-
-    symbolKeysFromGroups(groupKeys) {
-        return Object.entries(this.symbols)
-            .filter(([_, symbol]) => groupKeys.includes(symbol.group))
-            .map(([key, _]) => key);
-    }
-
-    propertiesFromKeys(propertyKeys) {
-        return Object.fromEntries(
-            propertyKeys.map(key => [key, this.properties[key]])
+        this.settings.locale = RadioGroupSetting.create(
+            this.data.locales,
+            this.data.defaultLocale ?? null
         );
+        this.settingsLabels.locale = this.data.localeSettingName ?? "Language";
     }
 
-    guessedDisplaySymbols() {
-        const symbols = {};
-        for (const symbol of Object.values(this.symbols)) {
-            let keys = symbol[this.matchEnteredSymbolsTo].solutions.flat();
+    preprocessSymbols() {
+        if (!("prototypes" in this.data)) {
+            return;
+        }
 
-            for (const k of keys) {
-                const key = k.toLowerCase();
-                if (key in symbols) {
-                    symbols[key] += symbol.string;
-                } else {
-                    symbols[key] = symbol.string;
+        for (const prototypeData of Object.values(this.data.prototypes)) {
+            const prototype = SymbolPrototype.deserialize(prototypeData);
+            this.data.symbols = prototype.processSymbols(this.data.symbols);
+        }
+    }
+
+    /**
+     * @param symbols {SymbolsData}
+     * @returns {SymbolsData}
+     */
+    getFilteredSymbols(symbols) {
+        let keys = Object.keys(symbols);
+        for (const [filterKey, filterData] of Object.entries(this.data.filters)) {
+            const values = this.settings[this.filterSettingKey(filterKey)].value;
+            keys = keys.filter(key => values.indexOf(symbols[key][filterData.property]) !== -1);
+        }
+        return Object.fromEntries(keys.map(key => [key, symbols[key]]));
+    }
+
+    /**
+     * @returns {SymbolsData}
+     */
+    generateSymbols() {
+        let symbols = this.getFilteredSymbols(this.data.symbols);
+        if (this.hasLocales()) {
+            this.applyLocale(symbols);
+        }
+        return symbols;
+    }
+
+    /**
+     * @param {string} key
+     * @param {string} locale
+     * @returns {string}
+     */
+    localeKey(key, locale) {
+        return key + ":" + locale;
+    }
+
+    /**
+     * @param {SymbolsData} symbols
+     */
+    applyLocale(symbols) {
+        const keys = this.data.localeProperties;
+        for (const data of Object.values(symbols)) {
+            for (const key of keys) {
+                const localeKey = this.localeKey(key, this.settings.locale.value);
+                if (localeKey in data) {
+                    data[key] = data[localeKey];
                 }
             }
+        }
+        return symbols;
+    }
+
+
+}
+
+class SymbolMapDataset extends Dataset {
+    constructor(data) {
+        super(data);
+        this.preprocessSymbols();
+    }
+}
+
+
+class SymbolPrototype {
+    /**
+     * @param {string[]} keys
+     * @param {Object.<string, Object>} objects
+     * @param {boolean} [useByDefault]
+     */
+    constructor(keys, objects, useByDefault = true) {
+        this.keys = keys;
+        this.objectKeys = Object.keys(objects);
+        this.objects = objects;
+        this.useByDefault = useByDefault;
+    }
+
+    getObject(index) {
+        return this.objects[this.objectKeys[index]];
+    }
+
+    nPrototypes(symbolData) {
+        let len = -1;
+        for (const key of this.keys) {
+            const currentLen = symbolData[key].length;
+            if (len === -1) {
+                len = currentLen;
+                if (len > this.keys.length) {
+                    console.warn(`Too many elements of key "${key}" to prototype.`);
+                }
+            } else if (symbolData[key].length !== len) {
+                console.warn("Inconsistent number of elements for prototype generation");
+                break;
+            }
+        }
+        return len;
+    }
+
+    processSymbol(data, symbolKey) {
+        const symbols = {};
+        const nSymbols = this.nPrototypes(data);
+
+        for (let i = 0; i < nSymbols; i++) {
+            const symbol = Object.assign({}, data, this.getObject(i));
+            for (const key of this.keys) {
+                symbol[key] = symbol[key][i];
+            }
+            symbols[symbolKey + "_" + this.objectKeys[i]] = symbol;
         }
 
         return symbols;
     }
+
+    processSymbols(symbolsData) {
+        const newData = {};
+        for (const [symbolKey, symbolData] of Object.entries(symbolsData)) {
+            if (symbolData.usePrototype ?? this.useByDefault) {
+                Object.assign(newData, this.processSymbol(symbolData, symbolKey));
+            } else {
+                newData[symbolKey] = symbolData;
+            }
+        }
+        return newData;
+    }
+
+    /**
+     * @param {Object.<string,*>} data
+     * @returns {SymbolPrototype}
+     */
+    static deserialize(data) {
+        return new this(data.keys, data.objects, data.useByDefault ?? true);
+    }
 }
 
-class SymbolEntry {
+/**
+ * @typedef {Object} SymbolData
+ * @property {*} display
+ */
+
+/**
+ * @typedef {Object.<string,SymbolData>} SymbolsData
+ */
+
+
+class SymbolFilter {
+    key;
+    setting;
+
+    constructor(key, setting) {
+        this.key = key;
+        this.setting = setting;
+    }
+
+    /**
+     * @param {string} key
+     * @param {Object.<string,string>} labels
+     * @param {?string[]} [defaults]
+     * @param {?string} idPrefix
+     */
+    static create(key, labels, defaults = null, idPrefix = null) {
+        defaults ??= Object.keys(labels);
+        const setting = ButtonGroupSetting.create(labels, defaults, null, idPrefix);
+        return new this(key, setting);
+    }
+
+    filteredBy(symbolData) {
+        return symbolData[this.key];
+    }
+
+    /**
+     * @template V
+     * @param {Object<string, V>} data
+     * @param {function(V, string): *} func
+     * @param {*[]} values
+     * @returns {Object<string, V>}
+     */
+    static filterBy(data, func, values) {
+        return ObjectHelper.filter(data, (v, k) => values.indexOf(func(v, k)) !== -1);
+    }
+
+    /**
+     * @param {string[]} values
+     * @param {string} key
+     * @param {?Object.<string,string>} [labels]
+     * @param {?string[]} [defaults]
+     * @param {?string} idPrefix
+     */
+    static fromValues(values, key, labels = null, defaults = null, idPrefix = null) {
+        labels = Object.assign({}, labels);
+        labels = Object.fromEntries(Object.map(values, value => [value, labels[value] ?? value]));
+
+        return new this(key, labels, defaults, idPrefix);
+    }
+}
+
+
+
+class SymbolProperty {
     type;
     display;
     solutions;
@@ -151,10 +269,10 @@ class SymbolEntry {
     static fromData(type, data, maxDist) {
         if (typeof data === 'object' && !Array.isArray(data) && data !== null) {
             const solutions = this.normalizeSolutions(data.solutions || data.solution);
-            return new SymbolEntry(type, data.display, solutions, maxDist);
+            return new this(type, data.display, solutions, maxDist);
         } else {
             const solutions = this.normalizeSolutions(data);
-            return new SymbolEntry(type, this.solutionsString(solutions), solutions, maxDist);
+            return new this(type, this.solutionsString(solutions), solutions, maxDist);
         }
     }
 
@@ -197,7 +315,7 @@ class SymbolEntry {
     _grade(guess, sol) {
         const dist = this._distance(guess, sol);
         if (dist <= this.maxDist) {
-            if (this.maxDist == 0) {
+            if (this.maxDist === 0) {
                 return [1, true];
             }
             return [Math.pow(2, -dist / this.maxDist), true];
@@ -207,15 +325,15 @@ class SymbolEntry {
     }
 
     _distance(guess, sol) {
-        if (this.type == "integer") {
+        if (this.type === "integer") {
             return Math.abs(parseInt(guess) - parseInt(sol));
-        } else if (this.type == "real") {
+        } else if (this.type === "real") {
             return Math.abs(parseFloat(guess) - parseFloat(sol));
-        } else if (this.type == "string" || this.type == "istring"){
+        } else if (this.type === "string" || this.type === "istring"){
             guess = guess.trim();
             sol = sol.trim();
 
-            if (this.type == "istring") {
+            if (this.type === "istring") {
                 guess = guess.toLowerCase();
                 sol = sol.toLowerCase();
             }

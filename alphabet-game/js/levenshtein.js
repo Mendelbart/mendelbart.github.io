@@ -1,6 +1,6 @@
 // Source: https://github.com/gustf/js-levenshtein/tree/v1.1.6
 
-const levDist = (function() {
+export const levDist = (function() {
     function _min(d0, d1, d2, bx, ay) {
         return d0 < d1 || d2 < d1
             ? d0 > d2
