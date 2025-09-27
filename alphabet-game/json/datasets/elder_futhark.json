@@ -7,45 +7,39 @@
         {"key": "noto-runic", "displayName": "Noto"}
     ],
     "groups": {
-        "normalized": "Normalized",
-        "variations": "Variations"
+        "normalized": "Normalized"
     },
     "defaultGroup": "normalized",
     "properties": {
         "name": {"type": "istring", "maxDist": 1, "displayName": "Name", "listScoringMode": "best"},
-        "pronunciation": {"type": "string", "maxDist": 0, "displayName": "Pronunciation", "listScoringMode": "best"}
+        "pronunciation": {"type": "istring", "maxDist": 0, "displayName": "Pronunciation", "listScoringMode": "best"},
+        "meaning": {"type": "istring", "maxDist": 1, "displayName": "Meaning", "listScoringMode": "best"}
     },
     "matchEnteredSymbolsTo": "name",
     "symbols": {
-        "fehu": {"string": "ᚠ", "name": "Fehu", "pronunciation": "f"},
-        "uruz": {"string": "ᚢ", "name": [["Uruz", "Ur"]], "pronunciation": "u"},
-        "thurisaz": {"string": "ᚦ", "name": "Thurisaz", "pronunciation": {"display": "þ (/θ/ or /ð/)", "solutions": [["th", "ð", "θ", "þ"]]}},
-        "ansuz": {"string": "ᚨ", "name": "Ansuz", "pronunciation": "a"},
-        "raido": {"string": "ᚱ", "name": "Raido", "pronunciation": "r"},
-        "kaunan": {"string": "ᚲ", "name": "Kaunan", "pronunciation": "k"},
-        "gebo": {"string": "ᚷ", "name": "Gebo", "pronunciation": "g"},
-        "wunjo": {"string": "ᚹ", "name": "Wunjo", "pronunciation": "w"},
-        "hagalaz": {"name": "Hagalaz", "pronunciation": "h", "mult": [
-            {"string": "ᚺ"},
-            {"string": "ᚻ", "group": "variations"}
-        ]},
-        "naudiz": {"string": "ᚾ", "name": [["Naudiz", "Nauthiz"]], "pronunciation": "n"},
-        "isaz": {"string": "ᛁ", "name": "Isaz", "pronunciation": "i"},
-        "jera": {"string": "ᛃ", "name": [["Jera", "Jeran", "Jeraz", "Yera"]], "pronunciation": "j"},
-        "eihaz": {"string": "ᛇ", "name": [["Eihaz", "Eiwaz"]], "pronunciation": {"display": "ï or æ", "solutions": [["ï", "ä", "æ"]]}},
-        "pertho": {"string": "ᛈ", "name": [["Pertho", "Peorth"]], "pronunciation": "p"},
-        "algiz": {"string": "ᛉ", "name": "Algiz", "pronunciation": {"display": "z or ʀ", "solutions": [["z", "ʀ", "R"]]}},
-        "sowilo": {"string": "ᛊ", "name": "Sowilo", "pronunciation": "s"},
-        "tiwaz": {"string": "ᛏ", "name": [["Tiwaz", "Teiwaz", "Tiewaz"]], "pronunciation": "t"},
-        "berkanan": {"string": "ᛒ", "name": "Berkanan", "pronunciation": "b"},
-        "ehwaz": {"string": "ᛖ", "name": "Ehwaz", "pronunciation": "e"},
-        "mannaz": {"string": "ᛗ", "name": "Mannaz", "pronunciation": "m"},
-        "laguz": {"string": "ᛚ", "name": [["Laguz", "Laukaz"]], "pronunciation": "l"},
-        "ingwaz": {"name": "Ingwaz", "pronunciation": {"display": "ŋ (ng)", "solutions": [["ng", "ŋ"]]}, "mult": [
-            {"string": "ᛜ"},
-            {"string": "ᛝ", "group": "variations"}
-        ]},
-        "dagaz": {"string": "ᛞ", "name": "Dagaz", "pronunciation": "d"},
-        "othala": {"string": "ᛟ", "name": "Othala", "pronunciation": "o"}
+        "fehu": {"string": "ᚠ", "name": "Fehu", "pronunciation": "f", "meaning": {"display": "cattle, wealth", "solutions": [["cattle", "wealth"]]}},
+        "uruz": {"string": "ᚢ", "name": [["Uruz", "Ur"]], "pronunciation": "u", "meaning": {"display": "aurochs (wild ox)", "solutions": [["aurochs", "wild ox"]]}},
+        "thurisaz": {"string": "ᚦ", "name": "Thurisaz", "pronunciation": {"display": "þ (/θ/ or /ð/)", "solutions": [["th", "ð", "θ", "þ"]]}, "meaning": {"display": "Thunraz/Thor (god)", "solutions": [["Thunraz", "Thor"]]}},
+        "ansuz": {"string": "ᚨ", "name": "Ansuz", "pronunciation": "a", "meaning": "god"},
+        "raido": {"string": "ᚱ", "name": "Raido", "pronunciation": "r", "meaning": {"display": "ride, journey", "solutions": [["ride", "journey"]]}},
+        "kaunan": {"string": "ᚲ", "name": "Kaunan", "pronunciation": "k", "meaning": {"display": "ulcer?", "solutions": [["ulcer"]]}},
+        "gebo": {"string": "ᚷ", "name": "Gebo", "pronunciation": "g", "meaning": "gift"},
+        "wunjo": {"string": "ᚹ", "name": "Wunjo", "pronunciation": "w", "meaning": "joy"},
+        "hagalaz": {"string": "ᚺ", "name": "Hagalaz", "pronunciation": "h", "meaning": "hail"},
+        "naudiz": {"string": "ᚾ", "name": [["Naudiz", "Nauthiz"]], "pronunciation": "n", "meaning": "need"},
+        "isaz": {"string": "ᛁ", "name": "Isaz", "pronunciation": "i", "meaning": "ice"},
+        "jera": {"string": "ᛃ", "name": [["Jera", "Jeran", "Jeraz", "Yera"]], "pronunciation": "j", "meaning": {"display": "year, harvest", "solutions": [["year", "harvest"]]}},
+        "eihaz": {"string": "ᛇ", "name": [["Eihaz", "Eiwaz"]], "pronunciation": {"display": "ï or æ", "solutions": [["ï", "ä", "æ", "ei"]]}, "meaning": "yew (tree)"},
+        "pertho": {"string": "ᛈ", "name": [["Pertho", "Peorth"]], "pronunciation": "p", "meaning": {"display": "pear-tree?", "solutions": [["pear-tree", "pear tree"]]}},
+        "algiz": {"string": "ᛉ", "name": "Algiz", "pronunciation": {"display": "z or ʀ", "solutions": [["z", "ʀ", "R"]]}, "meaning": "elk"},
+        "sowilo": {"string": "ᛊ", "name": "Sowilo", "pronunciation": "s", "meaning": "sun"},
+        "tiwaz": {"string": "ᛏ", "name": [["Tiwaz", "Teiwaz", "Tiewaz"]], "pronunciation": "t", "meaning": {"display": "Tiwaz/Tyr (god)", "solutions": [["Tiwaz", "Tyr"]]}},
+        "berkanan": {"string": "ᛒ", "name": "Berkanan", "pronunciation": "b", "meaning": "birch"},
+        "ehwaz": {"string": "ᛖ", "name": "Ehwaz", "pronunciation": "e", "meaning": "horse"},
+        "mannaz": {"string": "ᛗ", "name": "Mannaz", "pronunciation": "m", "meaning": "man"},
+        "laguz": {"string": "ᛚ", "name": [["Laguz", "Laukaz"]], "pronunciation": "l", "meaning": {"display": "water, lake", "solutions": [["water", "lake"]]}},
+        "ingwaz": {"string": "ᛜ", "name": "Ingwaz", "pronunciation": {"display": "ŋ (ng)", "solutions": [["ng", "ŋ"]]}, "meaning": {"display": "Ingwaz/Freyr (god)", "solutions": [["Ingwaz", "Freyr"]]}},
+        "dagaz": {"string": "ᛞ", "name": "Dagaz", "pronunciation": "d", "meaning": "day"},
+        "othala": {"string": "ᛟ", "name": "Othala", "pronunciation": "o", "meaning": {"display": "heritage, estate, possession", "solutions": [["inheritance", "heritage", "estate", "possession"]]}}
     }
 }
