@@ -1,10 +1,9 @@
 /**************** FONTS ****************/
 @font-face {
     font-family: Junicode;
-    src: url("assets/Junicode.woff2") format("woff2");
+    src: url("../assets/Junicode.woff2") format("woff2");
     font-weight: 300 700;
     font-stretch: 100%;
-    font-optical-sizing: auto;
     font-style: normal;
     font-variation-settings: "ENLA" 0.5;
 }
@@ -338,8 +337,9 @@ h4 {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    border: 1px solid var(--border-grey-light);
     border-width: 1px 1px 1px 0;
+    border-style: solid;
+    border-color: var(--border-grey-light);
 }
 
 #totalSymbolCountContainer {
@@ -374,7 +374,7 @@ h4 {
     align-items: center;
     background: var(--bg-grey-light);
 
-    font-family: var(--symbol-font-family);
+    font-family: var(--symbol-font-family), serif;
     font-weight: var(--symbol-font-weight);
 }
 

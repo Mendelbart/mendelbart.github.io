@@ -1,4 +1,15 @@
-class Dataset {
+import {osaDistance} from "./string-metrics.js";
+
+export const DATASETS_METADATA = {
+    elements: {name: "Atomic Elements", file: "./json/datasets/elements.json"},
+    cyrillic: {name: "Cyrillic", file: "./json/datasets/cyrillic.json"},
+    elder_futhark: {name: "Elder Futhark", file: "./json/datasets/elder_futhark.json"},
+    greek: {name: "Greek", file: "./json/datasets/greek.json"},
+    hebrew: {name: "Hebrew", file: "./json/datasets/hebrew.json"},
+}
+export const DEFAULT_DATASET = "hebrew";
+
+export class Dataset {
     name
     gameName
     terms
@@ -8,9 +19,10 @@ class Dataset {
     symbols
     propertyKeys
     groupKeys
-    matchedDisplayStrings
     matchEnteredSymbolsTo
     symbolKeysByGroups
+
+    static _cache = {}
 
     constructor(data) {
         this.name = data.name;
@@ -25,37 +37,34 @@ class Dataset {
 
         if (data.symbols) {
             this.symbols = this.buildSymbols(data.symbols, data.defaultGroup, !!data.autoGroup);
-            this.matchedDisplayStrings = this.buildMatchedDisplayStrings(data.matchPropertyForDisplay || this.propertyKeys[0]);
         }
     }
+
+    /**
+     *
+     * @param {string} key
+     * @returns {Promise<*|Dataset>}
+     */
+    static async fromKey(key) {
+        if (key in this._cache) {
+            return this._cache[key];
+        }
+
+        const data = await fetch(DATASETS_METADATA[key].file).then(response => response.json());
+        const dataset = new this(data);
+        this._cache[key] = dataset;
+        return dataset;
+    }
+
 
     getSymbol(key) {
         return this.symbols[key];
     }
 
-    buildMatchedDisplayStrings(property) {
-        const strs = {};
-        for (const symbol of Object.values(this.symbols)) {
-            const key = symbol[property];
-            if (!(key in strs)) {
-                strs[key] = "";
-            }
-
-            strs[key] += symbol.string;
-        }
-        return strs;
-    }
-
     buildSymbols(symbols, defaultGroup, autoGroup) {
         const result = {};
         for (const [key, symbol] of Object.entries(symbols)) {
-            if ("mult" in symbol) {
-                const multsymbol = Object.assign({}, symbol);    
-                delete multsymbol.mult;
-                for (const [multkey, multdata] of Object.entries(symbol.mult)) {
-                    result[key + "_" + multkey] = this.processSymbol(multsymbol, multdata);
-                }
-            } else if (Array.isArray(symbol.string)) {
+            if (Array.isArray(symbol.string)) {
                 for (const [index, string] of Object.entries(symbol.string)) {
                     const multsymbol = Object.assign({}, symbol);
                     multsymbol.string = string;
@@ -93,17 +102,6 @@ class Dataset {
         return symbol;
     }
 
-    symbolKeysByGroupDict() {
-        const result = {};
-        for (const [key, symbol] of Object.entries(this.symbols)) {
-            if (!(symbol.group in result)) {
-                result[symbol.group] = [];
-            }
-            result[symbol.group].push(key);
-        }
-        return result;
-    }
-
     symbolKeysFromGroups(groupKeys) {
         return Object.entries(this.symbols)
             .filter(([_, symbol]) => groupKeys.includes(symbol.group))
@@ -119,7 +117,7 @@ class Dataset {
     guessedDisplaySymbols() {
         const symbols = {};
         for (const symbol of Object.values(this.symbols)) {
-            let keys = symbol[this.matchEnteredSymbolsTo].solutions.flat();
+            const keys = symbol[this.matchEnteredSymbolsTo].solutions.flat();
 
             for (const k of keys) {
                 const key = k.toLowerCase();
@@ -197,7 +195,7 @@ class SymbolEntry {
     _grade(guess, sol) {
         const dist = this._distance(guess, sol);
         if (dist <= this.maxDist) {
-            if (this.maxDist == 0) {
+            if (this.maxDist === 0) {
                 return [1, true];
             }
             return [Math.pow(2, -dist / this.maxDist), true];
@@ -207,19 +205,19 @@ class SymbolEntry {
     }
 
     _distance(guess, sol) {
-        if (this.type == "integer") {
+        if (this.type === "integer") {
             return Math.abs(parseInt(guess) - parseInt(sol));
-        } else if (this.type == "real") {
+        } else if (this.type === "real") {
             return Math.abs(parseFloat(guess) - parseFloat(sol));
-        } else if (this.type == "string" || this.type == "istring"){
+        } else if (this.type === "string" || this.type === "istring"){
             guess = guess.trim();
             sol = sol.trim();
 
-            if (this.type == "istring") {
+            if (this.type === "istring") {
                 guess = guess.toLowerCase();
                 sol = sol.toLowerCase();
             }
-            return levDist(guess, sol);
+            return osaDistance(guess, sol);
         } else {
             console.error("Invalid SymbolEntry type:", this.type);
         }

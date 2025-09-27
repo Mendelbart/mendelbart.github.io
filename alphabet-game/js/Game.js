@@ -1,4 +1,6 @@
-class Game {
+import {DOMHelper, RandomHelper} from "./helpers.js";
+
+export class Game {
     dataset;
     properties;
     settings;
@@ -33,7 +35,7 @@ class Game {
         this.guessedDisplaySymbols = dataset.guessedDisplaySymbols();
         this.onFinish = onFinish;
         if (seed) {
-            this.rand = seeded_prng(seed);
+            this.rand = RandomHelper.seededPRNG(seed);
         } else {
             this.rand = Math.random;
         }
@@ -44,8 +46,8 @@ class Game {
         this.clearedAtTries = Object.fromEntries(symbolKeys.map(key => [key, 0]));
         this.symbolsCount = symbolKeys.length;
 
-        if (this.settings.symbolsOrder == "shuffled") {
-            shuffle(this.symbolKeys, this.rand);
+        if (this.settings.symbolsOrder === "shuffled") {
+            RandomHelper.shuffle(this.symbolKeys, this.rand);
         }
 
         this.currentSymbolIndex = null;
@@ -65,14 +67,14 @@ class Game {
         const scoreModeSet = "scoreMode" in settings;
 
         settings = Object.assign({}, Game.defaultSettings, settings);
-        if (settings.maxTries == "infty") {
+        if (settings.maxTries === "infty") {
             settings.maxTries = Infinity;
         } else {
             settings.maxTries = parseInt(settings.maxTries);
         }
 
         if (!scoreModeSet) {
-            settings.scoreMode = settings.maxTries == Infinity ? "rounds" : "symbols";
+            settings.scoreMode = settings.maxTries === Infinity ? "rounds" : "symbols";
         }
 
         this.settings = settings;
@@ -122,14 +124,14 @@ class Game {
         }
 
         let newindex;
-        if (this.settings.symbolsOrder == "random") {
+        if (this.settings.symbolsOrder === "random") {
             newindex = Math.floor(this.rand() * this.symbolKeys.length);
         } else {
             if (this.currentSymbolIndex === null) {
                 newindex = 0;
             } else {
                 newindex = remove_current ? this.currentSymbolIndex : this.currentSymbolIndex + 1;
-                if (newindex == this.symbolKeys.length) {
+                if (newindex === this.symbolKeys.length) {
                     newindex = 0;
                 }
             }
@@ -156,7 +158,7 @@ class Game {
 
     update_score(symbol_key, score, cleared) {
         const tries = (this.triesBySymbol[symbol_key] += 1);
-        if (tries == 1) {
+        if (tries === 1) {
             this.symbolsHitCount += 1;
         }
 
@@ -170,7 +172,7 @@ class Game {
         this.roundsScore += score;
         this.rounds += 1;
 
-        if (cleared && this.clearedAtTries[symbol_key] == 0) {
+        if (cleared && this.clearedAtTries[symbol_key] === 0) {
             this.clearedAtTries[symbol_key] = tries;
             this.clearedCount += 1;
         }
@@ -204,14 +206,14 @@ class Game {
         const input = this.inputs[key];
         const solutions = this.current_symbol()[key];
         const [guess_eval, sol_eval] = this.get_eval_elements(input);
-        guess_eval.innerText = guess;
-        sol_eval.innerText = solutions.display;
+        guess_eval.textContent = guess;
+        sol_eval.textContent = solutions.display;
 
         const displays = [guess_eval, sol_eval];
         
-        classIfElse(score == 1, displays, "correct");
-        classIfElse(0 < score && score < 1, displays, "almost-correct");
-        classIfElse(score == 0, displays, "incorrect");
+        DOMHelper.classIfElse(score === 1, displays, "correct");
+        DOMHelper.classIfElse(0 < score && score < 1, displays, "almost-correct");
+        DOMHelper.classIfElse(score === 0, displays, "incorrect");
     }
 
     get_eval_elements(input) {
@@ -220,7 +222,7 @@ class Game {
     }
 
     new_round(remove_current_symbol) {
-        if (remove_current_symbol && this.symbolKeys.length == 1) {
+        if (remove_current_symbol && this.symbolKeys.length === 1) {
             this.finish();
             return;
         }
@@ -253,12 +255,12 @@ class Game {
         const symbolElement = container.querySelector('.symbol');
         symbolElement.innerHTML = symbol;
         symbolElement.style.setProperty("--symbol-scale", 1);
-        const [symbolWidth, symbolHeight] = element_size(symbolElement, true);
-        const [containerWidth, containerHeight] = element_size(container, false);
+        const [symbolWidth, symbolHeight] = DOMHelper.elementSize(symbolElement, true);
+        const [containerWidth, containerHeight] = DOMHelper.elementSize(container, false);
 
         const scale = Math.min(containerWidth / symbolWidth, containerHeight / symbolHeight);
         if (scale < 1) {
-            symbolElement.style.setProperty("--symbol-scale", scale);
+            symbolElement.style.setProperty("--symbol-scale", scale.toString());
         }
     }
 
@@ -269,7 +271,7 @@ class Game {
         }
 
         let value = this.inputs[key].value;
-        if (this.dataset.properties[key].type == "istring") {
+        if (this.dataset.properties[key].type === "istring") {
             value = value.toLowerCase();
         }
         if (value in this.guessedDisplaySymbols) {
@@ -288,7 +290,7 @@ class Game {
         }
 
         let numerator, denominator;
-        if (scoreMode == "rounds") {
+        if (scoreMode === "rounds") {
             numerator = this.roundsScore;
             denominator = this.rounds;
         } else { // scoreMode = "symbols"
@@ -296,8 +298,8 @@ class Game {
             denominator = this.symbolsHitCount;
         }
 
-        if (scoreStringMode == "percent") {
-            if (denominator == 0) {
+        if (scoreStringMode === "percent") {
+            if (denominator === 0) {
                 return percent_string(0);
             }
             return percent_string(numerator / denominator);
@@ -309,12 +311,12 @@ class Game {
     display_score() {
         const score_string = this.score_string();
         document.querySelectorAll(".current-score").forEach(elem => {
-            elem.innerText = score_string;
+            elem.textContent = score_string;
         });
     }
 
     display_symbols_left() {
-        document.getElementById("symbolCount").innerText = this.symbolKeys.length;
+        document.getElementById("symbolCount").textContent = this.symbolKeys.length;
     }
 
     remove_symbol(index) {
@@ -329,7 +331,7 @@ class Game {
     display_current_time() {
         const string = this.time_string();
         document.querySelectorAll(".current-time").forEach(elem => {
-            elem.innerText = string;
+            elem.textContent = string;
         });
     }
 
@@ -349,7 +351,7 @@ class Game {
     }
 
     averageTries() {
-        if (this.clearedCount == 0) {
+        if (this.clearedCount === 0) {
             return 0;
         }
 
@@ -357,11 +359,11 @@ class Game {
     }
 
     displayStats() {
-        document.getElementById("stat-score").innerText =
+        document.getElementById("stat-score").textContent =
             this.score_string(this.settings.scoreMode, "ratio") +
             " (" + this.score_string(this.settings.scoreMode, "percent") + ")";
-        document.getElementById("stat-time").innerText = this.time_string(2);
-        document.getElementById("stat-cleared").innerText = this.clearedCount +  "/" + this.seenCount();
+        document.getElementById("stat-time").textContent = this.time_string(2);
+        document.getElementById("stat-cleared").textContent = this.clearedCount +  "/" + this.seenCount();
     }
 }
 
@@ -371,7 +373,7 @@ function count_where(arr, callback) {
 }
 
 function percent_string(x, digits = 0) {
-    return Math.floor(x * Math.pow(10, digits + 2)) / Math.pow(10, digits) + "%"
+    return String(floor(x * 100, digits)) + "%"
 }
 
 function floor(x, digits = 0, factor = 1) {
@@ -379,8 +381,8 @@ function floor(x, digits = 0, factor = 1) {
     return Math.floor(x * digits_multiplier) / digits_multiplier;
 }
 
-function ceil(x, ...args) {
-    return -floor(-x, ...args);
+function ceil(x, digits = 0, factor = 1) {
+    return -floor(-x, digits, factor);
 }
 
 function format_time(milliseconds, seconds_digits = 0) {
@@ -389,104 +391,10 @@ function format_time(milliseconds, seconds_digits = 0) {
     const minutes = Math.floor(seconds / 60);
     seconds -= minutes * 60;
 
-    let string = String(minutes).padStart(2, 0) + ":" + String(seconds).padStart(2, 0);
+    let string = String(minutes).padStart(2, "0") + ":" + String(seconds).padStart(2, "0");
     if (seconds_digits > 0) {
-        string += "." + String(Math.floor(milliseconds * Math.pow(10, seconds_digits - 3))).padStart(seconds_digits, 0);
+        string += "." + String(Math.floor(milliseconds * Math.pow(10, seconds_digits - 3))).padStart(seconds_digits, "0");
     }
 
     return string;
-}
-
-
-function one_true(arr) {
-    return arr.reduce((bool, elem) => bool || elem, false);
-}
-
-function all_true(arr) {
-    return arr.reduce((bool, elem) => bool && elem, true);
-}
-
-function normalize_string(str) {
-    return str.trim().toLowerCase();
-}
-
-
-
-function element_size(element, with_padding = false) {
-    const computedStyle = getComputedStyle(element);
-
-    let width = element.clientWidth;
-    let height = element.clientHeight;
-
-    if (!with_padding) {
-        width -= parseFloat(computedStyle.paddingLeft) + parseFloat(computedStyle.paddingRight),
-        height -= parseFloat(computedStyle.paddingTop) + parseFloat(computedStyle.paddingBottom)
-    }
-
-    return [width, height];
-}
-
-
-function cyrb128(str) {
-    let h1 = 1779033703, h2 = 3144134277,
-        h3 = 1013904242, h4 = 2773480762;
-    for (let i = 0, k; i < str.length; i++) {
-        k = str.charCodeAt(i);
-        h1 = h2 ^ Math.imul(h1 ^ k, 597399067);
-        h2 = h3 ^ Math.imul(h2 ^ k, 2869860233);
-        h3 = h4 ^ Math.imul(h3 ^ k, 951274213);
-        h4 = h1 ^ Math.imul(h4 ^ k, 2716044179);
-    }
-    h1 = Math.imul(h3 ^ (h1 >>> 18), 597399067);
-    h2 = Math.imul(h4 ^ (h2 >>> 22), 2869860233);
-    h3 = Math.imul(h1 ^ (h3 >>> 17), 951274213);
-    h4 = Math.imul(h2 ^ (h4 >>> 19), 2716044179);
-    h1 ^= (h2 ^ h3 ^ h4), h2 ^= h1, h3 ^= h1, h4 ^= h1;
-    return [h1>>>0, h2>>>0, h3>>>0, h4>>>0];
-}
-
-function sfc32(a, b, c, d) {
-    return function() {
-        a |= 0; b |= 0; c |= 0; d |= 0;
-        const t = (a + b | 0) + d | 0;
-        d = d + 1 | 0;
-        a = b ^ b >>> 9;
-        b = c + (c << 3) | 0;
-        c = (c << 21 | c >>> 11);
-        c = c + t | 0;
-        return (t >>> 0) / 4294967296;
-    }
-}
-
-function seeded_prng(seed) {
-    return sfc32(...cyrb128(seed));
-}
-
-function randint(min, max = null) {
-    if (max === null) {
-        max = min;
-        min = 0;
-    }
-
-    return Math.floor(Math.random() * (max - min) + min);
-}
-
-function randindex(arr) {
-    return randint(arr.length);
-}
-
-function shuffle(array, rand = Math.random) {
-    let currentIndex = array.length;
-  
-    // While there remain elements to shuffle...
-    while (currentIndex != 0) {
-  
-      // Pick a remaining element...
-      let randomIndex = Math.floor(rand() * currentIndex);
-      currentIndex--;
-  
-      // And swap it with the current element.
-      [array[currentIndex], array[randomIndex]] = [
-        array[randomIndex], array[currentIndex]];
-    }
 }
