@@ -433,12 +433,6 @@ input[type="range"]::-moz-range-track {
 .symbol-string {
     scale: var(--font-scale);
     translate: 0 calc(var(--font-shift) * 1em);
-    background-image: linear-gradient(45deg, var(--clr-text-soft) 20%, white 80%);
-    background-clip: text;
-    --webkit-background-clip: text;
-    background-repeat: no-repeat;
-    background-origin: content-box;
-    color: transparent;
 }
 
 #symbol-current {

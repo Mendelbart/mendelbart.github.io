@@ -135,6 +135,15 @@ export class Game {
 
     setSymbolFont(element, key) {
         FontHelper.setFont(element, this.dataset.displayData.fonts[key]);
+        FontHelper.getFontData(this.dataset.displayData.fonts[key].family).then(data => {
+            const weightRange = this.fontSettings.settings.weight.valueElement;
+            const [min, max] =
+                "variationSettings" in data
+                    ? data.variationSettings.wght.split(" ").map(x => parseInt(x))
+                    : [100, 900];
+            weightRange.setMin(min);
+            weightRange.setMax(max);
+        });
     }
 
     seed(seed) {

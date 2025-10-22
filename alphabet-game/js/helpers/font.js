@@ -76,6 +76,16 @@ export function setFont(element, properties) {
 }
 
 /**
+ * @param family
+ * @returns {Promise<Record<string,*>>}
+ */
+export function getFontData(family) {
+    return fontDataReady.then(() => {
+        return FONT_DATA[family];
+    })
+}
+
+/**
  * @param {HTMLElement} element
  * @param {{weight?, shift?, scale?, styleset?}} properties
  */

@@ -291,6 +291,22 @@ export class Slider extends SingleNodeValueElement {
         return Math.round(this.nSteps * (value - this.min) / (this.max - this.min));
     }
 
+    setMin(min) {
+        const value = this.value;
+        this.min = min;
+        this.setValue(Math.max(value, min));
+        this.readValue();
+        this.runUpdateListeners();
+    }
+
+    setMax(max) {
+        const value = this.value;
+        this.max = max;
+        this.setValue(Math.min(value, max));
+        this.readValue();
+        this.runUpdateListeners();
+    }
+
     /**
      * @param {number} min
      * @param {number} max
