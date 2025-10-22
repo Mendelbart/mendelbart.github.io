@@ -26,49 +26,62 @@ export class GameContext {
         });
     }
 
+    log(...stuff) {
+        document.getElementById("console").innerHTML += stuff.join(", ") + "<br>";
+    }
+
     async selectDataset(key) {
-        this.dataset = await Dataset.fromKey(key);
-        this.datasetKey = key;
-        window.localStorage.setItem("dataset", key);
+        try {
+            this.log("Dataset key", key);
+            this.dataset = await Dataset.fromKey(key);
+            this.log("Dataset name", this.dataset.name);
+            this.datasetKey = key;
+            window.localStorage.setItem("dataset", key);
 
-        let cachedSettings = window.localStorage.getItem(this.localStorageSettingsKey());
-        cachedSettings = cachedSettings ? JSON.parse(cachedSettings) : {};
+            let cachedSettings = window.localStorage.getItem(this.localStorageSettingsKey());
+            cachedSettings = cachedSettings ? JSON.parse(cachedSettings) : {};
 
-        const [filterer, filterSettings] = this.dataset.getFilterSettings(cachedSettings.filters);
-        this.symbolFilterer = filterer;
-        this.settings.filters = filterSettings;
-        this.settings.properties = this.dataset.propertySetting(cachedSettings.properties);
-        this.settings.forms = this.dataset.formsSetting(cachedSettings.forms);
-        this.settings.language = this.dataset.languageSetting(cachedSettings.language);
+            const [filterer, filterSettings] = this.dataset.getFilterSettings(cachedSettings.filters);
+            this.symbolFilterer = filterer;
+            this.settings.filters = filterSettings;
+            this.settings.properties = this.dataset.propertySetting(cachedSettings.properties);
+            this.settings.forms = this.dataset.formsSetting(cachedSettings.forms);
+            this.settings.language = this.dataset.languageSetting(cachedSettings.language);
 
-        for (const key of ["forms", "language"]) {
-            const singleButton = this.settings[key].valueElement.buttonCount() === 1;
-            if (singleButton) {
-                DOMHelper.hide(this.settings[key].node);
+            for (const key of ["forms", "language"]) {
+                const singleButton = this.settings[key].valueElement.buttonCount() === 1;
+                if (singleButton) {
+                    DOMHelper.hide(this.settings[key].node);
+                }
+                DOMHelper.classIfElse(singleButton, this.settings[key].node, "hidden");
             }
-            DOMHelper.classIfElse(singleButton, this.settings[key].node, "hidden");
+
+            this.settings.properties.valueElement.disableIfSingleButton();
+
+            document.getElementById("dataset-settings").replaceChildren(
+                this.settings.forms.node,
+                ...this.settings.filters.nodeList(),
+            );
+
+            document.getElementById("game-settings").replaceChildren(
+                this.settings.properties.node,
+                this.settings.language.node,
+                ...this.settings.generic.nodeList(),
+            );
+
+            this.setupSymbolCount();
+
+            for (const setting of this.settingsList()) {
+                setting.valueElement.addUpdateListener(() => {
+                    this.saveSettings();
+                });
+            }
+
+            throw new Error("Testing error: hey");
+        } catch (error) {
+            this.log(error);
         }
 
-        this.settings.properties.valueElement.disableIfSingleButton();
-
-        document.getElementById("dataset-settings").replaceChildren(
-            this.settings.forms.node,
-            ...this.settings.filters.nodeList(),
-        );
-
-        document.getElementById("game-settings").replaceChildren(
-            this.settings.properties.node,
-            this.settings.language.node,
-            ...this.settings.generic.nodeList(),
-        );
-
-        this.setupSymbolCount();
-
-        for (const setting of this.settingsList()) {
-            setting.valueElement.addUpdateListener(() => {
-                this.saveSettings();
-            });
-        }
     }
 
     /**
