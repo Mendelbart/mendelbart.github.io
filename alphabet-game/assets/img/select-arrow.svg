@@ -1,0 +1,12 @@
+
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 17" stroke="black" fill="black">
+    <polygon
+        points="
+            2,4
+            18,4
+            10,14
+        "
+        stroke-linejoin="round"
+        stroke-width="3"
+    />
+</svg>

@@ -1,45 +1,58 @@
 {
-    "gameName": {"string": ["משחק אלפבית", "מִשְׂחַק אָלֶפְבֵּית"], "font": "noto-sans-hebrew"},
-    "name": "Hebrew",
+  "name": "Hebrew",
+  "metadata": {
+    "gameHeading": {"string": ["משחק אלפבית", "מִשְׂחַק אָלֶפְבֵּית"], "font": {"family": "Noto Sans Hebrew"}},
     "terms": {"symbol": "letter", "symbols": "letters"},
-    "rtl": true,
-    "fonts": [
-        {"key" : "noto-serif-hebrew", "displayName": "Serif"},
-        {"key" : "noto-sans-hebrew", "displayName": "Sans"},
-        {"key" : "noto-rashi-hebrew", "displayName": "Rashi"}
-    ],
-    "matchEnteredSymbolsTo": "name",
-    "properties": {
-        "name": {"type": "istring", "maxDist": 1, "displayName": "Name"}
-    },
-    "groups": {
-        "normal": "Normal",
-        "sofit": "Sofit"
-    },
-    "defaultGroup": "normal",
-    "autoGroup": true,
-    "symbols": {
-        "alef": {"string": "א", "name": [["Alef", "Aleph"]]},
-        "bet": {"string": "ב", "name": "Bet"},
-        "gimel": {"string": "ג", "name": "Gimel"},
-        "dalet": {"string": "ד", "name": "Dalet"},
-        "he": {"string": "ה", "name": "He"},
-        "vav": {"string": "ו", "name": "Vav"},
-        "zayin": {"string": "ז", "name": "Zayin"},
-        "chet": {"string": "ח", "name": "Chet"},
-        "tet": {"string": "ט", "name": "Tet"},
-        "yod": {"string": "י", "name": "Yod"},
-        "kaf": {"string": ["כ", "ך"], "name": "Kaf"},
-        "lamed": {"string": "ל", "name": "Lamed"},
-        "mem": {"string": ["מ", "ם"], "name": "Mem"},
-        "nun": {"string": ["נ", "ן"], "name": "Nun"},
-        "samekh": {"string": "ס", "name": "Samekh"},
-        "ayin": {"string": "ע", "name": "Ayin"},
-        "pe": {"string": ["פ", "ף"], "name": "Pe"},
-        "tsadi": {"string": ["צ", "ץ"], "name": "Tsadi"},
-        "qof": {"string": "ק", "name": "Qof"},
-        "resh": {"string": "ר", "name": "Resh"},
-        "shin": {"string": "ש", "name": "Shin"},
-        "tav": {"string": "ת", "name": "Tav"}
+    "rtl": true
+  },
+  "displayData": {
+    "type": "string",
+    "fonts": {
+      "serif": {"family" : "Noto Serif Hebrew", "label": "Serif"},
+      "sans": {"family" : "Noto Sans Hebrew", "label": "Sans"},
+      "rashi": {"family" : "Noto Rashi Hebrew", "label": "Rashi"}
     }
+  },
+  "propsData": {
+    "name": {"type": "list", "maxDist": 1, "label": "Name", "identifier": true, "active": true},
+    "num": {"type":  "number", "maxDist": 0, "label": "Numeric Value", "identifier": true}
+  },
+  "formsData": {
+    "label": "Form",
+    "keys": ["normal", "sofit"],
+    "setting": {
+      "normal": {
+        "label": "Normal", "active": true},
+      "sofit": {
+        "label": "Sofit", "active": true}
+    },
+    "defaultForm": "normal"
+  },
+  "symbolsData": {
+    "format": "rows",
+    "rows": {
+      "alef": {"displayForms": "א", "p:name": "Aleph/Alef", "p:num": 1},
+      "bet": {"displayForms": "ב", "p:name": "Bet", "p:num": 2},
+      "gimel": {"displayForms": "ג", "p:name": "Gimel", "p:num": 3},
+      "dalet": {"displayForms": "ד", "p:name": "Dalet", "p:num": 4},
+      "he": {"displayForms": "ה", "p:name": "He", "p:num": 5},
+      "vav": {"displayForms": "ו", "p:name": "Vav", "p:num": 6},
+      "zayin": {"displayForms": "ז", "p:name": "Zayin", "p:num": 7},
+      "chet": {"displayForms": "ח", "p:name": "Chet", "p:num": 8},
+      "tet": {"displayForms": "ט", "p:name": "Tet", "p:num": 9},
+      "yod": {"displayForms": "י", "p:name": "Yod", "p:num": 10},
+      "kaf": {"displayForms": ["כ", "ך"], "p:name": "Kaf", "p:num": 20},
+      "lamed": {"displayForms": "ל", "p:name": "Lamed", "p:num": 30},
+      "mem": {"displayForms": ["מ", "ם"], "p:name": "Mem", "p:num": 40},
+      "nun": {"displayForms": ["נ", "ן"], "p:name": "Nun", "p:num": 50},
+      "samekh": {"displayForms": "ס", "p:name": "Samekh", "p:num": 60},
+      "ayin": {"displayForms": "ע", "p:name": "Ayin", "p:num": 70},
+      "pe": {"displayForms": ["פ", "ף"], "p:name": "Pe", "p:num": 80},
+      "tsadi": {"displayForms": ["צ", "ץ"], "p:name": "Tsadi", "p:num": 90},
+      "qof": {"displayForms": "ק", "p:name": "Qof", "p:num": 100},
+      "resh": {"displayForms": "ר", "p:name": "Resh", "p:num": 200},
+      "shin": {"displayForms": "ש", "p:name": "Shin", "p:num": 300},
+      "tav": {"displayForms": "ת", "p:name": "Tav", "p:num": 400}
+    }
+  }
 }

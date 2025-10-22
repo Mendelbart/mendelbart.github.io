@@ -1,451 +1,447 @@
-/**************** FONTS ****************/
-@font-face {
-    font-family: Junicode;
-    src: url("../assets/Junicode.woff2") format("woff2");
-    font-weight: 300 700;
-    font-stretch: 100%;
-    font-style: normal;
-    font-variation-settings: "ENLA" 0.5;
+/******************** RESET ***********************/
+*, *::before, *::after {
+    box-sizing: border-box;
 }
 
-/**************** ROOT VARIABLES ****************/
+* {
+    margin: 0;
+    padding: 0;
+    font: inherit;
+}
+
+
+/************************* BASE VARS ***********************/
 :root {
-    --symbol-font-weight: 400;
-    --symbol-font-family: "Noto Serif", serif;
-    --symbol-font-size: 7.5rem;
-    --symbol-font-scale: 1;
-    --symbol-shift: 0;
-    --game-name-scale: 1;
+    --accent-text: hsl(210, 95%, 97.5%);
+    --accent-300: hsl(210, 95%, 70%);
+    --accent-400: hsl(210, 89%, 55%);
+    --accent-500: hsl(210, 89%, 45%);
+    --accent-600: hsl(210, 89%, 38%);
+    --accent-800: hsl(210, 89%, 15%);
 
-    --bg-grey-light: #f4f4f4;
-    --bg-grey: #c3cbd5;
-    --border-grey-light: #c9cdd0;
-    --border-blue-light: #69beff;
-    --bs-border-color: var(--border-grey-light);
-    --blue: #0c8aea;
+    --clr-background: hsl(0, 0%, 8%);
+    --clr-surface: hsl(210, 100%, 85%, 0.07);
+    --clr-input: hsl(0, 0%, 100%, 0.14);
 
-    --bg-light-red: rgb(255, 206, 216);
-    --bg-light-yellow: rgb(255, 244, 152);
-    --bg-light-green: rgb(188, 250, 188);
+    --clr-border: hsl(0, 0%, 40%);
+    --clr-inset-shadow: hsl(0, 0%, 100%, 0.35);
+    --clr-outset-shadow: black;
 
-    --text-grey: #888c91;
-    --bs-font-sans-serif: "Ubuntu Sans";
+    --clr-text-soft: hsl(0, 0%, 87%);
+    --clr-text: hsl(0, 0%, 95%);
 
-    --button-green: hsl(146, 100%, 40%);
-    --button-green-active: hsl(146, 100%, 36%);
-    --button-red: hsl(343, 100%, 47%);
-    --button-red-active: hsl(343, 100%, 43%);
-    --button-grey: hsl(212, 8%, 54%);
-    --button-grey-active: hsl(212, 8%, 50%);
+    --clr-text-accent: var(--clr-text);
 
-    --heading-scale: 1;
+    --clr-button: hsl(0, 0%, 100%, 0.2);
+    --clr-button-active: var(--clr-input);
+    --clr-button-checked: var(--clr-text);
+    --clr-button-checked-active: var(--clr-text-soft);
 
-    font-size: 16px;
+    --clr-text-checked: var(--clr-background);
+    --clr-text-checked-accent: var(--clr-input);
+
+    --border-radius-small: .4rem;
+
+    --text-green: hsl(118, 70.6%, 66.7%);
+    --text-yellow: hsl(53.5, 98.1%, 59.4%);
+    --text-red: hsl(351.5, 100%, 69.4%);
+
+    --clr-input-active: var(--clr-surface);
+
+    @media (prefers-color-scheme: dark) {
+
+    }
+
+    --font-scale: 1;
+    --font-shift: 0;
+    --font-base-size: 1em;
 }
 
-.btn-outline-primary {
-    border-radius: 0;
-    --bs-btn-active-bg: var(--blue);
-    --bs-btn-active-border-color: var(--blue);
-    --bs-btn-color: var(--blue);
-    --bs-btn-border-color: var(--blue);
-    --bs-btn-hover-bg: var(--blue);
-    --bs-btn-hover-border-color: var(--blue);
+html {
+    color-scheme: dark light;
 }
 
-.btn-group {
-    border-radius: 0;   
-}
+body {
+    background-color: var(--clr-background);
+    color: var(--clr-text);
+    font-family: system-ui, sans-serif;
+    font-size: 1.125rem;
+    min-height: 100vh;
 
-.form-check-input:checked {
-    background-color: var(--blue);
-    border-color: var(--blue);
-}
-
-.form-range::-moz-range-thumb {
-    background: var(--blue);
-}
-
-.hidden {
-    display: none !important;
-}
-
-/**************** PAGE ****************/
-#page {
     max-width: 26rem;
     margin: auto;
-    padding: 0.3rem 0.7rem 0.5rem;
-    min-height: 100vh;
-    position: relative;
-}
-
-.game-grid {
-    width: 100%;
-    display: grid;
-    --gap: .2em;
-    grid-template-columns: 40% repeat(2, calc(30% - var(--gap)));
-    gap: .2em;
-    align-items: stretch;
-    margin-bottom: .2em;
-}
-
-#game-symbols {
-    container-type: inline-size;
-    height: 10rem;
+    padding-inline: 0.7rem;
 }
 
 
-/**************** NEW GAME DIALOGUE ****************/
+/****************** HEADINGS ******************/
+h1 {
+    font-weight: 700;
+    font-size: calc(var(--font-scale) * 1.8rem);
+    line-height: 1.25;
+    margin-block: .25rem;
+}
+
 h2 {
-    font-weight: 750;
-    margin-bottom: 0;
-    line-height: 1em;
-}
-
-h4 {
-    font-weight: bold;
-    font-size: 1.3rem;
-    margin-bottom: .4rem;
+    font-weight: 700;
+    font-size: calc(var(--font-scale) * 1.4rem);
+    margin-block: .75rem .25rem;
 }
 
 .heading-with-button {
     display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: .3rem 0;
-    gap: .3rem;
-    font-size: calc(var(--heading-scale) * 1.7rem);
-}
-
-.heading-with-button h2 {
-    flex-grow: 1;
-    text-wrap: nowrap;
-    font-size: 1em;
-    overflow: hidden;
-}
-
-#game-stats-heading, #game-heading {
-    border-bottom: 1px solid var(--border-grey-light);
+    flex-direction: row;
 }
 
 #game-heading {
-    margin-bottom: .25rem;
+    padding-inline: .2rem;
 }
 
-.heading-with-button.rtl {
-    flex-direction: row-reverse;
+.heading-with-button > h1 {
+    flex: 1;
 }
 
-.heading-with-button.rtl h2 {
-    text-align: right;
-}
 
-.game-name {
-    font-size: calc(var(--game-name-scale) * 1em);
-}
-
-.heading-with-button .symbol-button {
-    font-size: 2.2rem;
-    line-height: 0;
-    width: 0.8em;
+/******************** SETTINGS *********************/
+.settings {
     display: flex;
-    justify-content: center;
+    flex-direction: column;
+    align-items: stretch;
+    gap: .6rem;
+    padding-block: .75rem;
 }
 
-.symbol-button {
+.settings:not(:has(> .setting:not(.hidden))) {
+    display: none;
+}
+
+.labeled-value-element {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: .125rem;
+}
+
+.labeled-value-element > label {
+    font-weight: 600;
+    font-size: .9rem;
+    color: var(--clr-text-soft);
+}
+
+#dataset-settings {
+    border-bottom: 1px solid var(--clr-border);
+}
+
+
+/********************** BUTTONS *******************/
+.button-group {
+    display: flex;
+    gap: .25rem;
+}
+
+.button-group > input {
+    display: none;
+}
+
+.button-group > .button {
+    border-radius: 0;
+}
+
+.button-group > .button:first-of-type {
+    border-top-left-radius: var(--border-radius-small);
+    border-bottom-left-radius: var(--border-radius-small);
+}
+
+.button-group > .button:last-of-type {
+    border-top-right-radius: var(--border-radius-small);
+    border-bottom-right-radius: var(--border-radius-small);
+}
+
+/*
+.button-group:has(> input[type="radio"]) {
+    gap: .25rem;
+}
+
+.button-group:has(> input[type="radio"]) > .button {
+    border-radius: 0;
+}
+
+.button-group:has(> input[type="radio"]) > .button:first-of-type {
+    border-top-left-radius: var(--border-radius-small);
+    border-bottom-left-radius: var(--border-radius-small);
+}
+
+.button-group:has(> input[type="radio"]) > .button:last-of-type {
+    border-top-right-radius: var(--border-radius-small);
+    border-bottom-right-radius: var(--border-radius-small);
+} */
+
+.button {
+    padding: .4em .6em;
+    background: var(--clr-button);
+    font-weight: 650;
+    font-size: 1rem;
+
+    border-radius: var(--border-radius-small);
     cursor: pointer;
     user-select: none;
 }
 
-.play-button {
-    color: var(--button-green);
-}
-.play-button:active {
-    color: var(--button-green-active);
-}
-.stop-button {
-    color: var(--button-red);
-}
-.stop-button:active {
-    color: var(--button-red-active);
-}
-.pause-button {
-    color: var(--button-grey);
-}
-.pause-button:active {
-    color: var(--button-grey-active);
-}
-#restart-game-button {
-    font-weight: 600;
+input:not(:disabled) + .button:active {
+    background: var(--clr-button-active);
 }
 
-#score-display {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 7.5rem;
-    border-bottom: 1px solid var(--border-grey-light);
+input:disabled + .button {
+    opacity: .75;
+    cursor: default;
 }
 
-#score-display .score-label {
-    font-size: 1.6rem;
-    font-weight: 500;
-    margin-right: 1.5rem;
+input:checked + .button {
+    background: var(--clr-button-checked);
+    color: var(--clr-text-checked);
 }
 
-#score-display-value {
-    font-size: 3.5rem;
-    font-weight: 750;
+input:not(:disabled):checked + .button:active {
+    background: var(--clr-button-checked-active);
+    color: var(--clr-text-checked-accent);
 }
 
-#game-stats-container {
-    margin-bottom: 0.3rem;
+
+
+
+input[type="button"] {
+    background: var(--accent-500);
+    color: var(--accent-text);
+    font-weight: 700;
+    padding: .5em .7em;
+    outline: none;
+    border: none;
+    border-radius: var(--border-radius-small);
+    cursor: pointer;
+
 }
 
-/**************** HEADER ****************/
-#counters {
-    font-weight: 600;
-    position: relative;
-    height: 1.5em;
+input[type="button"]:active {
+    background: var(--accent-600);
 }
 
-#counters .counters:first-child {
-    position: absolute;
-    top: 0;
-    left: 0;
+input[type="button"]:focus {
+    box-shadow: 0 0 .2rem 0 var(--accent-300);
 }
 
-#counters .counter:nth-child(2) {
-    transform: translateX(-50%);
-    position: absolute;
-    left: 50%;
-    top: 0;
+
+/************************* INPUTS, SELECT ***************/
+input[type="text"], select, .item-eval {
+    border-radius: var(--border-radius-small);
+    border: 0;
+    color: var(--clr-text);
+    background: var(--clr-input);
 }
 
-#counters .counter:last-child {
-    position: absolute;
-    right: 0;
-    top: 0;
+:is(input[type="text"], select):focus {
+    outline: none;
+    box-shadow: inset 0 0 .25rem 0 var(--clr-inset-shadow);
 }
 
-/**************** SETTINGS ****************/
-.range-label {
-    display: flex;
-    flex-direction: row;
-    justify-content: space-between;
-    margin-bottom: -.2rem;
+input[type="text"], .item-eval {
+    padding: .4em .55em;
 }
 
-.range-value {
-    font-weight: bold;
+input[type="text"] {
+    min-width: 0;
 }
 
-#game-font-settings {
-    margin-top: 2rem;
-    background: var(--bg-grey-light);
-    --bs-secondary-bg: var(--bg-grey); /* slider background */
-    padding: .3rem .6rem .1rem .6rem;
+select {
+    font-weight: 550;
+    padding: .4em .625em;
 }
 
-.settings-grid {
-    display: grid;
-    grid-template-columns: 1fr 3fr;
-    align-items: stretch;
-    justify-content: stretch;
-    gap: 0;
-    margin-top: -1px;
+.styled-select > select {
+    width: 100%;
 }
 
-.settings-grid .grid-left-label {
-    display: flex;
-    justify-content: right;
-    align-items: center;
-    padding-left: .5rem;
-}
+@supports(mask-image: none) {
+    .styled-select > select {
+        appearance: none;
+    }
 
-.settings-grid .grid-left-label::after {
-    content: ':';
-}
+    .styled-select {
+        position: relative;
+    }
 
-.settings-grid .wide-setting {
-    grid-column: span 2;
-}
+    .styled-select::after {
+        content: "";
+        display: block;
+        position: absolute;
+        background: var(--clr-text);
+        mask-image: url("../assets/img/select-arrow.svg");
+        mask-repeat: no-repeat;
+        mask-position: center;
+        height: 100%;
+        width: .8rem;
+        right: .7rem;
+        top: 0;
+        pointer-events: none;
+    }
 
-.settings-grid > * {
-    border-top: 1px solid var(--border-grey-light);
-    padding: .2rem .3rem;
-}
-
-.settings-grid .btn-group {
-    overflow-x: scroll;
-    max-width: 100%;
-    justify-content: left;
-    padding-right: .4rem;
-}
-.settings-grid .form-switch {
-    display: flex;
-    justify-content: right;
-    padding: .4rem .3rem;
-    margin: 0;
-    align-items: center;
-}
-
-.settings-grid .form-check-input {
-    margin-top: 0;
-}
-
-.settings-grid .form-check-label {
-    line-height: 1.15em;
-    display: flex;
-    justify-content: left;
-    align-items: center;
-}
-
-.invalid-setting {
-    background: var(--bg-light-red);
-}
-
-.form-select:focus, .form-check-input:focus {
-    box-shadow: none;
-}
-
-.settings-grid .btn {
-    font-size: 0.9rem;
-    padding: 0.3rem 0.55rem 0.25rem;
-    margin: 0.2rem 0;
-    line-height: 1.15em;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    text-wrap: nowrap;
-    flex-grow: 0;
+    @supports selector(:open) {
+        .styled-select:has(> select:open)::after {
+            rotate: 180deg;
+        }
+    }
 }
 
 #datasetSelect {
-    height: calc(3rem + calc(var(--bs-border-width) * 2));
-    min-height: calc(3rem + calc(var(--bs-border-width) * 2));
-    padding-top: 1.35rem;
-    border-radius: 0;
-    border-width: 0 1px;
+    font-size: 1.25rem;
 }
 
-#datasetSelect ~ label {
-    transform: scale(.85) translateY(-.7rem) translateX(.15rem)
-}
-
-#datasetSelectContainer {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    border-width: 1px 1px 1px 0;
-    border-style: solid;
-    border-color: var(--border-grey-light);
-}
-
-#totalSymbolCountContainer {
-    text-align: right;
-    text-wrap: nowrap;
-    padding: 0 1rem;
-}
-
-.capitalize {
-    text-transform: capitalize;
-}
-.lowercase {
-    text-transform: lowercase;
-}
-.uppercase {
-    text-transform: uppercase;
-}
-
-#game-stats {
-    grid-template-columns: 1fr 1fr;
-}
-
-#game-stats .grid-left-label {
-    font-weight: 600;
+#datasetSelect > option {
+    font-size: 1.125rem;
 }
 
 
-/**************** CHAR DISPLAY ****************/
-.symbol-display {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    background: var(--bg-grey-light);
-
-    font-family: var(--symbol-font-family), serif;
-    font-weight: var(--symbol-font-weight);
+input[type=range] {
+    appearance: none;
+    width: 100%;
+    background: transparent;
 }
 
-.symbol-display .symbol {
-    --symbol-scale: 1;
-    font-size: calc(var(--symbol-font-scale) * var(--symbol-font-size));
-    transform: scale(var(--symbol-scale)) translateY(var(--symbol-shift));
-    line-height: 1em;
-    text-align: center;
-    text-wrap: nowrap;
-    padding: 0 .12em;
-}
-
-#guessed-symbol {
-    color: var(--text-grey);
-}
-
-#guessed-symbol, #previous-symbol {
-    --symbol-font-size: min(2.5rem + 19cqw, 6rem);
-}
-
-#current-symbol {
-    --symbol-font-size: min(calc(2.5rem + 20cqw), 7.5rem);
-}
-
-
-
-/**************** EVAL FIELDS ****************/
-.eval-field {
-    padding: .25rem .35rem;
-    background: var(--bg-grey-light);
-    text-wrap: nowrap;
-    overflow-x: scroll;
-}
-
-.eval-field.correct {
-    background: var(--bg-light-green);
-}
-
-.eval-field.incorrect {
-    background: var(--bg-light-red);
-}
-
-.eval-field.almost-correct {
-    background: var(--bg-light-yellow);
-}
-
-#eval-headings {
-    grid-column: 2;
-}
-
-.eval-heading {
-    font-size: 1em;
-    font-weight: 600;
-    margin-bottom: -.4rem;
-    transform: translateX(-10%) scale(.8);
-    color: #333;
-}
-
-input[type=text] {
-    padding: .1rem .3rem;
-    border-style: solid;
-    border-color: var(--border-grey-light);
-    border-width: 2px;
-}
-
-input[type=text]:focus {
+input[type=range]::-webkit-slider-thumb, input[type=range]::-moz-range-thumb {
+    appearance: none;
+    background: var(--clr-text);
+    border: none;
     outline: none;
-    border-color: var(--border-blue-light);
+    cursor: pointer;
 }
 
-input[type=text]::placeholder {
-    color: var(--text-grey);
+input[type=range]:focus::-webkit-slider-thumb, input[type=range]:focus::-moz-range-thumb {
+    box-shadow: inset 0 0 .25rem 0 var(--clr-inset-shadow);
+}
+
+input[type=range]:focus {
+    outline: none; /* Removes the blue border. You should probably do some kind of focus styling for accessibility reasons though. */
+}
+
+input[type=range]::-webkit-slider-runnable-track, input[type=range]::-moz-range-track {
+    background: linear-gradient(to right, var(--accent-400) calc(var(--range-progress) * 100%), var(--clr-input) calc(var(--range-progress) * 100%));
+    height: .6rem;
+    border-radius: var(--border-radius-small);
+}
+
+.slider-container {
+    margin-top: -.25rem;
+    position: relative;
+}
+
+.slider-container .range-min, .slider-container .range-max {
+    display: none;
+}
+
+.slider-container .range-value {
+    position: absolute;
+    right: 0;
+    top: -1em;
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--clr-text-soft);
+}
+
+
+/******************** GAME ******************************/
+#progress-bar {
+    background: var(--clr-input);
+    border-radius: .15rem;
+    height: .35rem;
+    width: 100%;
+    margin-block: .15rem;
+}
+
+#progress-bar::after {
+    content: "";
+    display: block;
+    background: linear-gradient(to right, var(--accent-500), var(--accent-300));
+    background-size: calc(100% / var(--progress, 1));
+    width: calc(var(--progress, 0) * 100%);
+    height: 100%;
+    border-radius: inherit;
+    transition: width 125ms ease-out;
+}
+
+#game-inputs {
+    display: flex;
+    flex-direction: column;
+    gap: .5rem;
+    margin-top: -.25rem;
+}
+
+#item-buttons {
+    display: flex;
+    flex-direction: row;
+    flex-flow: row-reverse;
+}
+
+#game-symbols {
+    display: flex;
+    gap: .6rem;
+    align-items: center;
+    justify-content: center;
+    margin-top: 1.35rem;
+}
+
+/*************** SYMBOLS, EVAL *******************/
+.symbol {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: end;
+
+    font-weight: var(--symbol-weight, 400);
+
+    box-sizing: content-box;
+    height: 1em;
+    padding: calc(.75rem + .1em) .225em;
+    color: var(--clr-text-soft);
+    background: var(--clr-surface);
+    border-radius: var(--border-radius-small);
+    line-height: 1em;
+}
+
+.symbol-string {
+    scale: var(--font-scale);
+    translate: 0 calc(var(--font-shift) * 1em);
+    background: linear-gradient(45deg, var(--clr-text-soft) 20%, white 80%);
+    background-clip: text;
+    color: transparent;
+}
+
+#symbol-current {
+    font-size: 7rem;
+}
+
+.hint-symbol {
+    font-size: 5rem;
+}
+
+
+
+
+.item-eval .solution {
+    font-style: italic;
+    opacity: .75;
+}
+
+.item-eval .submitted:not(:empty) {
+    margin-inline-end: .5rem;
+}
+
+.item-eval [data-correct="true"] {
+    color: var(--text-green);
+}
+
+.item-eval:not(.best-mode:has([data-correct="true"])) [data-correct="partially"] {
+    color: var(--text-yellow);
+}
+
+.item-eval:not(.best-mode:has([data-correct="true"])) [data-correct="false"] {
+    color: var(--text-red);
 }

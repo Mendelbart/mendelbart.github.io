@@ -1,46 +1,72 @@
 {
-    "gameName": {"string": "Παιχνίδι Aλφάβητο"},
-    "name": "Greek",
-    "terms": {"symbol": "letter", "symbols": "letters"},
-    "fonts": [
-        {"key": "noto-serif"},
-        {"key": "noto-sans"},
-        {"key": "junicode"}
-    ],
-    "properties": {
-        "name": {"type": "istring", "maxDist": 1, "displayName": "Name"}
+  "name": "Greek",
+  "metadata": {
+    "gameHeading": {"string": "Παιχνίδι Aλφάβητο"},
+    "terms": {"symbol": "letter", "symbols": "letters"}
+  },
+  "languageData": {
+    "languages": ["en", "de"],
+    "default": "en"
+  },
+  "displayData": {
+    "type": "string",
+    "fonts": {
+      "serif": {"family": "Noto Serif"},
+      "sans": {"family": "Noto Sans"}
     },
-    "matchEnteredSymbolsTo": "name",
-    "groups": {
-        "upper": "Uppercase",
-        "lower": "Lowercase"
-    },
-    "autoGroup": true,
-    "symbols": {
-        "alpha": {"string": ["Α", "α"], "name": "Alpha"},
-        "beta": {"string": ["Β", "β"], "name": "Beta"},
-        "gamma": {"string": ["Γ", "γ"], "name": "Gamma"},
-        "delta": {"string": ["Δ", "δ"], "name": "Delta"},
-        "epsilon": {"string": ["Ε", "ε"], "name": "Epsilon"},
-        "zeta": {"string": ["Ζ", "ζ"], "name": "Zeta"},
-        "eta": {"string": ["Η", "η"], "name": "Eta"},
-        "theta": {"string": ["Θ", "θ"], "name": "Theta"},
-        "iota": {"string": ["Ι", "ι"], "name": "Iota"},
-        "kappa": {"string": ["Κ", "κ"], "name": "Kappa"},
-        "lambda": {"string": ["Λ", "λ"], "name": "Lambda"},
-        "mu": {"string": ["Μ", "μ"], "name": [["Mu", "Mü"]]},
-        "nu": {"string": ["Ν", "ν"], "name": [["Nu", "Nü"]]},
-        "xi": {"string": ["Ξ", "ξ"], "name": "Xi"},
-        "omicron": {"string": ["Ο", "ο"], "name": [["Omicron", "Omikron"]]},
-        "pi": {"string": ["Π", "π"], "name": "Pi"},
-        "rho": {"string": ["Ρ", "ρ"], "name": "Rho"},
-        "sigma": {"string": ["Σ", "σ"], "name": "Sigma"},
-        "sigma_final": {"string": "ς", "name": "Sigma", "group": "lower"},
-        "tau": {"string": ["Τ", "τ"], "name": "Tau"},
-        "upsilon": {"string": ["Υ", "υ"], "name": [["Upsilon", "Ypsilon"]]},
-        "phi": {"string": ["Φ", "φ"], "name": "Phi"},
-        "chi": {"string": ["Χ", "χ"], "name": "Chi"},
-        "psi": {"string": ["Ψ", "ψ"], "name": "Psi"},
-        "omega": {"string": ["Ω", "ω"], "name": "Omega"}
+    "defaultFont": "serif"
+  },
+  "propsData": {
+    "name": {"type": "string", "label": "Name", "maxDist": 1, "identifier": true, "active": true}
+  },
+  "filters": {
+    "type": {
+      "label": "Type",
+      "values": {
+        "vowel": {
+          "label": "Vowel", "keys": ["alpha", "epsilon", "iota", "omicron", "upsilon", "omega"]},
+        "consonant": {
+          "label": "Consonant"}
+      },
+      "defaultValue": "consonant"
     }
+  },
+  "formsData": {
+    "label": "Case",
+    "keys": ["upper", "lower", "final"],
+    "setting": {
+      "upper": {
+        "label": "Uppercase", "active": true},
+      "lower": {"keys": ["lower", "final"], "label": "Lowercase", "active": true}
+    }
+  },
+  "symbolsData": {
+    "format": "rows",
+    "rows": {
+      "alpha": {"displayForms": ["Α", "α"], "p:name": "Alpha"},
+      "beta": {"displayForms": ["Β", "β"], "p:name": "Beta"},
+      "gamma": {"displayForms": ["Γ", "γ"], "p:name": "Gamma"},
+      "delta": {"displayForms": ["Δ", "δ"], "p:name": "Delta"},
+      "epsilon": {"displayForms": ["Ε", "ε"], "p:name": "Epsilon"},
+      "zeta": {"displayForms": ["Z", "ζ"], "p:name": "Zeta"},
+      "eta": {"displayForms": ["Η", "η"], "p:name": "Eta"},
+      "theta": {"displayForms": ["Θ", "θ"], "p:name": "Theta"},
+      "iota": {"displayForms": ["Ι", "ι"], "p:name": "Iota"},
+      "kappa": {"displayForms": ["Κ", "κ"], "p:name": "Kappa"},
+      "lambda": {"displayForms": ["Λ", "λ"], "p:name": "Lambda"},
+      "mu": {"displayForms": ["Μ", "μ"], "p:name": "Mu", "p:name_de": "Mü"},
+      "nu": {"displayForms": ["Ν", "ν"], "p:name": "Nu", "p:name_de": "Nü"},
+      "xi": {"displayForms": ["Ξ", "ξ"], "p:name": "Xi"},
+      "omicron": {"displayForms": ["Ο", "ο"], "p:name": "Omicron", "p:name_de": "Omikron"},
+      "pi": {"displayForms": ["Π", "π"], "p:name": "Pi"},
+      "rho": {"displayForms": ["Ρ", "ρ"], "p:name": "Rho"},
+      "sigma": {"displayForms": ["Σ", "σ", "ς"], "p:name": "Sigma"},
+      "tau": {"displayForms": ["Τ", "τ"], "p:name": "Tau"},
+      "upsilon": {"displayForms": ["Υ", "υ"], "p:name": "Upsilon", "p:name_de": "Ypsilon"},
+      "phi": {"displayForms": ["Φ", "φ"], "p:name": "Phi"},
+      "chi": {"displayForms": ["Χ", "χ"], "p:name": "Chi"},
+      "psi": {"displayForms": ["Ψ", "ψ"], "p:name": "Psi"},
+      "omega": {"displayForms": ["Ω", "ω"], "p:name": "Omega"}
+    }
+  }
 }

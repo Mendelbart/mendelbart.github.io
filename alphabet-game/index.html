@@ -5,164 +5,85 @@
 
         <meta name="viewport" content="width=device-width"/>
 
-        <link rel="preconnect" href="https://fonts.googleapis.com">
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-        <link href="https://fonts.googleapis.com/css2?family=Noto+Rashi+Hebrew:wght@100..900&family=Noto+Sans+Hebrew:wght@100..900&family=Noto+Sans+Runic&family=Noto+Sans:ital,wght@0,100..900&family=Noto+Serif+Hebrew:wght@100..900&family=Noto+Serif:ital,wght@0,100..900&family=Ubuntu+Sans:ital,wght@0,100..900&display=swap" rel="stylesheet">
-        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@40,550,1,0&icon_names=pause,play_arrow,refresh,resume,stop" />
+<!--        <link rel="preconnect" href="https://fonts.googleapis.com">-->
+<!--        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>-->
 
-        <link href="css/bootstrap.min.css" rel="stylesheet">
+<!--        <link href="css/bootstrap.min.css" rel="stylesheet">-->
+        <link href="css/fonts.css" type="text/css" rel="stylesheet">
         <link href="css/index.css" type="text/css" rel="stylesheet">
         <link rel="icon" href="/favicon.svg">
 
         <script type="module" src="js/index.js" defer></script>
+
+<!--        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@40,550,1,0&icon_names=pause,play_arrow,refresh,resume,stop" />-->
     </head>
 
     <body>
-        <div id="page">
-            <div id="game-dialogue" class="hidden">
-                <div id="game-stats-container" class="hidden">
-                    <div id="game-stats-heading" class="heading-with-button game-name-heading">
-                        <h2><span class="game-name"></span></h2>
-                        <span class="material-symbols-outlined play-button symbol-button" id="resume-game-button">
-                            resume
-                        </span>
-                    </div>
-                    <div id="game-stats" class="settings-grid">
-                        <label for="stat-score" class="grid-left-label">Score</label>
-                        <div id="stat-score"></div>
-
-                        <label for="stat-time" class="grid-left-label">Time</label>
-                        <div id="stat-time"></div>
-
-                        <label for="stat-rounds" class="grid-left-label hidden">Rounds</label>
-                        <div id="stat-rounds" class="hidden"></div>
-
-                        <label for="stat-cleared" class="grid-left-label hidden"><span>Cleared <span class="symbol-term-plural capitalize"></span></span></label>
-                        <div id="stat-cleared" class="hidden"></div>
-
-                        <label for="stat-seen" class="grid-left-label hidden"><span>Seen <span class="symbol-term-plural capitalize"></span></span></label>
-                        <div id="stat-seen" class="hidden"></div>
-
-                        <label for="stat-tries" class="grid-left-label hidden">Avg Tries To Clear</label>
-                        <div id="stat-tries" class="hidden"></div>
-                    </div>
+        <div id="game-dialogue">
+            <div id="game-stats-container" style="display: none;">
+                <div class="heading-with-button">
+                    <h1 class="game-heading"></h1>
+                    <span class="material-symbols-outlined play-button symbol-button" id="resume-game-button">
+                        resume
+                    </span>
                 </div>
-
-                <div id="new-game-settings">
-                    <div id="new-game-heading" class="heading-with-button">
-                        <h2>New Game</h2>
-                        <span class="material-symbols-outlined play-button symbol-button" id="new-game-button">
-                            play_arrow
-                        </span>
-                    </div>
-
-                    <div id="datasetSelectContainer" class="form-floating">
-                        <select class="form-select" id="datasetSelect" aria-label="Select Dataset">
-                        </select>
-                        <label for="datasetSelect">Dataset</label>
-
-                        <div id="totalSymbolCountContainer">
-                            <span id="totalSymbolCount"></span> <span class="symbol-term-plural"></span>
-                        </div>
-                    </div>
-
-                    <div class="settings-grid">
-                        <label class="grid-left-label" for="propertiesButtons">Properties</label>
-                        <div class="btn-group" role="group" id="propertiesButtons"></div>
-    
-                        <label class="grid-left-label" for="groupsButtons">Groups</label>
-                        <div class="btn-group" role="group" id="groupsButtons"></div>
-    
-                        <label class="grid-left-label" for="triesButtons">Tries</label>
-                        <div class="btn-group" role="group" id="triesButtons">
-                            <input type="radio" class="btn-check form-input tries-button" name="tries" id="triesButton1" autocomplete="off" value="1">
-                            <label class="btn btn-outline-primary" for="triesButton1">One</label>
-                            <input type="radio" class="btn-check form-input tries-button" name="tries" id="triesButton3" autocomplete="off" value="3" checked>
-                            <label class="btn btn-outline-primary" for="triesButton3">Three</label>
-                            <input type="radio" class="btn-check form-input tries-button" name="tries" id="triesButton5" autocomplete="off" value="5">
-                            <label class="btn btn-outline-primary" for="triesButton5">Five</label>
-                            <input type="radio" class="btn-check form-input tries-button" name="tries" id="triesButtonInfty" autocomplete="off" value="infty">
-                            <label class="btn btn-outline-primary" for="triesButtonInfty">Infinite</label>
-                        </div>
-    
-                        <label class="grid-left-label" for="orderButtons">Order</label>
-                        <div class="btn-group" role="group" id="orderButtons">
-                            <input type="radio" class="btn-check form-input order-button" name="order" id="orderButtonRandom" autocomplete="off" value="random" checked>
-                            <label class="btn btn-outline-primary" for="orderButtonRandom">Random</label>
-                            <input type="radio" class="btn-check form-input order-button" name="order" id="orderButtonShuffled" autocomplete="off" value="shuffled">
-                            <label class="btn btn-outline-primary" for="orderButtonShuffled">Shuffled</label>
-                            <input type="radio" class="btn-check form-input order-button" name="order" id="orderButtonSorted" autocomplete="off" value="sorted">
-                            <label class="btn btn-outline-primary" for="orderButtonSorted">Sorted</label>
-                        </div>
-    
-                        <div class="form-check form-switch">
-                            <input class="form-check-input" type="checkbox" role="switch" id="removeClearedSwitch" checked>
-                        </div>
-                        <label class="form-check-label" for="removeClearedSwitch"><span>Remove correctly guessed <span class="symbol-term-plural"></span></span></label>
-
-                        <label class="grid-left-label" for="seedInput">Seed</label>
-                        <div class="grid-input-container">
-                            <input type="text" id="seedInput">
-                        </div>
-                    </div>
+                <div id="game-stats" class="settings-grid">
+                    <label for="stat-score" class="grid-left-label">Score</label>
+                    <div id="stat-score"></div>
                 </div>
             </div>
 
-            <div id="game-container" class="hidden">
-                <div id="game-heading" class="heading-with-button game-name-heading">
-                    <h2><span class="game-name"></span></h2>
-                    <span class="material-symbols-outlined stop-button symbol-button" style="display:none" id="stop-game-button">
-                        stop
-                    </span>
-                    <span class="material-symbols-outlined pause-button symbol-button" id="pause-game-button">
-                        pause
+            <div id="new-game-settings">
+                <div class="heading-with-button">
+                    <h1>New Game</h1>
+                    <span class="material-symbols-outlined play-button symbol-button" id="new-game-button">
+                        play_arrow
                     </span>
                 </div>
-                <div id="counters">
-                    <div class="counter">
-                        <span id="symbolCount"></span> left
-                    </div>
-                    <div class="counter">
-                        <span class="current-time" id="current-time"></span>
-                        <span class="hidden" id="current-time-alt">[Time]</span>
-                    </div>
-                    <div class="counter">
-                        <span class="current-score"></span>
-                    </div>
+
+                <div id="datasetStats">
+                    <span id="totalSymbolCount"></span>
                 </div>
 
-                <div id="game-symbols" class="game-grid">
-                    <div id="current-symbol" class="symbol-display">
-                        <span class="symbol"></span>
-                    </div>
-                    <div id="guessed-symbol" class="symbol-display">
-                        <span class="symbol"></span>
-                    </div>
-                    <div id="previous-symbol" class="symbol-display">
-                        <span class="symbol"></span>
-                    </div>
-                </div>
-                <div id="game-inputs" class="game-grid">
-                    <span class="eval-heading">Guess</span>
-                    <span class="eval-heading">Guessed</span>
-                    <span class="eval-heading">Solution</span>
+                <div class="styled-select">
+                    <select id="datasetSelect" aria-label="Select Dataset"></select>
                 </div>
 
-                <div id="game-font-settings">
-                    <h4>Font Settings</h4>
-                    <div class="settings-grid">
-                        <label class="grid-left-label" for="fontButtons">Font</label>
-                        <div class="btn-group" role="group" id="fontButtons"></div>
+                <div id="dataset-settings" class="settings"></div>
 
-                        <div class="wide-setting">
-                            <label for="fontWeightRange" class="range-label">
-                                <span class="range-title"><span class="symbolTerm capitalize"></span> Font Weight:</span>
-                                <span class="range-value">400</span>
-                            </label>
-                            <input type="range" class="form-range" min="100" max="900" step=1 value="400" id="fontWeightRange">
-                        </div>
-                    </div>
-                </div>    
+                <div id="game-settings" class="settings"></div>
+            </div>
+        </div>
+
+        <div id="game-container" style="display: none;">
+            <div id="game-heading" class="heading-with-button game-name-heading">
+                <h1 class="game-heading"></h1>
+                <span class="material-symbols-outlined stop-button symbol-button" style="display:none" id="stop-game-button">
+                    stop
+                </span>
+                <span class="material-symbols-outlined pause-button symbol-button" id="pause-game-button">
+                    pause
+                </span>
+            </div>
+
+            <div id="progress-bar"></div>
+
+            <div id="game-symbols">
+                <div id="symbol-current" class="symbol">
+                    <span class="symbol-string"></span>
+                </div>
+            </div>
+
+            <div id="game-inputs" class="settings"></div>
+
+            <div id="item-buttons">
+                <input id="item-submit-button" type="button" value="Submit">
+                <input id="item-next-button" type="button" value="Next" style="display:none;">
+            </div>
+
+            <div id="game-font-settings">
+                <h2>Font Settings</h2>
+                <div id="font-settings" class="settings"></div>
             </div>
         </div>
     </body>

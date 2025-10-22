@@ -1,50 +1,62 @@
 {
+  "name": "Cyrillic",
+  "metadata": {
     "_source": "https://en.wikipedia.org/wiki/Cyrillic_alphabets#Common_letters",
-    "gameName": {"string": ["Игра в алфавит"]},
-    "name": "Cyrillic",
-    "terms": {"symbol": "letter", "symbols": "letters"},
-    "fonts": [
-        {"key": "noto-serif"},
-        {"key": "noto-sans"},
-        {"key": "junicode"}
-    ],
-    "properties": {
-        "transl": {"type": "istring", "maxDist": 0, "displayName": "Name"}
+    "gameHeading": {"string": ["Игра в алфавит"]},
+    "terms": {"symbol": "letter", "symbols": "letters"}
+  },
+  "displayData": {
+    "type": "string",
+    "fonts": {
+      "serif": {"family": "Noto Serif"},
+      "sans": {"family": "Noto Sans"}
     },
-    "matchEnteredSymbolsTo": "transl",
-    "groups": {
-        "upper": "Uppercase",
-        "lower": "Lowercase"
-    },
-    "autoGroup": true,
-    "symbols": [
-        {"string": ["А", "а"], "transl": "a", "ipa": "/a/"},
-        {"string": ["Б", "б"], "transl": "b", "ipa": "/b/"},
-        {"string": ["В", "в"], "transl": [["v", "w"]], "ipa": "/v/"},
-        {"string": ["Г", "г"], "transl": "g", "ipa": "/g/"},
-        {"string": ["Д", "д"], "transl": "d", "ipa": "/d/"},
-        {"string": ["Е", "е"], "transl": "e", "ipa": "/je/,/ʲe/,"},
-        {"string": ["Ж", "ж"], "transl": "zh", "ipa": "/ʒ/"},
-        {"string": ["З", "з"], "transl": "z", "ipa": "/z/"},
-        {"string": ["И", "и"], "transl": "i", "ipa": "/i/,/ʲi/,"},
-        {"string": ["Й", "й"], "transl": "j", "ipa": "/j/"},
-        {"string": ["К", "к"], "transl": "k", "ipa": "/k/"},
-        {"string": ["Л", "л"], "transl": "l", "ipa": "/l/"},
-        {"string": ["М", "м"], "transl": "m", "ipa": "/m/"},
-        {"string": ["Н", "н"], "transl": "n", "ipa": "/n/"},
-        {"string": ["О", "о"], "transl": "o", "ipa": "/o/"},
-        {"string": ["П", "п"], "transl": "p", "ipa": "/p/"},
-        {"string": ["Р", "р"], "transl": "r", "ipa": "/r/"},
-        {"string": ["С", "с"], "transl": "s", "ipa": "/s/"},
-        {"string": ["Т", "т"], "transl": "t", "ipa": "/t/"},
-        {"string": ["У", "у"], "transl": "u", "ipa": "/u/"},
-        {"string": ["Ф", "ф"], "transl": "f", "ipa": "/f/"},
-        {"string": ["Х", "х"], "transl": [["x", "kh"]], "ipa": "/x/"},
-        {"string": ["Ц", "ц"], "transl": [["c", "ts", "z"]], "ipa": "/ts/,(t͡s),"},
-        {"string": ["Ч", "ч"], "transl": [["č", "ch", "tsch"]], "ipa": "/tʃ/,(t͡ʃ),"},
-        {"string": ["Ш", "ш"], "transl": [["š", "sh", "sch"]], "ipa": "/ʃ/"},
-        {"string": ["Ь", "ь"], "transl": "'", "ipa": "/ʲ/"},
-        {"string": ["Ю", "ю"], "transl": [["ju", "yu", "ü"]], "ipa": "/ju/,/ʲu/,"},
-        {"string": ["Я", "я"], "transl": [["ja", "ya"]], "ipa": "/ja/,/ʲa/"}
+    "defaultFont": "serif"
+  },
+  "propsData": {
+    "transl": {"type": "list", "maxDist": 0, "label": "Transliteration", "active": true, "identifier": true}
+  },
+  "formsData": {
+    "label": "Case",
+    "keys": ["upper", "lower"],
+    "setting": {
+      "upper": {
+        "label": "Uppercase", "active": true},
+      "lower": {
+        "label": "Lowercase", "active": true}
+    }
+  },
+  "symbolsData": {
+    "format": "rows",
+    "rows": [
+      {"displayForms": ["А", "а"], "p:transl": "a", "ipa": "/a/"},
+      {"displayForms": ["Б", "б"], "p:transl": "b", "ipa": "/b/"},
+      {"displayForms": ["В", "в"], "p:transl": "v, w", "ipa": "/v/"},
+      {"displayForms": ["Г", "г"], "p:transl": "g", "ipa": "/g/"},
+      {"displayForms": ["Д", "д"], "p:transl": "d", "ipa": "/d/"},
+      {"displayForms": ["Е", "е"], "p:transl": "e", "ipa": "/je/,/ʲe/,"},
+      {"displayForms": ["Ж", "ж"], "p:transl": "zh", "ipa": "/ʒ/"},
+      {"displayForms": ["З", "з"], "p:transl": "z", "ipa": "/z/"},
+      {"displayForms": ["И", "и"], "p:transl": "i", "ipa": "/i/,/ʲi/,"},
+      {"displayForms": ["Й", "й"], "p:transl": "j", "ipa": "/j/"},
+      {"displayForms": ["К", "к"], "p:transl": "k", "ipa": "/k/"},
+      {"displayForms": ["Л", "л"], "p:transl": "l", "ipa": "/l/"},
+      {"displayForms": ["М", "м"], "p:transl": "m", "ipa": "/m/"},
+      {"displayForms": ["Н", "н"], "p:transl": "n", "ipa": "/n/"},
+      {"displayForms": ["О", "о"], "p:transl": "o", "ipa": "/o/"},
+      {"displayForms": ["П", "п"], "p:transl": "p", "ipa": "/p/"},
+      {"displayForms": ["Р", "р"], "p:transl": "r", "ipa": "/r/"},
+      {"displayForms": ["С", "с"], "p:transl": "s", "ipa": "/s/"},
+      {"displayForms": ["Т", "т"], "p:transl": "t", "ipa": "/t/"},
+      {"displayForms": ["У", "у"], "p:transl": "u", "ipa": "/u/"},
+      {"displayForms": ["Ф", "ф"], "p:transl": "f", "ipa": "/f/"},
+      {"displayForms": ["Х", "х"], "p:transl": "x, kh", "ipa": "/x/"},
+      {"displayForms": ["Ц", "ц"], "p:transl": "c, ts, z", "ipa": "/ts/,(t͡s),"},
+      {"displayForms": ["Ч", "ч"], "p:transl": "č, ch, tsch", "ipa": "/tʃ/,(t͡ʃ),"},
+      {"displayForms": ["Ш", "ш"], "p:transl": "š, sh, sch", "ipa": "/ʃ/"},
+      {"displayForms": ["Ь", "ь"], "p:transl": "'", "ipa": "/ʲ/"},
+      {"displayForms": ["Ю", "ю"], "p:transl": "ju, yu, ü", "ipa": "/ju/,/ʲu/,"},
+      {"displayForms": ["Я", "я"], "p:transl": "ja, ya", "ipa": "/ja/,/ʲa/"}
     ]
+  }
 }
