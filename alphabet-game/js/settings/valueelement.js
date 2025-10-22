@@ -113,7 +113,7 @@ export class ButtonGroup extends ValueElement {
          * @type {Record<string, HTMLInputElement>}
          */
         this.inputs = Object.fromEntries(
-            this.node.querySelectorAll("INPUT").values().map(input => [input.value, input])
+            Array.from(this.node.querySelectorAll("INPUT")).map(input => [input.value, input])
         );
         this.exclusive = exclusive;
         this.decheckable = decheckable;

@@ -76,8 +76,6 @@ export function createButtonGroup(data, {
     container = null,
     decheckable = false
 } = {}) {
-    document.querySelector("#console").innerHTML += "Button Group Data: " + JSON.stringify(data) + "\n";
-
     if (Array.isArray(data)) {
         data = Object.fromEntries(data.map(x => [x, x]));
     }
