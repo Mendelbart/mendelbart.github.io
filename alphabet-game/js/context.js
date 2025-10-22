@@ -73,9 +73,6 @@ export class GameContext {
                 this.saveSettings();
             });
         }
-
-        throw new Error("Testing error: hey");
-
     }
 
     /**

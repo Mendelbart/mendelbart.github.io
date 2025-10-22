@@ -72,7 +72,7 @@ const fontDataReady = fetch("/alphabet-game/json/fonts.json")
 export function setFont(element, properties) {
     clearFont(element);
     setFontFamily(element, properties.family);
-    setFontProperties(element, ObjectHelper.withoutKeys(properties, ["family"]));
+    setFontProperties(element, properties);
 }
 
 /**
@@ -81,6 +81,10 @@ export function setFont(element, properties) {
  */
 export function setFontProperties(element, properties) {
     for (const [key, value] of Object.entries(properties)) {
+        if (key === "family") {
+            continue;
+        }
+
         if (!(key in FONT_PROPERTY_KEYS)) {
             console.warn(`Unknown font property '${key}'`);
             continue;
@@ -126,7 +130,7 @@ function setStylesets(element, stylesets, family) {
     } else {
         fontDataReady.then(() => {
             const ssIDs = stylesets.map(name => FONT_DATA[family].styleset[name]);
-            const ssIDsStr = ssIDs.map(id => '"ss' + id.toString() + '"').join(', ');
+            const ssIDsStr = ssIDs.map(id => `"ss${id.toString().padStart(2, "0")}"`).join(', ');
             element.style.setProperty("font-feature-settings", ssIDsStr);
         });
     }
