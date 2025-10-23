@@ -133,7 +133,7 @@ export function setAttrOnKeys(elements, keys, attr, value = "") {
 /**
  * Set the `attrs` on the `object`.
  * @param {Element} element
- * @param {Object.<string,any>} attrs
+ * @param {Object.<string,string>} attrs
  */
 export function setAttrs(element, attrs) {
     for (const [key, value] of Object.entries(attrs)) {
@@ -178,6 +178,10 @@ export function setDefaultId(element, defaultId) {
  * @param {function(Element): void} callback
  */
 export function forEachElement(elements, callback) {
+    if (!elements) {
+        console.warn("No elements.");
+        return;
+    }
     if (elements instanceof Node) {
         callback(elements);
     } else {

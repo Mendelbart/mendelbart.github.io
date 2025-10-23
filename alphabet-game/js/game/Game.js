@@ -30,6 +30,8 @@ export class Game {
         document.querySelectorAll(".game-heading").forEach(element => {
             this.dataset.setupGameHeading(element);
         });
+
+        document.getElementById("item-next-button").value = "Next";
     }
 
     /**
@@ -126,7 +128,7 @@ export class Game {
         document.querySelector("#font-settings").replaceChildren(...this.fontSettings.nodeList());
 
         this.fontSettings.settings.family.valueElement.addUpdateListener(key => {
-            document.querySelectorAll("#game-symbols .symbol").forEach(element => {
+            document.querySelectorAll("#game-symbols .symbol > .symbol-string").forEach(element => {
                 this.setSymbolFont(element, key);
             });
         });
@@ -139,7 +141,7 @@ export class Game {
             const weightRange = this.fontSettings.settings.weight.valueElement;
             const [min, max] =
                 "variationSettings" in data
-                    ? data.variationSettings.wght.split(" ").map(x => parseInt(x))
+                    ? data.variationSettings.wght.split(" ").map(x => parseInt(x, 10))
                     : [100, 900];
             weightRange.setMin(min);
             weightRange.setMax(max);
@@ -157,7 +159,6 @@ export class Game {
 
     finish() {
         this.cleanup();
-        this.displayStats();
 
         for (const func of this.onFinish) {
             func(this);
@@ -193,7 +194,11 @@ export class Game {
 
         this.updateProgressBar();
         this.show("evals");
+        if (this.dealer.isEmpty()) {
+            document.getElementById("item-next-button").value = "Finish";
+        }
         document.getElementById("item-next-button").focus();
+        window.scrollTo({top: 0});
     }
 
     clearInputs() {
@@ -252,13 +257,5 @@ export class Game {
 
     clearSymbol() {
         this.displaySymbol("");
-    }
-
-    pause() {
-        this.displayStats();
-    }
-
-    displayStats() {
-        document.getElementById("stat-score").textContent = this.dealer.scoreString("both");
     }
 }

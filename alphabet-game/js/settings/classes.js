@@ -156,7 +156,7 @@ export class Setting {
     }
 
     getValue() {
-        return this.valueElement.value;
+        return this.valueElement.getValue();
     }
 
     setValue(value) {

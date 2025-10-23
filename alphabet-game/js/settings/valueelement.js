@@ -44,6 +44,10 @@ export class ValueElement {
         return false;
     }
 
+    getValue() {
+        return this.value;
+    }
+
     readValue() {console.error("Not Implemented")}
     setValue() {console.error("Not Implemented")}
     setupValueUpdate() {console.error("Not Implemented")}
@@ -79,15 +83,19 @@ export class SingleNodeValueElement extends ValueElement {
 
     readValue() {
         if (this.isCheckbox()) {
-            return this.value = this.valueNode.checked;
+            this.value = this.valueNode.checked;
         } else {
-            return this.value = this.valueNode.value;
+            this.value = this.valueNode.value;
         }
     }
 
     setValue(value) {
-        this.valueNode.value = value;
-        this.value = value;
+        if (this.isCheckbox()) {
+            this.valueNode.checked = value;
+        } else {
+            this.valueNode.value = value;
+        }
+        this.readValue();
     }
 
     setupValueUpdate(updateEvent = "change") {
@@ -131,16 +139,21 @@ export class ButtonGroup extends ValueElement {
         if (this.exclusive && !this.decheckable) {
             for (const input of Object.values(this.inputs)) {
                 if (input.checked) {
-                    return this.value = input.value;
+                    this.value = input.value;
+                    return;
                 }
             }
-            return null;
+            this.value = null;
+            return;
         }
 
-        return this.value = ObjectHelper.map(this.inputs, input => input.checked);
+        this.value = ObjectHelper.map(this.inputs, input => input.checked);
     }
 
-    getListValue() {
+    getValue() {
+        if (this.exclusive) {
+            return this.value;
+        }
         return ObjectHelper.filterKeys(this.value, x => x);
     }
 
@@ -149,7 +162,7 @@ export class ButtonGroup extends ValueElement {
             for (const [key, input] of Object.entries(this.inputs)) {
                 input.addEventListener(updateEvent, () => {
                     this.value = key;
-                    this.runUpdateListeners();
+                    this.runUpdateListeners(key);
                 });
             }
         } else {
@@ -163,30 +176,12 @@ export class ButtonGroup extends ValueElement {
     }
 
     /**
-     * @param {string} key
-     * @param {boolean} checked
-     */
-    setChecked(key, checked) {
-        this.inputs[key].checked = checked;
-    }
-
-    /**
-     * @param {string} checked
+     * @param {string|string[]|Record<string,boolean>} checked
      */
     setValue(checked) {
-        if (this.exclusive) {
-            this.setChecked(checked, true);
-        } else {
-            if (Array.isArray(checked)) {
-                const objValue = ObjectHelper.map(this.inputs, () => false);
-                for (const key of checked) {
-                    objValue[key] = true;
-                }
-            }
-
-            for (const [key, input] of Object.entries(this.inputs)) {
-                input.checked = checked[key];
-            }
+        checked = ObjectHelper.subsetToBoolRecord(checked, Object.keys(this.inputs));
+        for (const [key, input] of Object.entries(this.inputs)) {
+            input.checked = checked[key];
         }
     }
 
@@ -209,15 +204,11 @@ export class Slider extends SingleNodeValueElement {
      * @param {HTMLElement} node
      * @param {number} min
      * @param {number} max
-     * @param {number} nSteps
-     * @param {number} digits
      */
-    constructor(node, min, max, nSteps, digits) {
+    constructor(node, min, max) {
         super(node);
         this.min = min;
         this.max = max;
-        this.nSteps = nSteps;
-        this.digits = digits;
     }
 
     setup(updateEvent = this.defaultUpdateEvent) {
@@ -227,20 +218,21 @@ export class Slider extends SingleNodeValueElement {
     }
 
     setupSpans() {
-        for (const key of ["min", "max"]) {
-            this.node.querySelector(`.range-${key}`).innerText = this.formatValue(this[key]);
-        }
-        this.addUpdateListener(() => {
-            this.displayValue();
-        });
+        this.addUpdateListener(this.displayValue.bind(this));
+        this.readValue();
+        this.displayValue();
     }
 
     setupRangeCSS() {
         const listener = () => {
-            this.valueNode.style.setProperty("--range-progress", (this.valueNode.value / this.nSteps).toString());
+            this.valueNode.style.setProperty("--range-progress", this.getProgress().toString());
         }
         listener();
         this.addUpdateListener(listener);
+    }
+
+    getProgress() {
+        return (this.valueNode.value - this.min) / (this.max - this.min);
     }
 
     displayValue() {
@@ -251,102 +243,43 @@ export class Slider extends SingleNodeValueElement {
      * @param {number} value
      */
     setValue(value) {
-        const inputValue= this.valueToStep(value);
-        this.valueNode.value = inputValue.toString();
-        this.value = this.stepToValue(inputValue);
+        if (this.min > value || this.max < value) {
+            console.warn("Slider value outside range.");
+        }
+        this.valueNode.value = value.toString();
+        this.readValue();
         this.displayValue();
     }
 
     readValue() {
-        return this.value = this.stepToValue(this.valueNode.value);
+        this.value = parseInt(this.valueNode.value);
     }
 
     /**
      * @param {number} value
-     * @param {string} [point]
      * @returns {string}
      */
-    formatValue(value, point = ".") {
-        const scaledInt = String(Math.round(value * Math.pow(10, this.digits)));
-        if (this.digits <= 0) {
-            return scaledInt;
-        }
-
-        return scaledInt.slice(0, -this.digits) + point + scaledInt.slice(-this.digits);
-    }
-
-    /**
-     * @param {number} step
-     * @returns {number}
-     */
-    stepToValue(step) {
-        return this.min + (this.max - this.min) * step / this.nSteps;
-    }
-
-    /**
-     * @param {number} value
-     * @returns {number}
-     */
-    valueToStep(value) {
-        return Math.round(this.nSteps * (value - this.min) / (this.max - this.min));
+    formatValue(value) {
+        return (Math.round(value * 100) / 100).toString();
     }
 
     setMin(min) {
-        const value = this.value;
+        if (this.valueNode.value < min) {
+            this.valueNode.value = min;
+            this.readValue();
+            this.runUpdateListeners();
+        }
         this.min = min;
-        this.setValue(Math.max(value, min));
-        this.readValue();
-        this.runUpdateListeners();
+        this.valueNode.min = min;
     }
 
     setMax(max) {
-        const value = this.value;
+        if (this.valueNode.value > max) {
+            this.valueNode.value = max;
+            this.readValue();
+            this.runUpdateListeners();
+        }
         this.max = max;
-        this.setValue(Math.min(value, max));
-        this.readValue();
-        this.runUpdateListeners();
-    }
-
-    /**
-     * @param {number} min
-     * @param {number} max
-     * @param {number} digits
-     * @param {Object} [options]
-     * @returns number
-     */
-    static calculateNSteps(min, max, digits, options = {}) {
-        if ("nSteps" in options)
-            return options.nSteps;
-        if ("stepSize" in options)
-            return this.nStepsFromStepSize(min, max, options.stepSize)
-
-        return this.defaultNSteps(min, max, digits);
-    }
-
-    static nStepsFromStepSize(min, max, stepSize) {
-        return Math.round((max - min) / stepSize);
-    }
-
-    static defaultNSteps(min, max, digits) {
-        return Math.round(Math.pow(10, digits) * (max - min));
-    }
-}
-
-
-export class LogarithmicSlider extends Slider {
-    static nStepsFromStepSize(min, max, stepSize) {
-        return (Math.log(max) - Math.log(min)) / Math.log(stepSize);
-    }
-
-    stepToValue(step) {
-        return this.min * Math.pow(this.max / this.min, step / this.nSteps);
-    }
-
-    valueToStep(value) {
-        return Math.log(value / this.min) / Math.log(this.max / this.min) * this.nSteps;
-    }
-
-    static defaultNSteps(min, max, stepSize) {
-        return 500;
+        this.valueNode.max = max;
     }
 }

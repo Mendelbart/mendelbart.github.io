@@ -24,7 +24,7 @@
       "label": "Type",
       "values": {
         "vowel": {
-          "label": "Vowel", "keys": ["alpha", "epsilon", "iota", "omicron", "upsilon", "omega"]},
+          "label": "Vowel", "keys": [0, 4, 8, 14, 19, 23]},
         "consonant": {
           "label": "Consonant"}
       },
@@ -42,31 +42,32 @@
   },
   "symbolsData": {
     "format": "rows",
-    "rows": {
-      "alpha": {"displayForms": ["Α", "α"], "p:name": "Alpha"},
-      "beta": {"displayForms": ["Β", "β"], "p:name": "Beta"},
-      "gamma": {"displayForms": ["Γ", "γ"], "p:name": "Gamma"},
-      "delta": {"displayForms": ["Δ", "δ"], "p:name": "Delta"},
-      "epsilon": {"displayForms": ["Ε", "ε"], "p:name": "Epsilon"},
-      "zeta": {"displayForms": ["Z", "ζ"], "p:name": "Zeta"},
-      "eta": {"displayForms": ["Η", "η"], "p:name": "Eta"},
-      "theta": {"displayForms": ["Θ", "θ"], "p:name": "Theta"},
-      "iota": {"displayForms": ["Ι", "ι"], "p:name": "Iota"},
-      "kappa": {"displayForms": ["Κ", "κ"], "p:name": "Kappa"},
-      "lambda": {"displayForms": ["Λ", "λ"], "p:name": "Lambda"},
-      "mu": {"displayForms": ["Μ", "μ"], "p:name": "Mu", "p:name_de": "Mü"},
-      "nu": {"displayForms": ["Ν", "ν"], "p:name": "Nu", "p:name_de": "Nü"},
-      "xi": {"displayForms": ["Ξ", "ξ"], "p:name": "Xi"},
-      "omicron": {"displayForms": ["Ο", "ο"], "p:name": "Omicron", "p:name_de": "Omikron"},
-      "pi": {"displayForms": ["Π", "π"], "p:name": "Pi"},
-      "rho": {"displayForms": ["Ρ", "ρ"], "p:name": "Rho"},
-      "sigma": {"displayForms": ["Σ", "σ", "ς"], "p:name": "Sigma"},
-      "tau": {"displayForms": ["Τ", "τ"], "p:name": "Tau"},
-      "upsilon": {"displayForms": ["Υ", "υ"], "p:name": "Upsilon", "p:name_de": "Ypsilon"},
-      "phi": {"displayForms": ["Φ", "φ"], "p:name": "Phi"},
-      "chi": {"displayForms": ["Χ", "χ"], "p:name": "Chi"},
-      "psi": {"displayForms": ["Ψ", "ψ"], "p:name": "Psi"},
-      "omega": {"displayForms": ["Ω", "ω"], "p:name": "Omega"}
-    }
+    "template": ["displayForms", "p:name", "p:name_de"],
+    "rows": [
+      [["Α", "α"], "Alpha"],
+      [["Β", "β"], "Beta"],
+      [["Γ", "γ"], "Gamma"],
+      [["Δ", "δ"], "Delta"],
+      [["Ε", "ε"], "Epsilon"],
+      [["Z", "ζ"], "Zeta"],
+      [["Η", "η"], "Eta"],
+      [["Θ", "θ"], "Theta"],
+      [["Ι", "ι"], "Iota"],
+      [["Κ", "κ"], "Kappa"],
+      [["Λ", "λ"], "Lambda"],
+      [["Μ", "μ"], "Mu", "Mü"],
+      [["Ν", "ν"], "Nu", "Nü"],
+      [["Ξ", "ξ"], "Xi"],
+      [["Ο", "ο"], "Omicron", "Omikron"],
+      [["Π", "π"], "Pi"],
+      [["Ρ", "ρ"], "Rho"],
+      [["Σ", "σ", "ς"], "Sigma"],
+      [["Τ", "τ"], "Tau"],
+      [["Υ", "υ"], "Upsilon", "Ypsilon"],
+      [["Φ", "φ"], "Phi"],
+      [["Χ", "χ"], "Chi"],
+      [["Ψ", "ψ"], "Psi"],
+      [["Ω", "ω"], "Omega"]
+    ]
   }
 }

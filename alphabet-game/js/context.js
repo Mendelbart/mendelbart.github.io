@@ -1,7 +1,7 @@
 import {Setting, SettingsCollection, SettingsHelper as SH} from "./settings/settings.js";
 import {Game} from "./game/Game.js";
 import {Dataset} from "./dataset/Dataset.js";
-import {ObjectHelper, DOMHelper} from "./helpers/helpers.js";
+import {DOMHelper} from "./helpers/helpers.js";
 
 
 export class GameContext {
@@ -66,7 +66,7 @@ export class GameContext {
             ...this.settings.generic.nodeList(),
         );
 
-        this.setupSymbolCount();
+        // this.setupSymbolCount();
 
         for (const setting of this.settingsList()) {
             setting.valueElement.addUpdateListener(() => {
@@ -94,7 +94,7 @@ export class GameContext {
 
     updateSymbolCount() {
         document.getElementById("totalSymbolCount").textContent =
-            this.dataset.quizItemsCountString(this.symbolFilterer.active, ObjectHelper.filterKeys(this.settings.forms.getValue(), x => x));
+            this.dataset.quizItemsCountString(this.symbolFilterer.active, this.settings.forms.getValue());
     }
 
     localStorageSettingsKey() {
@@ -119,10 +119,10 @@ export class GameContext {
 
         this.saveSettings();
 
-        const properties = ObjectHelper.filterKeys(this.settings.properties.getValue(), x => x);
+        const properties = this.settings.properties.getValue();
         const items = this.dataset.getQuizItems(
             this.symbolFilterer.activeItemsList(),
-            ObjectHelper.filterKeys(this.settings.forms.getValue(), x => x),
+            this.settings.forms.getValue(),
             properties,
             this.settings.language.getValue()
         );
@@ -138,9 +138,20 @@ export class GameContext {
         this.game.newRound();
         this.showScreen("game");
         this.game.focus();
+        this.setPlaying(true);
         this.game.addOnFinish(() => {
+            this.setPlaying(false);
             this.showScreen("dialogue");
         });
+    }
+
+    /**
+     * @param {boolean} playing
+     */
+    setPlaying(playing) {
+        const url = new URL(location);
+        url.searchParams.set("play", playing ? "1" : "0");
+        history.pushState({}, "", url);
     }
 
     /**

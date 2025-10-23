@@ -20,22 +20,12 @@ const datasetSelect = document.getElementById("datasetSelect");
         ctx.selectDataset(e.target.value);
     });
 
-    document.getElementById("new-game-button").addEventListener("click", () => {
+    document.getElementById("playButton").addEventListener("click", () => {
         ctx.startGame();
     });
 
-    document.getElementById("pause-game-button").addEventListener("click", () => {
-        ctx.game.pause();
-        ctx.showScreen("dialogue");
-    });
     document.getElementById("stop-game-button").addEventListener("click", () => {
-        ctx.game.cleanup();
-        DOMHelper.hide(document.getElementById("game-stats-container"));
-        ctx.showScreen("dialogue");
-    });
-    document.getElementById("resume-game-button").addEventListener("click", () => {
-        ctx.showScreen("game");
-        ctx.game.focus();
+        ctx.game.finish();
     });
 
     document.getElementById("item-submit-button").addEventListener("click", () => {
@@ -49,8 +39,10 @@ const datasetSelect = document.getElementById("datasetSelect");
     ctx.showScreen("dialogue");
 
     const searchParams = new URLSearchParams(window.location.search);
-    if (["1", "true"].includes(searchParams.get("autoplay"))) {
+    if (searchParams.get("play") === "1") {
         ctx.startGame();
+    } else {
+        ctx.setPlaying(false);
     }
 })();
 

@@ -103,7 +103,7 @@ export class Dataset {
         return Setting.create("Language", SH.createButtonGroup(
             ObjectHelper.onlyKeys(LANGUAGES, this.languageData.languages),
             {
-                checked: checked ?? [this.languageData.default],
+                checked: checked ?? this.languageData.default,
                 exclusive: true
             }
         ));
@@ -188,16 +188,41 @@ export class Dataset {
      * @returns {Record<string,DatasetItem>}
      */
     processItems(symbolsData) {
-        const rows = symbolsData.format === "columns" ?
+        let rows = symbolsData.format === "columns" ?
             this.symbolsDataColumnsToRows(symbolsData.columns) :
             symbolsData.rows;
 
+        if (Array.isArray(rows)) {
+            rows = Object.assign({}, rows);
+        }
+
+        if (symbolsData.template) {
+            this.applyTemplateToRows(rows, symbolsData.template);
+        }
 
         const items = ObjectHelper.map(rows, itemData => {
             const data = this.standardizeItemData(itemData);
             return new DatasetItem(data.displayForms, data.properties, data.filters);
         });
         return this.setItemFilterValues(items);
+    }
+
+    /**
+     * @param {Record<string,*[]>} rows
+     * @param {string[]} template
+     */
+    applyTemplateToRows(rows, template) {
+        for (const [itemKey, item] of Object.entries(rows)) {
+            if (!Array.isArray(item)) {
+                continue;
+            }
+
+            const row = {};
+            for (const [index, value] of item.entries()) {
+                row[template[index]] = value;
+            }
+            rows[itemKey] = row;
+        }
     }
 
     /**

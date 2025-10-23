@@ -20,8 +20,8 @@
     --accent-800: hsl(210, 89%, 15%);
 
     --clr-background: hsl(0, 0%, 8%);
-    --clr-surface: hsl(210, 100%, 85%, 0.07);
-    --clr-input: hsl(0, 0%, 100%, 0.14);
+    --clr-surface: hsl(216, 7.5%, 13.1%);
+    --clr-input: hsl(0, 0%, 21%);
 
     --clr-border: hsl(0, 0%, 40%);
     --clr-inset-shadow: hsl(0, 0%, 100%, 0.35);
@@ -32,7 +32,7 @@
 
     --clr-text-accent: var(--clr-text);
 
-    --clr-button: hsl(0, 0%, 100%, 0.2);
+    --clr-button: hsl(0, 0%, 26.3%);
     --clr-button-active: var(--clr-input);
     --clr-button-checked: var(--clr-text);
     --clr-button-checked-active: var(--clr-text-soft);
@@ -65,26 +65,32 @@ body {
     background-color: var(--clr-background);
     color: var(--clr-text);
     font-family: system-ui, sans-serif;
-    font-size: 1.125rem;
+    font-size: 1rem;
     min-height: 100vh;
 
     max-width: 26rem;
     margin: auto;
-    padding-inline: 0.7rem;
+    padding: 0.625rem 0.75rem;
+}
+
+.font-transform {
+    scale: var(--font-scale);
+    transform-origin: left center;
+    translate: 0 calc(var(--font-shift) * 1em);
 }
 
 
 /****************** HEADINGS ******************/
 h1 {
     font-weight: 700;
-    font-size: calc(var(--font-scale) * 1.8rem);
+    font-size: 1.8rem;
     line-height: 1.25;
-    margin-block: .25rem;
+    margin-block-end: .175rem;
 }
 
 h2 {
     font-weight: 700;
-    font-size: calc(var(--font-scale) * 1.4rem);
+    font-size: 1.4rem;
     margin-block: .75rem .25rem;
 }
 
@@ -94,7 +100,7 @@ h2 {
 }
 
 #game-heading {
-    padding-inline: .2rem;
+    padding-inline: .125rem;
 }
 
 .heading-with-button > h1 {
@@ -107,8 +113,8 @@ h2 {
     display: flex;
     flex-direction: column;
     align-items: stretch;
-    gap: .6rem;
-    padding-block: .75rem;
+    gap: .5rem;
+    padding-block: .625rem;
 }
 
 .settings:not(:has(> .setting:not(.hidden))) {
@@ -119,7 +125,7 @@ h2 {
     display: flex;
     flex-direction: column;
     align-items: stretch;
-    gap: .125rem;
+    gap: .1rem;
 }
 
 .labeled-value-element > label {
@@ -157,25 +163,6 @@ h2 {
     border-bottom-right-radius: var(--border-radius-small);
 }
 
-/*
-.button-group:has(> input[type="radio"]) {
-    gap: .25rem;
-}
-
-.button-group:has(> input[type="radio"]) > .button {
-    border-radius: 0;
-}
-
-.button-group:has(> input[type="radio"]) > .button:first-of-type {
-    border-top-left-radius: var(--border-radius-small);
-    border-bottom-left-radius: var(--border-radius-small);
-}
-
-.button-group:has(> input[type="radio"]) > .button:last-of-type {
-    border-top-right-radius: var(--border-radius-small);
-    border-bottom-right-radius: var(--border-radius-small);
-} */
-
 .button {
     padding: .4em .6em;
     background: var(--clr-button);
@@ -207,9 +194,9 @@ input:not(:disabled):checked + .button:active {
 }
 
 
-
-
 input[type="button"] {
+    appearance: none;
+    -webkit-appearance: none;
     background: var(--accent-500);
     color: var(--accent-text);
     font-weight: 700;
@@ -291,14 +278,6 @@ select {
     }
 }
 
-#datasetSelect {
-    font-size: 1.25rem;
-}
-
-#datasetSelect > option {
-    font-size: 1.125rem;
-}
-
 
 input[type="range"] {
     -webkit-appearance: none;
@@ -370,6 +349,33 @@ input[type="range"]::-moz-range-track {
     color: var(--clr-text-soft);
 }
 
+/*********************** GAME SETTINGS ***********************/
+#game-select-container {
+    display: flex;
+    gap: .5rem;
+    align-items: stretch;
+}
+
+#game-select-container > .styled-select {
+    flex: 1;
+}
+
+
+#datasetSelect {
+    font-size: 1.4rem;
+    padding: 0.5rem 0.875rem
+}
+
+#playButton {
+    font-size: 1.2rem;
+    padding-inline: 1rem;
+}
+
+#datasetSelect > option {
+    font-size: 1.125rem;
+}
+
+
 
 /******************** GAME ******************************/
 #progress-bar {
@@ -424,15 +430,13 @@ input[type="range"]::-moz-range-track {
     box-sizing: content-box;
     height: 1em;
     padding: calc(.75rem + .1em) .225em;
-    color: var(--clr-text-soft);
     background: var(--clr-surface);
     border-radius: var(--border-radius-small);
     line-height: 1em;
 }
 
 .symbol-string {
-    scale: var(--font-scale);
-    translate: 0 calc(var(--font-shift) * 1em);
+    transform-origin: center;
 }
 
 #symbol-current {
@@ -452,7 +456,7 @@ input[type="range"]::-moz-range-track {
 }
 
 .item-eval .submitted:not(:empty) {
-    margin-inline-end: .5rem;
+    margin-inline-end: .625rem;
 }
 
 .item-eval [data-correct="true"] {

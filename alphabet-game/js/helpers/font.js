@@ -1,4 +1,5 @@
 import * as ObjectHelper from "./object.js";
+import {classIfElse} from './dom.js';
 
 /**
  * @type {Record<string,Record<string,*>>}
@@ -10,7 +11,8 @@ const FONT_PROPERTY_KEYS = {
     weight: "font-weight",
     scale: "--font-scale",
     shift: "--font-shift",
-    styleset: "font-variant-alternates"
+    styleset: "font-variant-alternates",
+    letterSpacing: "letter-spacing"
 };
 
 /**
@@ -106,6 +108,8 @@ export function setFontProperties(element, properties) {
             element.style.setProperty(FONT_PROPERTY_KEYS[key], value);
         }
     }
+
+    classIfElse("scale" in properties || "shift" in properties, element, "font-transform");
 }
 
 export function setFontFamily(element, family) {

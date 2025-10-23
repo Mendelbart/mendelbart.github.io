@@ -1,47 +1,48 @@
 {
   "name": "Elder Futhark",
   "metadata": {
-    "gameHeading": {"string": ["fuþarklaikaz", "fuþarklaikaʀ"], "fonts": [{"family": "Junicode", "styleset": "Elder-futhark"}, {"family": "Noto Sans"}]},
+    "gameHeading": {"string": ["fuþarklaikaz", "fuþarklaikaʀ"], "fonts": [{"family": "Junicode", "styleset": "Elder-futhark", "shift": 0.16}, {"family": "Noto Sans"}]},
     "terms": {"symbol": "rune", "symbols": "runes"}
   },
   "displayData": {
     "type": "string",
     "fonts": {
-      "junicode": {"family": "Junicode", "styleset": "Elder-futhark"}
+      "junicode": {"family": "Junicode", "styleset": "Elder-futhark", "shift": 0.16}
     }
   },
   "propsData": {
     "name": {"type": "list", "maxDist": 1, "label": "Name", "identifier": true, "active": true},
-    "pronunciation": {"type": "string", "maxDist": 0, "label": "Pronunciation", "active": false},
+    "pron": {"type": "list", "maxDist": 0, "label": "Pronunciation", "active": false},
     "meaning": {"type": "list", "maxDist": 1, "label": "Meaning", "active":  false}
   },
   "symbolsData": {
     "format": "rows",
-    "rows": {
-      "fehu": {"display": "f", "p:name": "Fehu", "p:pronunciation": "f", "p:meaning": "cattle, wealth"},
-      "uruz": {"display": "u", "p:name": "Uruz, Ur", "p:pronunciation": "u", "p:meaning": "aurochs, wild ox"},
-      "thurisaz": {"display": "þ", "p:name": "Thurisaz", "p:pronunciation": "þ, th (/θ/ or /ð/)", "p:meaning": "Thunraz/Thor (god)"},
-      "ansuz": {"display": "a", "p:name": "Ansuz", "p:pronunciation": "a", "p:meaning": "god"},
-      "raido": {"display": "r", "p:name": "Raido", "p:pronunciation": "r", "p:meaning": "ride, journey"},
-      "kaunan": {"display": "k", "p:name": "Kaunan", "p:pronunciation": "k", "p:meaning": "ulcer (?)"},
-      "gebo": {"display": "g", "p:name": "Gebo", "p:pronunciation": "g", "p:meaning": "gift"},
-      "wunjo": {"display": "w", "p:name": "Wunjo", "p:pronunciation": "w", "p:meaning": "joy"},
-      "hagalaz": {"display": "h", "p:name": "Hagalaz", "p:pronunciation": "h", "p:meaning": "hail"},
-      "naudiz": {"display": "n", "p:name": "Naudiz, Nauthiz", "p:pronunciation": "n", "p:meaning": "need"},
-      "isaz": {"display": "i", "p:name": "Isaz", "p:pronunciation": "i", "p:meaning": "ice"},
-      "jera": {"display": "j", "p:name": "Jera, Jeran, Jeraz, Yera", "p:pronunciation": "j", "p:meaning": "year, harvest"},
-      "eihaz": {"display": "æ", "p:name": "Eihaz, Eiwaz", "p:pronunciation": "ï, æ", "p:meaning": "yew (tree)"},
-      "pertho": {"display": "p", "p:name": "Pertho, Peorth", "p:pronunciation": "p", "p:meaning": "pear-tree (?)"},
-      "algiz": {"display": "z", "p:name": "Algiz", "p:pronunciation": "z, R (ʀ)", "p:meaning": "elk"},
-      "sowilo": {"display": "s", "p:name": "Sowilo", "p:pronunciation": "s", "p:meaning": "sun"},
-      "tiwaz": {"display": "t", "p:name": "Tiwaz, Teiwaz, Tiewaz", "p:pronunciation": "t", "p:meaning": "Tiwaz/Tyr (god)"},
-      "berkanan": {"display": "b", "p:name": "Berkanan", "p:pronunciation": "b", "p:meaning": "birch"},
-      "ehwaz": {"display": "e", "p:name": "Ehwaz", "p:pronunciation": "e", "p:meaning": "horse"},
-      "mannaz": {"display": "m", "p:name": "Mannaz", "p:pronunciation": "m", "p:meaning": "man"},
-      "laguz": {"display": "l", "p:name": "Laguz, Laukaz", "p:pronunciation": "l", "p:meaning": "water, lake"},
-      "ingwaz": {"display": "ŋ", "p:name": "Ingwaz", "p:pronunciation": "ng (ŋ)", "p:meaning": "Ingwaz/Freyr (god)"},
-      "dagaz": {"display": "d", "p:name": "Dagaz", "p:pronunciation": "d", "p:meaning": "day"},
-      "othala": {"display": "o", "p:name": "Othala", "p:pronunciation": "o", "p:meaning": "inheritance, heritage, estate, possession"}
-    }
+    "template": ["display", "p:name", "p:pron", "p:meaning"],
+    "rows": [
+      ["f", "Fehu", "f", "cattle, wealth"],
+      ["u", "Uruz, Ur", "u", "aurochs, wild ox"],
+      ["þ", "Thurisaz", "þ, th (/θ/ or /ð/)", "Thunraz/Thor (god)"],
+      ["a", "Ansuz", "a", "god"],
+      ["r", "Raido", "r", "ride, journey"],
+      ["k", "Kaunan", "k", "ulcer (?)"],
+      ["g", "Gebo", "g", "gift"],
+      ["w", "Wunjo", "w", "joy"],
+      ["h", "Hagalaz", "h", "hail"],
+      ["n", "Naudiz, Nauthiz", "n", "need"],
+      ["i", "Isaz", "i", "ice"],
+      ["j", "Jera, Jeran, Jeraz, Yera", "j", "year, harvest"],
+      ["æ", "Eihaz, Eiwaz", "ï, æ", "yew (tree)"],
+      ["p", "Pertho, Peorth", "p", "pear-tree (?)"],
+      ["z", "Algiz", "z, R (ʀ)", "elk"],
+      ["s", "Sowilo", "s", "sun"],
+      ["t", "Tiwaz, Teiwaz, Tiewaz", "t", "Tiwaz/Tyr (god)"],
+      ["b", "Berkanan", "b", "birch"],
+      ["e", "Ehwaz", "e", "horse"],
+      ["m", "Mannaz", "m", "man"],
+      ["l", "Laguz, Laukaz", "l", "water, lake"],
+      ["ŋ", "Ingwaz", "ng (ŋ)", "Ingwaz/Freyr (god)"],
+      ["d", "Dagaz", "d", "day"],
+      ["o", "Othala", "o", "inheritance, heritage, estate, possession"]
+    ]
   }
 }
