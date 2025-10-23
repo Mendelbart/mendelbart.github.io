@@ -73,8 +73,9 @@ const fontDataReady = fetch("/alphabet-game/json/fonts.json")
  */
 export function setFont(element, properties) {
     clearFont(element);
-    setFontFamily(element, properties.family);
-    setFontProperties(element, properties);
+    setFontFamily(element, properties.family).then(() => {
+        setFontProperties(element, properties);
+    });
 }
 
 /**
@@ -113,7 +114,7 @@ export function setFontProperties(element, properties) {
 }
 
 export function setFontFamily(element, family) {
-    fontDataReady.then(() => {
+    return fontDataReady.then(() => {
         const font = FONT_DATA[family];
         element.style.fontFamily = family + ", " + font.fallback ?? "system-ui, sans-serif";
         setFontProperties(element, ObjectHelper.onlyKeys(font, ["scale", "shift"]));

@@ -224,11 +224,12 @@ export class Slider extends SingleNodeValueElement {
     }
 
     setupRangeCSS() {
-        const listener = () => {
-            this.valueNode.style.setProperty("--range-progress", this.getProgress().toString());
-        }
-        listener();
-        this.addUpdateListener(listener);
+        this.updateProgress();
+        this.addUpdateListener(this.updateProgress.bind(this));
+    }
+
+    updateProgress() {
+        this.valueNode.style.setProperty("--range-progress", this.getProgress().toString());
     }
 
     getProgress() {
@@ -249,6 +250,7 @@ export class Slider extends SingleNodeValueElement {
         this.valueNode.value = value.toString();
         this.readValue();
         this.displayValue();
+        this.updateProgress();
     }
 
     readValue() {
@@ -271,6 +273,7 @@ export class Slider extends SingleNodeValueElement {
         }
         this.min = min;
         this.valueNode.min = min;
+        this.updateProgress();
     }
 
     setMax(max) {
@@ -281,5 +284,6 @@ export class Slider extends SingleNodeValueElement {
         }
         this.max = max;
         this.valueNode.max = max;
+        this.updateProgress();
     }
 }

@@ -429,7 +429,7 @@ input[type="range"]::-moz-range-track {
 
     box-sizing: content-box;
     height: 1em;
-    padding: calc(.75rem + .1em) .225em;
+    padding: .125em .2em;
     background: var(--clr-surface);
     border-radius: var(--border-radius-small);
     line-height: 1em;
@@ -440,7 +440,7 @@ input[type="range"]::-moz-range-track {
 }
 
 #symbol-current {
-    font-size: 7rem;
+    font-size: 9rem;
 }
 
 .hint-symbol {
