@@ -1,4 +1,4 @@
-import {DOMHelper, ObjectHelper, ArrayHelper, FontHelper} from "../helpers/helpers.js";
+import {DOMHelper, ObjectHelper, FontHelper} from "../helpers/helpers.js";
 import {ItemDealer} from "./dealer.js";
 import {Setting, SettingsCollection, SettingsHelper} from "../settings/settings.js";
 import {ListProperty} from "../dataset/symbol.js";
@@ -27,11 +27,7 @@ export class Game {
         this.setupEvals();
         this.setupFontSettings();
 
-        document.querySelectorAll(".game-heading").forEach(element => {
-            this.dataset.setupGameHeading(element);
-        });
-
-        document.getElementById("item-next-button").value = "Next";
+        document.getElementById("item-next-button").textContent = "Next";
     }
 
     /**
@@ -51,28 +47,19 @@ export class Game {
 
     setupInputs() {
         /**
-         * @type {SettingsCollection}
-         */
-        this.inputsCollection = SettingsCollection.createFrom(
-            ObjectHelper.mapKeyArrayToValues(this.properties, prop => Setting.create(
-                this.dataset.propsData[prop].label,
-                SettingsHelper.createInput({
-                    type: "text",
-                    inputmode: this.getInputMode(this.dataset.propsData[prop].type)
-                }),
-                {
-                    id: "game-input-" + prop
-                }
-            )),
-            this.properties
-        );
-
-        /**
          * @type {Object<string, HTMLInputElement>}
          */
-        this.inputs = ObjectHelper.map(this.inputsCollection.settings, setting => setting.valueElement.node);
+        this.inputs = ObjectHelper.mapKeyArrayToValues(this.properties, prop => {
+            const input = document.createElement("INPUT");
+            DOMHelper.setAttrs(input, {
+                type: "text",
+                inputmode: this.getInputMode(this.dataset.propsData[prop].type),
+                placeholder: this.dataset.propsData[prop].label
+            });
+            return input;
+        });
 
-        document.getElementById("game-inputs").replaceChildren(...this.inputsCollection.nodeList());
+        document.getElementById("game-inputs").replaceChildren(...Object.values(this.inputs));
 
         for (const [i, key] of this.properties.entries()) {
             const input = this.inputs[key];
@@ -94,8 +81,7 @@ export class Game {
 
             this.inputs[this.properties[this.properties.length - 1]].addEventListener("keydown", event => {
                 if (event.key === "Enter") {
-                    this.submitRound();
-                    event.preventDefault();
+                    document.getElementById("item-submit-button").focus();
                 }
             });
         }
@@ -153,8 +139,11 @@ export class Game {
     }
 
     cleanup() {
-        this.inputsCollection.removeAll();
+        for (const input of Object.values(this.inputs)) {
+            input.remove();
+        }
         this.clearSymbol();
+        this.updateProgressBar(0);
     }
 
     finish() {
@@ -195,10 +184,13 @@ export class Game {
         this.updateProgressBar();
         this.show("evals");
         if (this.dealer.isEmpty()) {
-            document.getElementById("item-next-button").value = "Finish";
+            document.getElementById("item-next-button").textContent = "Finish";
         }
         document.getElementById("item-next-button").focus();
-        window.scrollTo({top: 0});
+
+        if (window.scrollY > 0) {
+            window.scrollTo({top: 0, behavior: "smooth"});
+        }
     }
 
     clearInputs() {
@@ -223,14 +215,9 @@ export class Game {
         );
     }
 
-    updateProgressBar() {
-        const k = 6;
-        const a = 0.9;
-
-        const triesLeftSum = ArrayHelper.sum(this.dealer.triesLeft);
-        const x = a * triesLeftSum / this.itemCount;
-        const progress = 1 - x / (1 + x**k) ** (1/k);
-        document.getElementById("progress-bar").style.setProperty("--progress", progress.toString());
+    updateProgressBar(value = null) {
+        value ??= this.dealer.progress();
+        document.getElementById("progress-bar").style.setProperty("--progress", value);
     }
 
     newRound() {

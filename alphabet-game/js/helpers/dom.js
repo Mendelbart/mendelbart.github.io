@@ -20,7 +20,8 @@ const TEMPLATES_HTML = {
     setting: `<div class="setting labeled-value-element"></div>`,
     eval: `<div class="item-eval">
         <span class="submitted"></span><span class="solution"></span>
-    </div>`
+    </div>`,
+    headingElement: `<div class="heading-element"><span class="heading-element-number"></span><span class="heading-element-symbol"></span></div>`
 }
 
 
@@ -328,4 +329,19 @@ export function setCSS(data, element = document.documentElement) {
     for (const [property, value] of Object.entries(data)) {
         element.style.setProperty(property, value);
     }
+}
+
+
+/**
+ * @param {[function, ...*][]} updates
+ * @param {string[]} fonts
+ */
+export function batchUpdate(updates, fonts = []) {
+    Promise.all(fonts.map(font => document.fonts.load(`16px "${font}"`))).then(() => {
+        requestAnimationFrame(() => {
+            for (const [update, ...args] of updates) {
+                update(...args);
+            }
+        });
+    });
 }

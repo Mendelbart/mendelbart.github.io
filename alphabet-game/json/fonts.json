@@ -1,8 +1,7 @@
 [
   {
     "family": "Noto Serif Hebrew",
-    "sourceFilename": "NotoSerifHebrew.ttf",
-    "subsetFilename": "NotoSerifHebrew.woff2",
+    "scale": 1.2,
     "fallback": "serif",
     "variationSettings": {
       "wght": "100 900",
@@ -11,9 +10,7 @@
   },
   {
     "family": "Noto Sans Hebrew",
-    "sourceFilename": "NotoSansHebrew.ttf",
-    "subsetFilename": "NotoSansHebrew.woff2",
-    "fallback": "system-ui, sans-serif",
+    "scale": 1.2,
     "variationSettings": {
       "wght": "100 900",
       "wdth": "100"
@@ -21,8 +18,7 @@
   },
   {
     "family": "Noto Rashi Hebrew",
-    "sourceFilename": "NotoRashiHebrew.ttf",
-    "subsetFilename": "NotoRashiHebrew.woff2",
+    "scale": 1.2,
     "fallback": "serif",
     "variationSettings": {
       "wght": "100 900"
@@ -31,8 +27,6 @@
   {
     "family": "Noto Serif",
     "fallback": "serif",
-    "sourceFilename": "NotoSerif.ttf",
-    "subsetFilename": "NotoSerif.woff2",
     "variationSettings": {
       "wght": "100 900",
       "wdth": "100"
@@ -40,26 +34,14 @@
   },
   {
     "family": "Noto Sans",
-    "fallback": "system-ui, sans-serif",
-    "sourceFilename": "NotoSans.ttf",
-    "subsetFilename": "NotoSans.woff2",
     "variationSettings": {
       "wght": "100 900",
       "wdth": "100"
     }
   },
   {
-    "family": "Noto Sans Runic",
-    "fallback": "system-ui, sans-serif",
-    "sourceFilename": "NotoSansRunic.ttf",
-    "subsetFilename": "NotoSansRunic.woff2",
-    "weight": 400
-  },
-  {
     "family": "Junicode",
     "fallback": "serif",
-    "sourceFilename": "Junicode.ttf",
-    "subsetFilename": "Junicode.woff2",
     "variationSettings": {
       "wght": "300 700",
       "wdth": "100",

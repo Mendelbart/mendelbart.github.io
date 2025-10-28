@@ -1,5 +1,5 @@
 import {osaDistance} from "../game/string-metrics.js";
-import {ArrayHelper} from "../helpers/helpers.js";
+import {ArrayHelper, ObjectHelper} from "../helpers/helpers.js";
 
 export class QuizItem {
     /**
@@ -29,7 +29,7 @@ export class ItemProperty {
      * @returns {ItemProperty}
      */
     static fromData(data, propData) {
-        const maxDist = propData.maxDist ?? 0;
+        let maxDist = propData.maxDist ?? 0;
         const type = propData.type;
 
         if (type === "number") {
@@ -37,7 +37,21 @@ export class ItemProperty {
         } else if (type === "string") {
             return new StringProperty(data, maxDist, propData.ignoreCase ?? true);
         } else if (type === "list") {
-            return new ListProperty(data, maxDist, propData);
+            let string;
+            let alternatives = {};
+            if (typeof data === "string") {
+                string = data;
+            } else {
+                if (!("source" in data)) {
+                    console.error("Source of list property missing.");
+                }
+                string = data.source;
+                if ("alts" in data) {
+                    alternatives = data.alts;
+                }
+            }
+
+            return new ListProperty(string, maxDist, alternatives, propData);
         } else {
             console.error(`Unknown property type "${propData.type}"`)
         }
@@ -148,6 +162,7 @@ export class ListProperty extends StringProperty {
     /**
      * @param {string} displayString
      * @param {number} maxDist
+     * @param {Record<string, string[] | string>} [alternatives]
      * @param {"best"|"avg"} listMode
      * @param {boolean} ignoreCase
      * @param {string} splitter - regex string of splitters
@@ -155,7 +170,8 @@ export class ListProperty extends StringProperty {
      */
     constructor(
         displayString,
-        maxDist, {
+        maxDist,
+        alternatives = {}, {
             listMode = "best",
             ignoreCase = true,
             splitter = "[,;/]",
@@ -170,6 +186,11 @@ export class ListProperty extends StringProperty {
          * @type {SubString[]}
          */
         this.values = this.constructor.getValues(displayString, maxDist, this.splitter, excludeFromList);
+        if (alternatives) {
+            this.alternatives = ObjectHelper.map(alternatives, val => typeof val === "string" ? [val] : val);
+        } else {
+            this.alternatives = {};
+        }
         this.listMode = listMode;
     }
 
@@ -191,6 +212,10 @@ export class ListProperty extends StringProperty {
                 .filter(x => x.end > x.start);
         }
 
+        if (values.length === 0) {
+            console.warn("No values in list.")
+        }
+
         return values;
     }
 
@@ -201,7 +226,12 @@ export class ListProperty extends StringProperty {
 
         for (const [i, value] of this.values.entries()) {
             for (const [j, guess] of guesses.entries()) {
-                const score = this.gradeSingle(guess.str, value.str);
+                let score = this.gradeSingle(guess.str, value.str);
+
+                if (value.str in this.alternatives) {
+                    score = Math.max(score, ...this.alternatives[value.str].map(alt => this.gradeSingle(guess.str, alt)));
+                }
+
                 if (score > 0) {
                     if (guessScores[j] > 0) {
                         console.warn("Guess matches multiple values, maxDist too high.");
@@ -302,7 +332,7 @@ class SubString {
             }
 
             result.push(new this.constructor(this, i, match.index));
-            i = match.index + match.length;
+            i = match.index + match[0].length;
         }
 
         if (includeEmpty || i < this.end - this.start) {

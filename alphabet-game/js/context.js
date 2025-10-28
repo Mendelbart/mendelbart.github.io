@@ -54,17 +54,27 @@ export class GameContext {
         }
 
         this.settings.properties.valueElement.disableIfSingleButton();
-
-        document.getElementById("dataset-settings").replaceChildren(
-            this.settings.forms.node,
-            ...this.settings.filters.nodeList(),
-        );
-
-        document.getElementById("game-settings").replaceChildren(
-            this.settings.properties.node,
-            this.settings.language.node,
-            ...this.settings.generic.nodeList(),
-        );
+        const gameHeading = this.dataset.metadata.gameHeading;
+        const fonts = "font" in gameHeading && "family" in gameHeading.font ? [gameHeading.font.family] : [];
+        DOMHelper.batchUpdate([
+            [
+                this.dataset.setupGameHeading.bind(this.dataset),
+                document.querySelector("#game-heading h1")
+            ],
+            [
+                (e, ...args) => e.replaceChildren(...args),
+                document.getElementById("dataset-settings"),
+                this.settings.forms.node,
+                ...this.settings.filters.nodeList()
+            ],
+            [
+                (e, ...args) => e.replaceChildren(...args),
+                document.getElementById("game-settings"),
+                this.settings.properties.node,
+                this.settings.language.node,
+                ...this.settings.generic.nodeList()
+            ]
+        ], fonts);
 
         // this.setupSymbolCount();
 
@@ -136,12 +146,10 @@ export class GameContext {
 
         this.game.setup();
         this.game.newRound();
-        this.showScreen("game");
-        this.game.focus();
         this.setPlaying(true);
+        this.game.focus();
         this.game.addOnFinish(() => {
             this.setPlaying(false);
-            this.showScreen("dialogue");
         });
     }
 
@@ -149,19 +157,6 @@ export class GameContext {
      * @param {boolean} playing
      */
     setPlaying(playing) {
-        const url = new URL(location);
-        url.searchParams.set("play", playing ? "1" : "0");
-        history.pushState({}, "", url);
-    }
-
-    /**
-     * @param {"game"|"dialogue"} which
-     */
-    showScreen(which) {
-        DOMHelper.toggleShown(
-            which === "dialogue",
-            document.getElementById("game-dialogue"),
-            document.getElementById("game-container")
-        );
+        DOMHelper.classIfElse(playing, document.getElementsByTagName("body"), "playing");
     }
 }

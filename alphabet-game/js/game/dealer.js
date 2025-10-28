@@ -20,6 +20,9 @@ export class ItemDealer {
         this.tries = new Array(n).fill(0);
         this.triesLeft = new Array(n).fill(1);
 
+        this.totalTriesLeft = n;
+        this.maxTriesLeft = n;
+
         this.currentIndex = RandomHelper.randInt(0, n, this.rand);
         this.previousIndex = null;
     }
@@ -49,6 +52,18 @@ export class ItemDealer {
         return weights;
     }
 
+    updateTotalTriesLeft() {
+        const val = ArrayHelper.sum(Object.values(this.triesLeft))
+        if (val > this.totalTriesLeft) {
+            this.maxTriesLeft += val - this.totalTriesLeft;
+        }
+        this.totalTriesLeft = val;
+    }
+
+    progress() {
+        return 1 - this.totalTriesLeft / this.maxTriesLeft;
+    }
+
     /**
      * Set the score of the current item.
      * @param score
@@ -71,8 +86,7 @@ export class ItemDealer {
             this.itemCount--;
         }
 
-        console.log(this.triesLeft);
-        console.log(this.itemCount);
+        this.updateTotalTriesLeft();
     }
 
     isEmpty() {

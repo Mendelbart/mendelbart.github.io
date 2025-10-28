@@ -57,11 +57,33 @@ def main():
         if not isinstance(symbols, list):
             symbols = symbols.values()
 
+        template = False
+        display_index = None
+        display_forms_index = None
+        if "template" in dataset["symbolsData"]:
+            template = True
+            try:
+                display_index = dataset["symbolsData"]["template"].index("display")
+            except ValueError:
+                try:
+                    display_forms_index = dataset["symbolsData"]["template"].index("displayForms")
+                except ValueError:
+                    raise ValueError("display and displayForms not in template.")
+
         for symbol in symbols:
-            if "display" in symbol:
-                dataset_chars.update(list(symbol["display"]))
+            if template and isinstance(symbol, list):
+                if display_index is not None:
+                    chars = symbol[display_index]
+                else:
+                    chars = "".join(symbol[display_forms_index])
             else:
-                dataset_chars.update(list("".join(symbol["displayForms"])))
+                if "display" in symbol:
+                    chars = symbol["display"]
+                else:
+                    chars = "".join(symbol["displayForms"])
+
+            dataset_chars.update(list(chars))
+
 
         for font_data in dataset["displayData"]["fonts"].values():
             if not validate_font_data(font_data):
@@ -79,6 +101,12 @@ def main():
 
 
     for family, font in fonts.items():
+        if "sourceFilename" not in font:
+            font["sourceFilename"] = family.replace(" ", "") + ".ttf"
+
+        if "subsetFilename" not in font:
+            font["subsetFilename"] = family.replace(" ", "") + ".woff2"
+
         chars_list = list(charsets[family])
 
         if len(chars_list) == 0:

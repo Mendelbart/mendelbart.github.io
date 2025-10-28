@@ -13,47 +13,43 @@
     </head>
 
     <body>
-        <div id="game-dialogue">
+        <div id="game-heading">
+            <h1>Kadmos</h1>
+            <button id="start-game-button">Start</button>
+            <button id="stop-game-button">Stop</button>
+        </div>
+
+        <div id="game-layers">
             <div id="new-game-settings">
-                <div id="game-select-container">
-                    <div class="styled-select">
-                        <select id="datasetSelect" aria-label="Select Dataset"></select>
-                    </div>
-                    <input type="button" id="playButton" value="Start">
+                <div id="game-select-container" class="styled-select">
+                    <select id="datasetSelect" aria-label="Select Dataset"></select>
                 </div>
 
                 <div id="dataset-settings" class="settings"></div>
 
                 <div id="game-settings" class="settings"></div>
             </div>
-        </div>
 
-        <div id="game-container" style="display: none;">
-            <div id="game-heading" class="heading-with-button game-name-heading">
-                <h1 class="game-heading"></h1>
-                <span class="material-symbols-outlined stop-button symbol-button" id="stop-game-button">
-                    stop
-                </span>
-            </div>
+            <div id="game-container">
+                <div id="progress-bar"></div>
 
-            <div id="progress-bar"></div>
-
-            <div id="game-symbols">
-                <div id="symbol-current" class="symbol">
-                    <span class="symbol-string"></span>
+                <div id="game-symbols">
+                    <div id="symbol-current" class="symbol">
+                        <span class="symbol-string"></span>
+                    </div>
                 </div>
-            </div>
 
-            <div id="game-inputs" class="settings"></div>
+                <div id="game-inputs" class="settings"></div>
 
-            <div id="item-buttons">
-                <input id="item-submit-button" type="button" value="Submit">
-                <input id="item-next-button" type="button" value="Next" style="display:none;">
-            </div>
+                <div id="item-buttons">
+                    <button id="item-submit-button">Submit</button>
+                    <button id="item-next-button" style="display:none">Next</button>
+                </div>
 
-            <div id="game-font-settings">
-                <h2>Font Settings</h2>
-                <div id="font-settings" class="settings"></div>
+                <div id="game-font-settings">
+                    <h2>Font Settings</h2>
+                    <div id="font-settings" class="settings"></div>
+                </div>
             </div>
         </div>
     </body>

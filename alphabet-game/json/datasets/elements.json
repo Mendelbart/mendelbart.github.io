@@ -2,7 +2,7 @@
   "_source": "https://en.wikipedia.org/wiki/List_of_chemical_elements",
   "name": "Atomic Elements",
   "metadata": {
-    "gameHeading": {"string": "Elements Game"},
+    "gameHeading": {"string": "KAtMoS", "font": {"letterSpacing": "-.07ch"}},
     "terms": {"symbol": "element", "symbols": "elements"}
   },
   "languageData": {
@@ -12,14 +12,14 @@
   "displayData": {
     "type": "string",
     "fonts": {
-      "sans": {"family": "Noto Sans", "weight": 700, "scale": 0.7, "label": "Sans", "letterSpacing": "-.05ch"},
-      "serif": {"family": "Noto Serif", "weight": 700, "scale": 0.7, "label": "Serif", "letterSpacing": "-.05ch"}
+      "sans": {"family": "Noto Sans", "weight": 700, "scale": 0.85, "label": "Sans", "letterSpacing": "-.07ch"},
+      "serif": {"family": "Noto Serif", "weight": 700, "scale": 0.85, "label": "Serif", "letterSpacing": "-.07ch"}
     }
   },
   "filters": {
     "period": {
       "label": "Period",
-      "values": [1, 2, 3, 4, 5, 6, 7, 8]
+      "values": [1, 2, 3, 4, 5, 6, 7]
     },
     "block": {
       "label": "Block",
@@ -28,7 +28,7 @@
     }
   },
   "propsData": {
-    "name": {"type": "string", "maxDist": 1, "label": "Name", "identifier":  true, "active": true},
+    "name": {"type": "string", "maxDist": 1, "maxDistPerCharsNum": 4, "label": "Name", "identifier":  true, "active": true},
     "no": {"type": "number", "maxDist": 0, "label": "Atomic Number", "identifier": true}
   },
   "symbolsData": {

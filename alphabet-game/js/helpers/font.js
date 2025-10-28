@@ -12,7 +12,7 @@ const FONT_PROPERTY_KEYS = {
     scale: "--font-scale",
     shift: "--font-shift",
     styleset: "font-variant-alternates",
-    letterSpacing: "letter-spacing"
+    letterSpacing: "--letter-spacing"
 };
 
 /**
@@ -73,9 +73,13 @@ const fontDataReady = fetch("/alphabet-game/json/fonts.json")
  */
 export function setFont(element, properties) {
     clearFont(element);
-    setFontFamily(element, properties.family).then(() => {
+    if ("family" in properties) {
+        setFontFamily(element, properties.family).then(() => {
+            setFontProperties(element, properties);
+        });
+    } else {
         setFontProperties(element, properties);
-    });
+    }
 }
 
 /**
@@ -104,7 +108,11 @@ export function setFontProperties(element, properties) {
         }
 
         if (key === "styleset") {
-            setStylesets(element, value, properties.family);
+            if (!("family" in properties)) {
+                console.error("Cannot set styleset without knowing family.");
+            } else {
+                setStylesets(element, value, properties.family);
+            }
         } else {
             element.style.setProperty(FONT_PROPERTY_KEYS[key], value);
         }
@@ -116,7 +124,7 @@ export function setFontProperties(element, properties) {
 export function setFontFamily(element, family) {
     return fontDataReady.then(() => {
         const font = FONT_DATA[family];
-        element.style.fontFamily = family + ", " + font.fallback ?? "system-ui, sans-serif";
+        element.style.fontFamily = family + ", " + (font.fallback ?? "system-ui, sans-serif");
         setFontProperties(element, ObjectHelper.onlyKeys(font, ["scale", "shift"]));
     });
 }

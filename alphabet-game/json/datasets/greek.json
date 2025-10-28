@@ -1,7 +1,7 @@
 {
   "name": "Greek",
   "metadata": {
-    "gameHeading": {"string": "Παιχνίδι Aλφάβητο"},
+    "gameHeading": {"string": "Κάδμος"},
     "terms": {"symbol": "letter", "symbols": "letters"}
   },
   "languageData": {

@@ -7,7 +7,7 @@ const datasetSelect = document.getElementById("datasetSelect");
 
 
 // --------------- GAME SETUP -----------------
-(async function() {
+(function() {
     const ctx = new GameContext();
 
     DOMHelper.setOptions(
@@ -16,11 +16,19 @@ const datasetSelect = document.getElementById("datasetSelect");
         window.localStorage.getItem("dataset") ?? DEFAULT_DATASET
     );
 
+    window.addEventListener("resize", () => {
+        document.querySelectorAll(".track-width").forEach(element => {
+            element.style.setProperty("--scroll-width", element.scrollWidth);
+            element.style.setProperty("--client-width", element.clientWidth);
+            element.style.setProperty("--offset-width", element.offsetWidth);
+        });
+    });
+
     datasetSelect.addEventListener("change", (e) => {
         ctx.selectDataset(e.target.value);
     });
 
-    document.getElementById("playButton").addEventListener("click", () => {
+    document.getElementById("start-game-button").addEventListener("click", () => {
         ctx.startGame();
     });
 
@@ -31,18 +39,18 @@ const datasetSelect = document.getElementById("datasetSelect");
     document.getElementById("item-submit-button").addEventListener("click", () => {
         ctx.game.submitRound();
     });
+
     document.getElementById("item-next-button").addEventListener("click", () => {
         ctx.game.newRound();
     });
 
-    await ctx.selectDataset(datasetSelect.value);
-    ctx.showScreen("dialogue");
-
-    const searchParams = new URLSearchParams(window.location.search);
-    if (searchParams.get("play") === "1") {
-        ctx.startGame();
-    } else {
+    ctx.selectDataset(datasetSelect.value).then(() => {
         ctx.setPlaying(false);
-    }
+
+        const searchParams = new URLSearchParams(window.location.search);
+        if (["1", "true"].includes(searchParams.get("autoplay"))) {
+            ctx.startGame();
+        }
+    });
 })();
 

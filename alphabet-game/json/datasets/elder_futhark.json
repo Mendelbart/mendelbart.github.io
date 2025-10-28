@@ -1,13 +1,13 @@
 {
   "name": "Elder Futhark",
   "metadata": {
-    "gameHeading": {"string": ["fuþarklaikaz", "fuþarklaikaʀ"], "fonts": [{"family": "Junicode", "styleset": "Elder-futhark", "shift": 0.16}, {"family": "Noto Sans"}]},
+    "gameHeading": {"string": "kadmoz", "font": {"family": "Junicode", "styleset": "Elder-futhark", "shift": 0.16, "scale": 1.2}},
     "terms": {"symbol": "rune", "symbols": "runes"}
   },
   "displayData": {
     "type": "string",
     "fonts": {
-      "junicode": {"family": "Junicode", "styleset": "Elder-futhark", "shift": 0.16}
+      "junicode": {"family": "Junicode", "styleset": "Elder-futhark", "shift": 0.16, "scale": 1.2}
     }
   },
   "propsData": {
@@ -32,7 +32,7 @@
       ["i", "Isaz", "i", "ice"],
       ["j", "Jera, Jeran, Jeraz, Yera", "j", "year, harvest"],
       ["æ", "Eihaz, Eiwaz", "ï, æ", "yew (tree)"],
-      ["p", "Pertho, Peorth", "p", "pear-tree (?)"],
+      ["p", "Pertho, Peorth", "p", {"source":  "pear-tree (?)", "alts": {"pear-tree": "pear tree"}}],
       ["z", "Algiz", "z, R (ʀ)", "elk"],
       ["s", "Sowilo", "s", "sun"],
       ["t", "Tiwaz, Teiwaz, Tiewaz", "t", "Tiwaz/Tyr (god)"],

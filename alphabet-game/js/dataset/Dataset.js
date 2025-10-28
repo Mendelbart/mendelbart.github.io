@@ -1,5 +1,5 @@
 import {ItemProperty, QuizItem} from "./symbol.js";
-import {ObjectHelper, ArrayHelper, FontHelper} from '../helpers/helpers.js';
+import {DOMHelper, ObjectHelper, ArrayHelper, FontHelper} from '../helpers/helpers.js';
 import {Filterer} from "./filterer.js";
 import {Setting, SettingsCollection, SettingsHelper as SH} from "../settings/settings.js";
 
@@ -178,6 +178,7 @@ export class Dataset {
             setting.valueElement.addUpdateListener((value) => {
                 filterer.updateFilterState(filterKey, value);
             });
+            filterer.updateFilterState(filterKey, setting.valueElement.value);
         }
 
         return [filterer, sc];
@@ -419,37 +420,34 @@ export class Dataset {
      * @param {HTMLElement} element
      */
     setupGameHeading(element) {
-        const gameHeading = this.metadata.gameHeading;
+        try {
+            const gameHeading = this.metadata.gameHeading;
 
-        if ("font" in gameHeading) {
-            FontHelper.setFont(element, gameHeading.font);
-        } else {
-            FontHelper.clearFont(element);
-        }
-
-        element.dataset.gameHeadingIndex = "0";
-
-        if (typeof gameHeading.string === "string") {
-            element.textContent = gameHeading.string;
-            element.onmousedown = null;
-        } else { // gameHeading.string is Array
-            element.textContent = gameHeading.string[0];
-            if ("fonts" in gameHeading) {
-                FontHelper.setFont(element, gameHeading.fonts[0]);
+            if ("font" in gameHeading) {
+                FontHelper.setFont(element, gameHeading.font);
+            } else {
+                FontHelper.clearFont(element);
             }
 
-            element.onmousedown = () => {
-                let index = Number(element.dataset.gameHeadingIndex) + 1;
-                if (index === gameHeading.string.length) {
-                    index = 0;
+            if (this.name === "Atomic Elements") {
+                const container = document.createElement("div");
+                container.classList.add("element-heading-container");
+                const els = [];
+                for (const [no, symbol] of [[19, "K"], [85, "At"], [42, "Mo"], [16, "S"]]) {
+                    const el = DOMHelper.getTemplate("headingElement");
+                    el.querySelector(".heading-element-symbol").textContent = symbol;
+                    el.querySelector(".heading-element-number").textContent = no;
+                    els.push(el);
                 }
-                element.dataset.gameHeadingIndex = index.toString();
-                element.textContent = gameHeading.string[index];
-
-                if ("fonts" in gameHeading) {
-                    FontHelper.setFont(element, gameHeading.fonts[index]);
-                }
-            };
+                container.replaceChildren(...els);
+                element.replaceChildren(container);
+            } else {
+                element.replaceChildren(document.createTextNode(gameHeading.string));
+            }
+        }
+        catch (error) {
+            console.error(error);
+            element.replaceChildren(document.createTextNode("Kadmos"));
         }
     }
 }

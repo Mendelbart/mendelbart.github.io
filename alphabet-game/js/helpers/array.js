@@ -45,6 +45,10 @@ export function sum(arr) {
  * @returns {number}
  */
 export function avg(arr) {
+    if (arr.length === 0) {
+        console.error("Cannot compute average of empty array.");
+        return 0;
+    }
     return sum(arr) / arr.length;
 }
 
