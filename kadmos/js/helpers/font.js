@@ -18,7 +18,7 @@ const FONT_PROPERTY_KEYS = {
 /**
  * @type {Record<string,*>}
  */
-const fontDataReady = fetch("/alphabet-game/json/fonts.json")
+const fontDataReady = fetch("/kadmos/json/fonts.json")
     .then(response => response.json())
     .then(json => {
         for (const fontData of json) {
@@ -27,7 +27,7 @@ const fontDataReady = fetch("/alphabet-game/json/fonts.json")
     });
 
 // const fontSetupPromise = Promise.all([
-//     fetch("/alphabet-game/json/fonts.json").then(response => response.json()),
+//     fetch("/kadmos/json/fonts.json").then(response => response.json()),
 //     document.fonts.ready
 // ]).then(([json, fontFaceSet]) => {
 //     for (const fontData of json) {
@@ -48,7 +48,7 @@ const fontDataReady = fetch("/alphabet-game/json/fonts.json")
 //            descriptors.variationSettings = variationSettingsString(fontData.variationSettings);
 //         }
 //
-//         const source = `url("/alphabet-game/assets/fonts/subset/${fontData.subsetFilename}")`;
+//         const source = `url("/kadmos/assets/fonts/subset/${fontData.subsetFilename}")`;
 //
 //         fontFaceSet.add(new FontFace(fontData.family, source, descriptors));
 //     }

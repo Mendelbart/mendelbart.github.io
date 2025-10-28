@@ -149,7 +149,7 @@ def main():
         for family, font in fonts.items():
             file.write("@font-face {\n")
             write_property("font-family", f'"{family}"')
-            write_property("src", f'url("/alphabet-game/assets/fonts/subset/{font["subsetFilename"]}")')
+            write_property("src", f'url("/kadmos/assets/fonts/subset/{font["subsetFilename"]}")')
             write_property("font-display", "swap")
 
             if "weight" in font:

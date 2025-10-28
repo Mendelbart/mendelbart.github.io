@@ -1,6 +1,6 @@
 @font-face {
   font-family: "Noto Serif Hebrew";
-  src: url("/alphabet-game/assets/fonts/subset/NotoSerifHebrew.woff2");
+  src: url("/kadmos/assets/fonts/subset/NotoSerifHebrew.woff2");
   font-display: swap;
   font-weight: 100 900;
   font-style: normal;
@@ -9,7 +9,7 @@
 
 @font-face {
   font-family: "Noto Sans Hebrew";
-  src: url("/alphabet-game/assets/fonts/subset/NotoSansHebrew.woff2");
+  src: url("/kadmos/assets/fonts/subset/NotoSansHebrew.woff2");
   font-display: swap;
   font-weight: 100 900;
   font-style: normal;
@@ -18,7 +18,7 @@
 
 @font-face {
   font-family: "Noto Rashi Hebrew";
-  src: url("/alphabet-game/assets/fonts/subset/NotoRashiHebrew.woff2");
+  src: url("/kadmos/assets/fonts/subset/NotoRashiHebrew.woff2");
   font-display: swap;
   font-weight: 100 900;
   font-style: normal;
@@ -26,7 +26,7 @@
 
 @font-face {
   font-family: "Noto Serif";
-  src: url("/alphabet-game/assets/fonts/subset/NotoSerif.woff2");
+  src: url("/kadmos/assets/fonts/subset/NotoSerif.woff2");
   font-display: swap;
   font-weight: 100 900;
   font-style: normal;
@@ -35,7 +35,7 @@
 
 @font-face {
   font-family: "Noto Sans";
-  src: url("/alphabet-game/assets/fonts/subset/NotoSans.woff2");
+  src: url("/kadmos/assets/fonts/subset/NotoSans.woff2");
   font-display: swap;
   font-weight: 100 900;
   font-style: normal;
@@ -44,7 +44,7 @@
 
 @font-face {
   font-family: "Junicode";
-  src: url("/alphabet-game/assets/fonts/subset/Junicode.woff2");
+  src: url("/kadmos/assets/fonts/subset/Junicode.woff2");
   font-display: swap;
   font-weight: 300 700;
   font-style: normal;
