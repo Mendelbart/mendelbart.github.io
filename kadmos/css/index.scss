@@ -232,12 +232,14 @@ h2 {
       border: 1px solid var(--clr-grp-button-checked-border);
     }
 
-    + .button:hover {
-      background: var(--clr-grp-button-hover);
-    }
+    @media(hover: hover) {
+      + .button:hover {
+        background: var(--clr-grp-button-hover);
+      }
 
-    &:checked + .button:hover {
-      background: var(--clr-grp-button-checked-hover);
+      &:checked + .button:hover {
+        background: var(--clr-grp-button-checked-hover);
+      }
     }
 
     + .button:active, &:checked + .button:active {
@@ -258,8 +260,10 @@ button {
   border-radius: var(--border-radius-small);
   cursor: pointer;
 
-  &:hover {
-    background: var(--clr-button-hover);
+  @media (hover: hover) {
+    &:hover {
+      background: var(--clr-button-hover);
+    }
   }
 
   &:active {
@@ -275,8 +279,10 @@ button {
 .button-red, #stop-game-button {
   background: var(--clr-button-red);
 
-  &:hover {
-    background: var(--clr-button-red-hover);
+  @media (hover: hover) {
+    &:hover {
+      background: var(--clr-button-red-hover);
+    }
   }
 
   &:active {
