@@ -18,7 +18,6 @@ export class Game {
         this.dealer = new ItemDealer(Object.keys(items));
         this.onFinish = [];
 
-        this.itemCount = Object.keys(items).length;
         this.updateProgressBar();
     }
 
@@ -102,7 +101,7 @@ export class Game {
             family: this.dataset.fontSetting(),
             weight: Setting.create(
                 "Weight",
-                SettingsHelper.createSlider(100, 900, 400)
+                SettingsHelper.createSlider(100, 900, this.dataset.displayData.defaultWeight ?? 400)
             )
         });
 
@@ -147,7 +146,7 @@ export class Game {
     }
 
     finish() {
-        this.cleanup();
+        setTimeout(() => this.cleanup(), 100);
 
         for (const func of this.onFinish) {
             func(this);

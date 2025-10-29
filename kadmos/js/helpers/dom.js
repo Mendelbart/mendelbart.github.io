@@ -1,7 +1,7 @@
 import {map as objectMap} from './object.js';
 
 /**
- * @typedef {Element | NodeListOf<Element> | Element[]} Elements
+ * @typedef {Element | NodeListOf<Element> | Element[] | HTMLCollection} Elements
  */
 
 const TEMPLATES_HTML = {

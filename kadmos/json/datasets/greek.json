@@ -17,7 +17,7 @@
     "defaultFont": "serif"
   },
   "propsData": {
-    "name": {"type": "string", "label": "Name", "maxDist": 1, "identifier": true, "active": true}
+    "name": {"type": "list", "label": "Name", "maxDist": 1, "identifier": true, "active": true}
   },
   "filters": {
     "type": {
@@ -44,30 +44,30 @@
     "format": "rows",
     "template": ["displayForms", "p:name", "p:name_de"],
     "rows": [
-      [["Α", "α"], "Alpha"],
-      [["Β", "β"], "Beta"],
-      [["Γ", "γ"], "Gamma"],
-      [["Δ", "δ"], "Delta"],
-      [["Ε", "ε"], "Epsilon"],
-      [["Z", "ζ"], "Zeta"],
-      [["Η", "η"], "Eta"],
-      [["Θ", "θ"], "Theta"],
-      [["Ι", "ι"], "Iota"],
-      [["Κ", "κ"], "Kappa"],
-      [["Λ", "λ"], "Lambda"],
-      [["Μ", "μ"], "Mu", "Mü"],
-      [["Ν", "ν"], "Nu", "Nü"],
-      [["Ξ", "ξ"], "Xi"],
-      [["Ο", "ο"], "Omicron", "Omikron"],
-      [["Π", "π"], "Pi"],
-      [["Ρ", "ρ"], "Rho"],
-      [["Σ", "σ", "ς"], "Sigma"],
-      [["Τ", "τ"], "Tau"],
-      [["Υ", "υ"], "Upsilon", "Ypsilon"],
-      [["Φ", "φ"], "Phi"],
-      [["Χ", "χ"], "Chi"],
-      [["Ψ", "ψ"], "Psi"],
-      [["Ω", "ω"], "Omega"]
+      [["Α", "α"], "alpha", "Alpha"],
+      [["Β", "β"], "beta", "Beta"],
+      [["Γ", "γ"], "gamma", "Gamma"],
+      [["Δ", "δ"], "delta", "Delta"],
+      [["Ε", "ε"], "epsilon", "Epsilon"],
+      [["Z", "ζ"], "zeta", "Zeta"],
+      [["Η", "η"], "eta", "Eta"],
+      [["Θ", "θ"], "theta", "Theta"],
+      [["Ι", "ι"], "iota", "Iota/Jota"],
+      [["Κ", "κ"], "kappa", "Kappa"],
+      [["Λ", "λ"], "lambda", "Lambda"],
+      [["Μ", "μ"], "mu", "My/Mü"],
+      [["Ν", "ν"], "nu", "Ny/Nü"],
+      [["Ξ", "ξ"], "xi", "Xi"],
+      [["Ο", "ο"], "omicron", "Omikron"],
+      [["Π", "π"], "pi", "Pi"],
+      [["Ρ", "ρ"], "rho", "Rho"],
+      [["Σ", "σ", "ς"], "sigma", "Sigma"],
+      [["Τ", "τ"], "tau", "Tau"],
+      [["Υ", "υ"], "upsilon", "Ypsilon"],
+      [["Φ", "φ"], "phi", "Phi"],
+      [["Χ", "χ"], "chi", "Chi"],
+      [["Ψ", "ψ"], "psi", "Psi"],
+      [["Ω", "ω"], "omega", "Omega"]
     ]
   }
 }

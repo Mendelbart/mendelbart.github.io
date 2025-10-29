@@ -25,9 +25,19 @@
                     <select id="datasetSelect" aria-label="Select Dataset"></select>
                 </div>
 
-                <div id="dataset-settings" class="settings"></div>
+                <div id="game-settings-ribbon" class="ribbon">
+                    <div class="ribbon-buttons button-group">
+                        <input type="checkbox" value="font" name="game-settings-ribbon" id="dataset-settings-button" data-content-id="dataset-settings">
+                        <label for="dataset-settings-button" class="button">Filters</label>
+                        <input type="checkbox" value="font" name="game-settings-ribbon" id="game-settings-button" data-content-id="game-settings">
+                        <label for="game-settings-button" class="button">Game Settings</label>
+                    </div>
+                    <div class="ribbon-contents">
+                        <div id="dataset-settings" class="settings ribbon-content"></div>
+                        <div id="game-settings" class="settings ribbon-content"></div>
+                    </div>
+                </div>
 
-                <div id="game-settings" class="settings"></div>
             </div>
 
             <div id="game-container">
@@ -41,14 +51,19 @@
 
                 <div id="game-inputs" class="settings"></div>
 
-                <div id="item-buttons">
+                <div id="game-footer">
+                    <div id="live-settings" class="ribbon ribbon-closable">
+                        <div class="ribbon-buttons button-group">
+                            <input type="checkbox" value="font" id="font-settings-button" data-content-id="font-settings">
+                            <label for="font-settings-button" class="button"></label>
+                        </div>
+                        <div class="ribbon-contents closed">
+                            <div id="font-settings" class="settings ribbon-content"></div>
+                        </div>
+                    </div>
+
                     <button id="item-submit-button">Submit</button>
                     <button id="item-next-button" style="display:none">Next</button>
-                </div>
-
-                <div id="game-font-settings">
-                    <h2>Font Settings</h2>
-                    <div id="font-settings" class="settings"></div>
                 </div>
             </div>
         </div>

@@ -133,6 +133,7 @@ export class Dataset {
             }
         ));
         setting.valueElement.disableIfSingleButton();
+        setting.node.classList.add("font-family-setting");
         return setting;
     }
 

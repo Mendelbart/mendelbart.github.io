@@ -236,11 +236,13 @@ export class ListProperty extends StringProperty {
                     if (guessScores[j] > 0) {
                         console.warn("Guess matches multiple values, maxDist too high.");
                     }
-                    valueScores[i] = Math.max(valueScores[j], score);
+                    valueScores[i] = Math.max(valueScores[i], score);
                     guessScores[j] = Math.max(guessScores[j], score);
                 }
             }
         }
+
+        console.log(valueScores);
 
         const grade = this.listMode === "best"
             ? Math.max(...valueScores)

@@ -52,5 +52,56 @@ const datasetSelect = document.getElementById("datasetSelect");
             ctx.startGame();
         }
     });
+
+    document.querySelectorAll(".ribbon").forEach((element) => {
+        setupRibbon(element, element.classList.contains("ribbon-closable"));
+    });
 })();
 
+
+/**
+ * @param {HTMLElement} container
+ * @param {boolean} [closable]
+ */
+function setupRibbon(container, closable = false) {
+    const contents = container.querySelector(".ribbon-contents");
+    const inputs = container.querySelectorAll(".ribbon-buttons input[type=checkbox]")
+
+    let checked;
+    for (const input of inputs) {
+        if (input.checked) {
+            checked = input.dataset.contentId;
+            break;
+        }
+    }
+
+    DOMHelper.hide(contents.querySelectorAll(".ribbon-content"));
+    if (!checked && !(closable && contents.classList.contains("closed"))) {
+        checked = inputs[0].dataset.contentId;
+        inputs[0].checked = true;
+        DOMHelper.show(document.getElementById(checked));
+    }
+
+    inputs.forEach(input => {
+        input.addEventListener("change", () => {
+            if (!input.checked && !closable) {
+                input.checked = checked;
+                return;
+            }
+
+            if (input.checked) {
+                DOMHelper.hide(contents.querySelectorAll(".ribbon-content"));
+                for (const el of inputs) {
+                    if (el.checked && el !== input) {
+                        el.checked = false;
+                        break;
+                    }
+                }
+                DOMHelper.show(document.getElementById(input.dataset.contentId));
+                contents.classList.remove("closed");
+            } else {
+                contents.classList.add("closed");
+            }
+        });
+    });
+}

@@ -1,3 +1,7 @@
+$borderRadiusSmall: .5rem;
+$transitionShort: 50ms;
+
+
 /******************** RESET ***********************/
 *, *::before, *::after {
   box-sizing: border-box;
@@ -13,15 +17,17 @@
 /************************* BASE VARS ***********************/
 :root {
   --accent-hue: 210deg;
-  --accent-secondary-hue: calc(var(--accent-hue) - 8deg);
+  --accent-secondary-hue: calc(var(--accent-hue) - 5deg);
   --accent-border: hsl(var(--accent-hue), 50%, 50%);
-  --accent-border-light: hsl(var(--accent-hue), 65%, 60%);
+  --accent-border-light: hsla(0, 0%, 100%, 25%);
   --accent-bg: hsl(var(--accent-hue), 73%, 45%);
   --accent-bg-hover: hsl(var(--accent-hue), 73%, 49%);
 
   --clr-background: hsl(0, 0%, 8%);
-  --clr-surface: hsl(var(--accent-hue), 7.5%, 14%);
-  --clr-input: hsl(0, 0%, 15%);
+  --clr-surface: hsl(0, 0%, 15%);
+  --clr-symbol-bg: hsl(var(--accent-hue), 7.5%, 14%);
+  --clr-input: hsla(0, 0%, 100%, 0.1);
+  --clr-input-solid: hsl(0, 0%, 15%);
 
   --clr-border: hsl(0, 0%, 40%);
   --clr-inset-shadow: hsl(0, 0%, 100%, 0.35);
@@ -36,28 +42,27 @@
   --clr-button: var(--accent-bg);
   --clr-button-hover: hsl(var(--accent-hue), 73%, 50%);
   --clr-button-active: hsl(var(--accent-hue), 73%, 55%);
-  --clr-button-red: #a01f4f;
-  --clr-button-red-hover: #a01f4f;
-  --clr-button-red-active: #a01f4f;
+  --clr-button-red: hsl(338, 68%, 37%);
+  --clr-button-red-hover: hsl(338, 64%, 43%);
+  --clr-button-red-active: hsl(338, 60%, 50%);
 
-  --clr-grp-button: hsl(0, 0%, 7%);
-  --clr-grp-button-border: hsl(0, 0%, 30%);
-  --clr-grp-button-hover: hsl(0, 0%, 15%);
-  --clr-grp-button-active: hsl(var(--accent-hue), 19%, 30%);
+  --clr-grp-button: transparent;
+  --clr-grp-button-border: hsla(0, 0%, 100%, .3);
+  --clr-grp-button-hover: hsla(0, 0%, 100%, 0.07);
+  --clr-grp-button-active: hsl(var(--accent-hue), 23%, 26%);
   --clr-grp-button-checked: hsl(var(--accent-hue), 26%, 19%);
-  --clr-grp-button-checked-hover: hsl(var(--accent-hue), 18%, 26%);
+  --clr-grp-button-checked-hover: hsl(var(--accent-hue), 18%, 23%);
   --clr-grp-button-checked-border: var(--accent-border);
+  --clr-grp-button-checked-active: var(--clr-grp-button-active);
 
   --clr-grp-button-text: hsl(0, 0%, 70%);
   --clr-grp-button-text-checked: hsl(var(--accent-hue), 90%, 72%);
 
-  --border-radius-small: .5rem;
+  --border-radius-small: .5625rem;
 
   --text-green: hsl(118, 70.6%, 66.7%);
   --text-yellow: hsl(53.5, 98.1%, 59.4%);
   --text-red: hsl(351.5, 100%, 69.4%);
-
-  --clr-input-active: var(--clr-surface);
 
   @media (prefers-color-scheme: dark) {
 
@@ -161,40 +166,13 @@ h2 {
 }
 
 
-/******************** SETTINGS *********************/
-.settings {
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  gap: .5rem;
-  padding-block: .625rem;
-}
-
-.labeled-value-element {
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  gap: .1rem;
-
-  &> label {
-    font-weight: 600;
-    font-size: .9rem;
-    color: var(--clr-text-soft);
-  }
-}
-
-#dataset-settings {
-  border-bottom: 1px solid var(--clr-border);
-}
-
-
 /********************** BUTTONS *******************/
 .button-group {
   display: flex;
   gap: .25rem;
 
   &> .button {
-    padding: .4em .6em;
+    padding: .4em .625em;
     background: var(--clr-grp-button);
     color: var(--clr-grp-button-text);
     font-weight: 650;
@@ -206,13 +184,13 @@ h2 {
     border: 1px solid var(--clr-grp-button-border);
 
     &:first-of-type {
-      border-top-left-radius: var(--border-radius-small);
-      border-bottom-left-radius: var(--border-radius-small);
+      border-top-left-radius: $borderRadiusSmall;
+      border-bottom-left-radius: $borderRadiusSmall;
     }
 
     &:last-of-type {
-      border-top-right-radius: var(--border-radius-small);
-      border-bottom-right-radius: var(--border-radius-small);
+      border-top-right-radius: $borderRadiusSmall;
+      border-bottom-right-radius: $borderRadiusSmall;
     }
   }
 
@@ -242,8 +220,12 @@ h2 {
       }
     }
 
-    + .button:active, &:checked + .button:active {
+    + .button:active {
       background: var(--clr-grp-button-active);
+    }
+
+    &:checked + .button:active {
+      background: var(--clr-grp-button-checked-active);
     }
   }
 }
@@ -257,7 +239,7 @@ button {
   font-weight: 700;
   padding: .5em .7em;
   border: 1px solid var(--clr-border-soft);
-  border-radius: var(--border-radius-small);
+  border-radius: $borderRadiusSmall;
   cursor: pointer;
 
   @media (hover: hover) {
@@ -292,10 +274,9 @@ button {
 
 /************************* INPUTS, SELECT ***************/
 input[type="text"], select, .item-eval {
-  border-radius: var(--border-radius-small);
+  border-radius: $borderRadiusSmall;
   border: 1px solid var(--clr-border-soft);
   color: var(--clr-text);
-  background: var(--clr-input);
 
   &:focus {
     outline: 2px solid var(--accent-border);
@@ -305,6 +286,7 @@ input[type="text"], select, .item-eval {
 
 input[type="text"], .item-eval {
   padding: .4em .55em;
+  background: var(--clr-input);
 }
 
 input[type="text"] {
@@ -314,6 +296,7 @@ input[type="text"] {
 select {
   font-weight: 550;
   padding: .4em .625em;
+  background: var(--clr-surface);
 }
 
 .styled-select > select {
@@ -382,13 +365,13 @@ input[type="range"] {
   &::-webkit-slider-runnable-track {
     background: #{'linear-gradient(to right, var(--accent-bg) calc(var(--range-progress) * 100%), var(--clr-input) calc(var(--range-progress) * 100%))'};
     height: .6rem;
-    border-radius: var(--border-radius-small);
+    border-radius: $borderRadiusSmall;
   }
 
   &::-moz-range-track {
     background: #{'linear-gradient(to right, var(--accent-bg) calc(var(--range-progress) * 100%), var(--clr-input) calc(var(--range-progress) * 100%))'};
     height: .6rem;
-    border-radius: var(--border-radius-small);
+    border-radius: $borderRadiusSmall;
   }
 
   &:focus {
@@ -424,7 +407,27 @@ input[type="range"] {
 }
 
 
-/*********************** GAME SETTINGS ***********************/
+/*********************** SETTINGS ***********************/
+.settings {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: .5rem;
+}
+
+.labeled-value-element {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: .1rem;
+
+  &> label {
+    font-weight: 600;
+    font-size: .9rem;
+    color: var(--clr-text-soft);
+  }
+}
+
 
 #datasetSelect {
   margin-top: 0.25rem;
@@ -441,11 +444,108 @@ input[type="range"] {
   padding: 0 .8rem;
 }
 
+#game-settings-ribbon {
+  margin-block-start: .625rem;
+
+  .ribbon-buttons {
+    border-bottom: 1px solid var(--clr-border);
+    padding-bottom: .625rem;
+  }
+}
+
+
+.ribbon {
+  background: var(--clr-surface);
+  --padding: .8rem;
+  padding: var(--padding);
+  border-radius: .8rem;
+  display: flex;
+  flex-direction: column;
+  gap: .6rem;
+  transition: background $transitionShort;
+
+  .ribbon-buttons {
+    transition: translate $transitionShort;
+    gap: .5rem;
+    --clr-grp-button: var(--clr-surface);
+    --clr-grp-button-border: var(--clr-surface);
+    --clr-grp-button-hover: hsl(0, 0%, 20%);
+    --clr-grp-button-active: hsl(0, 0%, 23%);
+    --clr-grp-button-checked: var(--clr-text);
+    --clr-grp-button-checked-hover: var(--clr-text-soft);
+    --clr-grp-button-checked-border: var(--clr-surface);
+    --clr-grp-button-checked-active: hsl(0, 0%, 80%);
+
+    //--clr-grp-button-text: hsl(0, 0%, 70%);
+    --clr-grp-button-text-checked: var(--clr-surface);
+
+    &> .button {
+      border-radius: $borderRadiusSmall;
+    }
+  }
+
+  .ribbon-contents {
+    transition: opacity $transitionShort;
+
+    &.closed {
+      transition: visibility 0ms $transitionShort, opacity $transitionShort;
+      visibility: hidden;
+      opacity: 0;
+    }
+  }
+
+
+
+  &:has(> .ribbon-contents.closed) {
+    background: transparent;
+
+    .ribbon-buttons {
+      translate: calc(-1 * var(--padding)) calc(-1 * var(--padding));
+    }
+  }
+}
+
+#live-settings {
+  position: relative;
+}
+
+#font-settings {
+  margin-block: -.5rem;
+
+  .font-family-setting {
+    &> label {
+      display: none;
+    }
+
+    &> .button-group {
+      position: absolute;
+      top: var(--padding);
+      right: var(--padding);
+    }
+  }
+}
+
+#font-settings-button + label {
+  &::before, &::after {
+    content: "A";
+    font-weight: 700;
+  }
+
+  &::before {
+    font-size: 1.4rem;
+  }
+
+  &::after {
+    font-size: 1rem;
+  }
+}
+
+
 
 
 /************* PLAYING TOGGLE ********************/
 .playing {
- #start-game-button {
+  #start-game-button {
     display: none;
   }
 }
@@ -463,13 +563,13 @@ body:not(.playing) {
 .playing #game-container, body:not(.playing) #new-game-settings {
   visibility: visible;
   opacity: 1;
-  transition: opacity 50ms ease-out;
+  transition: opacity $transitionShort ease-out;
 }
 
 body:not(.playing) #game-container, .playing #new-game-settings {
   visibility: hidden;
   opacity: 0;
-  transition: visibility 50ms, opacity 50ms ease-out;
+  transition: visibility $transitionShort, opacity $transitionShort ease-out;
 }
 
 #game-container, #new-game-settings {
@@ -481,23 +581,23 @@ body:not(.playing) #game-container, .playing #new-game-settings {
 #progress-bar {
   background: var(--clr-input);
   border-radius: .15rem;
-  height: .35rem;
+  --height: .4rem;
+  height: var(--height);
   width: 100%;
-  transition: opacity 50ms;
+  transition: opacity $transitionShort;
 
   &::after {
-    --base-width: .4rem;
-    --gradient-base-size: 0.6;
+    --gradient-base-size: 0.5;
     --width: var(--progress, 0);
     --gradient-scale: calc((var(--width) * (1 - var(--gradient-base-size)) + var(--gradient-base-size)));
 
     content: "";
     display: block;
-    width: max(calc(var(--width) * 100%), var(--base-width));
+    width: max(calc(var(--width) * 100%), var(--height));
     height: 100%;
     opacity: 1;
-    background: linear-gradient(to right, hsl(var(--accent-hue), 90%, 36%), hsl(var(--accent-secondary-hue), 68%, 62%));
-    background-size: calc(100% / var(--gradient-scale));
+    background: linear-gradient(to right, hsl(var(--accent-hue), 90%, 45%), hsl(var(--accent-secondary-hue), 55%, 60%));
+    background-size: calc(100% / (var(--gradient-scale) * var(--width)));
     border-radius: inherit;
 
     transition: width 125ms ease-out;
@@ -513,13 +613,17 @@ body:not(.playing) #game-container, .playing #new-game-settings {
   display: flex;
   flex-direction: column;
   gap: .625rem;
-  margin-block-start: .25rem;
+  margin-block-end: .625rem;
 }
 
-#item-buttons {
+#game-footer {
   display: flex;
-  flex-direction: row;
-  flex-flow: row-reverse;
+  align-items: start;
+  gap: 1rem;
+}
+
+#live-settings {
+  flex: 1;
 }
 
 #game-symbols {
@@ -527,7 +631,7 @@ body:not(.playing) #game-container, .playing #new-game-settings {
   gap: .6rem;
   align-items: center;
   justify-content: center;
-  margin-block-start: 1rem;
+  margin-block: .8rem;
 }
 
 /*************** SYMBOLS, EVAL *******************/
@@ -541,9 +645,8 @@ body:not(.playing) #game-container, .playing #new-game-settings {
 
   box-sizing: content-box;
   padding: 1.8rem 1.6rem;
-  background: var(--clr-surface);
-  border-radius: var(--border-radius-small);
-
+  background: var(--clr-symbol-bg);
+  border-radius: $borderRadiusSmall;
 
   pointer-events: none;
 
@@ -552,6 +655,7 @@ body:not(.playing) #game-container, .playing #new-game-settings {
   &> .symbol-string {
     font-size: calc(var(--font-scale) * var(--symbol-size));
     line-height: var(--symbol-size);
+    height: var(--symbol-size);
   }
 
   &:hover {
@@ -562,7 +666,7 @@ body:not(.playing) #game-container, .playing #new-game-settings {
 
 
 #symbol-current {
-  --symbol-size: 7.5rem;
+  --symbol-size: 6.25rem;
 }
 
 

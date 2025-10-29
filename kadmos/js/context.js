@@ -83,6 +83,11 @@ export class GameContext {
                 this.saveSettings();
             });
         }
+
+        const filtersButton = document.querySelector("#game-settings-ribbon [data-content-id=\"dataset-settings\"]");
+        if (!filtersButton.checked) {
+            filtersButton.click();
+        }
     }
 
     /**
