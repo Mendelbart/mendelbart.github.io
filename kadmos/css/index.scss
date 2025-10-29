@@ -170,6 +170,7 @@ h2 {
 .button-group {
   display: flex;
   gap: .25rem;
+  overflow-x: scroll;
 
   &> .button {
     padding: .4em .625em;
@@ -177,6 +178,7 @@ h2 {
     color: var(--clr-grp-button-text);
     font-weight: 650;
     font-size: 1rem;
+    text-wrap: nowrap;
 
     border-radius: 0;
     cursor: pointer;
@@ -241,6 +243,7 @@ button {
   border: 1px solid var(--clr-border-soft);
   border-radius: $borderRadiusSmall;
   cursor: pointer;
+  color: var(--clr-text);
 
   @media (hover: hover) {
     &:hover {
@@ -560,6 +563,10 @@ body:not(.playing) {
   }
 }
 
+#game-layers {
+  position: relative;
+}
+
 .playing #game-container, body:not(.playing) #new-game-settings {
   visibility: visible;
   opacity: 1;
@@ -604,10 +611,13 @@ body:not(.playing) #game-container, .playing #new-game-settings {
   }
 }
 
-#game-layers {
-  position: relative;
+#game-symbols {
+  display: flex;
+  gap: .6rem;
+  align-items: center;
+  justify-content: center;
+  margin-block: .8rem;
 }
-
 
 #game-inputs {
   display: flex;
@@ -626,13 +636,6 @@ body:not(.playing) #game-container, .playing #new-game-settings {
   flex: 1;
 }
 
-#game-symbols {
-  display: flex;
-  gap: .6rem;
-  align-items: center;
-  justify-content: center;
-  margin-block: .8rem;
-}
 
 /*************** SYMBOLS, EVAL *******************/
 .symbol {
@@ -662,8 +665,6 @@ body:not(.playing) #game-container, .playing #new-game-settings {
     pointer-events: auto;
   }
 }
-
-
 
 #symbol-current {
   --symbol-size: 6.25rem;
