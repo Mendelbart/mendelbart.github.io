@@ -48,7 +48,7 @@ $bodyPaddingInline: .75rem;
   --clr-grp-button: transparent;
   --clr-grp-button-border: hsla(0, 0%, 100%, .3);
   --clr-grp-button-hover: hsla(0, 0%, 100%, 0.06);
-  --clr-grp-button-active: hsla(0, 0%, 100%, 0.11);
+  --clr-grp-button-active: hsla(var(--accent-hue), 100%, 68%, 0.22);
   --clr-grp-button-checked: hsl(var(--accent-hue), 100%, 68%, 0.17);
   --clr-grp-button-checked-hover: hsl(var(--accent-hue), 100%, 68%, 0.22);
   --clr-grp-button-checked-border: var(--accent-border);
@@ -203,7 +203,7 @@ h2 {
     font-weight: 650;
     font-size: 1rem;
     text-wrap: nowrap;
-    transition: background $transitionButton, border $transitionButton;
+    transition: background $transitionButton, border $transitionButton, color $transitionButton;
 
     border-radius: 0;
     cursor: pointer;
