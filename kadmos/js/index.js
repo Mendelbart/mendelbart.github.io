@@ -75,11 +75,14 @@ function setupRibbon(container, closable = false) {
         }
     }
 
-    DOMHelper.hide(contents.querySelectorAll(".ribbon-content"));
-    if (!checked && !(closable && contents.classList.contains("closed"))) {
+    DOMHelper.addClass(contents.querySelectorAll(".ribbon-content"), "hidden");
+    if (!checked && !(closable && contents.classList.contains("hidden"))) {
         checked = inputs[0].dataset.contentId;
         inputs[0].checked = true;
-        DOMHelper.show(document.getElementById(checked));
+    }
+
+    if (checked) {
+        document.getElementById(checked).classList.remove("hidden");
     }
 
     inputs.forEach(input => {
@@ -89,18 +92,17 @@ function setupRibbon(container, closable = false) {
                 return;
             }
 
+            const previousShown = contents.querySelector(".ribbon-content:not(.hidden)");
             if (input.checked) {
-                DOMHelper.hide(contents.querySelectorAll(".ribbon-content"));
-                for (const el of inputs) {
-                    if (el.checked && el !== input) {
-                        el.checked = false;
-                        break;
-                    }
+                if (previousShown) {
+                    DOMHelper.addClass(previousShown, "hidden");
+                    container.querySelector(`.ribbon-buttons input[type=checkbox][data-content-id="${previousShown.id}"]`).checked = false;
                 }
-                DOMHelper.show(document.getElementById(input.dataset.contentId));
-                contents.classList.remove("closed");
+
+                document.getElementById(input.dataset.contentId).classList.remove("hidden");
+                contents.classList.remove("hidden");
             } else {
-                contents.classList.add("closed");
+                contents.classList.add("hidden");
             }
         });
     });

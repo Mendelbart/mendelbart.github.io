@@ -15,6 +15,8 @@ const FONT_PROPERTY_KEYS = {
     letterSpacing: "--letter-spacing"
 };
 
+const FONT_TRANSFORM_PROPERTIES = ["shift", "scale", "letterSpacing"];
+
 /**
  * @type {Record<string,*>}
  */
@@ -97,6 +99,8 @@ export function getFontData(family) {
  * @param {{weight?, shift?, scale?, styleset?}} properties
  */
 export function setFontProperties(element, properties) {
+    let transform = false;
+
     for (const [key, value] of Object.entries(properties)) {
         if (key === "family") {
             continue;
@@ -105,6 +109,10 @@ export function setFontProperties(element, properties) {
         if (!(key in FONT_PROPERTY_KEYS)) {
             console.warn(`Unknown font property '${key}'`);
             continue;
+        }
+
+        if (FONT_TRANSFORM_PROPERTIES.includes(key)) {
+            transform = true;
         }
 
         if (key === "styleset") {
@@ -118,14 +126,14 @@ export function setFontProperties(element, properties) {
         }
     }
 
-    classIfElse("scale" in properties || "shift" in properties, element, "font-transform");
+    classIfElse(transform, element, "font-transform");
 }
 
 export function setFontFamily(element, family) {
     return fontDataReady.then(() => {
         const font = FONT_DATA[family];
         element.style.fontFamily = family + ", " + (font.fallback ?? "system-ui, sans-serif");
-        setFontProperties(element, ObjectHelper.onlyKeys(font, ["scale", "shift"]));
+        setFontProperties(element, ObjectHelper.onlyKeys(font, FONT_TRANSFORM_PROPERTIES));
     });
 }
 

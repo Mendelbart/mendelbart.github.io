@@ -1,5 +1,7 @@
 $borderRadiusSmall: .5rem;
-$transitionShort: 50ms;
+$transitionHide: 75ms;
+$transitionButton: 30ms;
+$bodyPaddingInline: .75rem;
 
 
 /******************** RESET ***********************/
@@ -42,18 +44,15 @@ $transitionShort: 50ms;
   --clr-button: var(--accent-bg);
   --clr-button-hover: hsl(var(--accent-hue), 73%, 50%);
   --clr-button-active: hsl(var(--accent-hue), 73%, 55%);
-  --clr-button-red: hsl(338, 68%, 37%);
-  --clr-button-red-hover: hsl(338, 64%, 43%);
-  --clr-button-red-active: hsl(338, 60%, 50%);
 
   --clr-grp-button: transparent;
   --clr-grp-button-border: hsla(0, 0%, 100%, .3);
-  --clr-grp-button-hover: hsla(0, 0%, 100%, 0.07);
-  --clr-grp-button-active: hsl(var(--accent-hue), 23%, 26%);
-  --clr-grp-button-checked: hsl(var(--accent-hue), 26%, 19%);
-  --clr-grp-button-checked-hover: hsl(var(--accent-hue), 18%, 23%);
+  --clr-grp-button-hover: hsla(0, 0%, 100%, 0.06);
+  --clr-grp-button-active: hsla(0, 0%, 100%, 0.11);
+  --clr-grp-button-checked: hsl(var(--accent-hue), 100%, 68%, 0.17);
+  --clr-grp-button-checked-hover: hsl(var(--accent-hue), 100%, 68%, 0.22);
   --clr-grp-button-checked-border: var(--accent-border);
-  --clr-grp-button-checked-active: var(--clr-grp-button-active);
+  --clr-grp-button-checked-active: hsl(var(--accent-hue), 70%, 68%, 0.27);
 
   --clr-grp-button-text: hsl(0, 0%, 70%);
   --clr-grp-button-text-checked: hsl(var(--accent-hue), 90%, 72%);
@@ -87,7 +86,7 @@ body {
 
   max-width: 26rem;
   margin: auto;
-  padding: 0.75rem;
+  padding: 0.75rem $bodyPaddingInline;
 }
 
 .font-transform {
@@ -95,6 +94,31 @@ body {
   translate: calc(var(--letter-spacing) / 2) calc(var(--font-shift) * 1em);
   letter-spacing: var(--letter-spacing);
 }
+
+@mixin hideable {
+  visibility: visible;
+  opacity: 1;
+  transition: opacity $transitionHide ease-out;
+
+  &.hidden {
+    @include hidden;
+  }
+}
+
+@mixin hidden {
+  visibility: hidden;
+  opacity: 0;
+  transition: visibility 0ms $transitionHide, opacity $transitionHide ease-out;
+}
+
+.hideable {
+  @include hideable;
+
+  &.hidden {
+    @include hidden;
+  }
+}
+
 
 
 /****************** HEADINGS ******************/
@@ -144,7 +168,7 @@ h2 {
 
 .element-heading-container {
   display: flex;
-  gap: .12ch;
+  gap: .15ch;
 
   .heading-element-symbol {
     font-size: 1em;
@@ -179,6 +203,7 @@ h2 {
     font-weight: 650;
     font-size: 1rem;
     text-wrap: nowrap;
+    transition: background $transitionButton, border $transitionButton;
 
     border-radius: 0;
     cursor: pointer;
@@ -244,6 +269,7 @@ button {
   border-radius: $borderRadiusSmall;
   cursor: pointer;
   color: var(--clr-text);
+  transition: background $transitionButton, border $transitionButton;
 
   @media (hover: hover) {
     &:hover {
@@ -261,17 +287,17 @@ button {
   }
 }
 
-.button-red, #stop-game-button {
-  background: var(--clr-button-red);
+#stop-game-button {
+  background: hsl(0, 0%, 30%);
 
   @media (hover: hover) {
     &:hover {
-      background: var(--clr-button-red-hover);
+      background: hsl(0, 0%, 35%);
     }
   }
 
   &:active {
-    background: var(--clr-button-red-active);
+    background: hsl(0, 0%, 40%);
   }
 }
 
@@ -288,7 +314,7 @@ input[type="text"], select, .item-eval {
 }
 
 input[type="text"], .item-eval {
-  padding: .4em .55em;
+  padding: .5em .625em;
   background: var(--clr-input);
 }
 
@@ -465,10 +491,10 @@ input[type="range"] {
   display: flex;
   flex-direction: column;
   gap: .6rem;
-  transition: background $transitionShort;
+  transition: background $transitionHide;
 
   .ribbon-buttons {
-    transition: translate $transitionShort;
+    transition: translate $transitionHide;
     gap: .5rem;
     --clr-grp-button: var(--clr-surface);
     --clr-grp-button-border: var(--clr-surface);
@@ -488,18 +514,16 @@ input[type="range"] {
   }
 
   .ribbon-contents {
-    transition: opacity $transitionShort;
+    @include hideable;
 
-    &.closed {
-      transition: visibility 0ms $transitionShort, opacity $transitionShort;
-      visibility: hidden;
-      opacity: 0;
+    &> .ribbon-content.hidden {
+      display: none;
     }
   }
 
 
 
-  &:has(> .ribbon-contents.closed) {
+  &:has(> .ribbon-contents.hidden) {
     background: transparent;
 
     .ribbon-buttons {
@@ -510,25 +534,25 @@ input[type="range"] {
 
 #live-settings {
   position: relative;
+  margin-block-start: .5rem;
+
+  .ribbon-buttons {
+    position: absolute;
+    top: -2.85rem;
+    left: 0;
+    translate: 0;
+  }
 }
 
 #font-settings {
-  margin-block: -.5rem;
-
-  .font-family-setting {
-    &> label {
-      display: none;
-    }
-
-    &> .button-group {
-      position: absolute;
-      top: var(--padding);
-      right: var(--padding);
-    }
+  .font-family-setting > label {
+    display: none;
   }
 }
 
 #font-settings-button + label {
+  transition: background $transitionHide;
+
   &::before, &::after {
     content: "A";
     font-weight: 700;
@@ -567,16 +591,12 @@ body:not(.playing) {
   position: relative;
 }
 
-.playing #game-container, body:not(.playing) #new-game-settings {
-  visibility: visible;
-  opacity: 1;
-  transition: opacity $transitionShort ease-out;
+#game-container, #new-game-settings {
+  @include hideable;
 }
 
 body:not(.playing) #game-container, .playing #new-game-settings {
-  visibility: hidden;
-  opacity: 0;
-  transition: visibility $transitionShort, opacity $transitionShort ease-out;
+  @include hidden;
 }
 
 #game-container, #new-game-settings {
@@ -591,7 +611,7 @@ body:not(.playing) #game-container, .playing #new-game-settings {
   --height: .4rem;
   height: var(--height);
   width: 100%;
-  transition: opacity $transitionShort;
+  transition: opacity $transitionHide;
 
   &::after {
     --gradient-base-size: 0.5;
@@ -616,7 +636,7 @@ body:not(.playing) #game-container, .playing #new-game-settings {
   gap: .6rem;
   align-items: center;
   justify-content: center;
-  margin-block: .8rem;
+  margin-block: 1rem;
 }
 
 #game-inputs {
@@ -629,12 +649,9 @@ body:not(.playing) #game-container, .playing #new-game-settings {
 #game-footer {
   display: flex;
   align-items: start;
-  gap: 1rem;
+  justify-content: end;
 }
 
-#live-settings {
-  flex: 1;
-}
 
 
 /*************** SYMBOLS, EVAL *******************/
