@@ -17,54 +17,116 @@ $bodyPaddingInline: .75rem;
 
 
 /************************* BASE VARS ***********************/
-:root {
+@mixin light-mode {
   --accent-hue: 210deg;
   --accent-secondary-hue: calc(var(--accent-hue) - 5deg);
-  --accent-border: hsl(var(--accent-hue), 50%, 50%);
+  --accent-border: hsl(var(--accent-hue), 60%, 50%);
   --accent-border-light: hsla(0, 0%, 100%, 25%);
-  --accent-bg: hsl(var(--accent-hue), 73%, 45%);
-  --accent-bg-hover: hsl(var(--accent-hue), 73%, 49%);
+  --accent-bg: hsl(var(--accent-hue), 73%, 48%);
+  --accent-bg-hover: hsl(var(--accent-hue), 73%, 51%);
 
-  --clr-background: hsl(0, 0%, 8%);
-  --clr-surface: hsl(0, 0%, 15%);
-  --clr-symbol-bg: hsl(var(--accent-hue), 7.5%, 14%);
-  --clr-input: hsla(0, 0%, 100%, 0.1);
-  --clr-input-solid: hsl(0, 0%, 15%);
+  --clr-background: #ffffff;
+  --clr-surface: var(--clr-background);
+  --clr-surface-border: var(--clr-border-soft);
+  --clr-symbol-bg: hsla(var(--accent-hue), 30%, 68%, 0.12);
+  --clr-input: var(--clr-background);
+  --clr-range: hsl(0, 0%, 0%, 0.08);
+  --clr-surface-standout: hsl(0, 0%, 95%);
 
-  --clr-border: hsl(0, 0%, 40%);
-  --clr-inset-shadow: hsl(0, 0%, 100%, 0.35);
-  --clr-outset-shadow: black;
+  --clr-border: hsl(0, 0%, 60%);
 
-  --clr-text-soft: hsl(0, 0%, 87%);
-  --clr-text: hsl(0, 0%, 95%);
+  --clr-text-soft: hsl(0, 0%, 17%);
+  --clr-text: hsl(0, 0%, 10%);
 
   --clr-text-accent: var(--clr-text);
 
-  --clr-border-soft: #ffffff29;
+  --clr-border-soft: #00000035;
   --clr-button: var(--accent-bg);
   --clr-button-hover: hsl(var(--accent-hue), 73%, 50%);
   --clr-button-active: hsl(var(--accent-hue), 73%, 55%);
+  --clr-button-text: #ffffff;
+
+  --clr-button-grey: hsl(0, 0%, 50%);
+  --clr-button-grey-hover: hsl(0, 0%, 53%);
+  --clr-button-grey-active: hsl(0, 0%, 58%);
+
+  --clr-grp-button: transparent;
+  --clr-grp-button-border: hsla(0, 0%, 0%, .4);
+  --clr-grp-button-hover: hsla(0, 0%, 0%, 0.02);
+  --clr-grp-button-active: hsl(var(--accent-hue), 70%, 80%, 0.2);
+  --clr-grp-button-checked: hsl(var(--accent-hue), 100%, 68%, 0.17);
+  --clr-grp-button-checked-hover: hsl(var(--accent-hue), 100%, 68%, 0.22);
+  --clr-grp-button-checked-border: var(--accent-border);
+  --clr-grp-button-checked-active: hsl(var(--accent-hue), 70%, 60%, 0.27);
+
+  --clr-grp-button-text: hsl(0, 0%, 40%);
+  --clr-grp-button-text-checked: hsl(var(--accent-hue), 64%, 44%);
+
+  --clr-ribbon-button: var(--clr-surface);
+  --clr-ribbon-button-hover: hsl(0, 0%, 90%);
+  --clr-ribbon-button-active: hsl(0, 0%, 85%);
+  --clr-ribbon-button-checked: hsl(0, 0%, 20%);
+  --clr-ribbon-button-checked-hover: hsl(0, 0%, 24%);
+  --clr-ribbon-button-checked-active: hsl(0, 0%, 28%);
+
+  --text-green: hsl(118.1, 91.9%, 33.9%);
+  --text-yellow: hsl(59.2, 100%, 31.2%);
+  --text-red: hsl(351.7, 98.8%, 33.1%);
+}
+
+@mixin dark-mode {
+  --accent-border: hsl(var(--accent-hue), 50%, 50%);
+  --accent-border-light: hsla(0, 0%, 100%, 25%);
+
+  --clr-background: hsl(0, 0%, 8%);
+  --clr-surface: hsl(0, 0%, 15%);
+  --clr-surface-border: var(--clr-surface);
+  --clr-symbol-bg: hsl(var(--accent-hue), 100%, 82%, 0.07);
+  --clr-input: hsla(0, 0%, 100%, 0.07);
+  --clr-range: var(--clr-input);
+  --clr-surface-standout: var(--clr-surface);
+
+  --clr-border: hsl(0, 0%, 40%);
+
+  --clr-text-soft: hsl(0, 0%, 87%);
+  --clr-text: hsl(0, 0%, 95%);
+  --clr-text-accent: #fff;
+
+  --clr-border-soft: #ffffff29;
+  --clr-button-hover: hsl(var(--accent-hue), 73%, 50%);
+  --clr-button-active: hsl(var(--accent-hue), 73%, 55%);
+
+  --clr-button-grey: hsl(0, 0%, 28%);
+  --clr-button-grey-hover: hsl(0, 0%, 33%);
+  --clr-button-grey-active: hsl(0, 0%, 38%);
 
   --clr-grp-button: transparent;
   --clr-grp-button-border: hsla(0, 0%, 100%, .3);
   --clr-grp-button-hover: hsla(0, 0%, 100%, 0.06);
-  --clr-grp-button-active: hsla(var(--accent-hue), 100%, 68%, 0.22);
   --clr-grp-button-checked: hsl(var(--accent-hue), 100%, 68%, 0.17);
   --clr-grp-button-checked-hover: hsl(var(--accent-hue), 100%, 68%, 0.22);
-  --clr-grp-button-checked-border: var(--accent-border);
   --clr-grp-button-checked-active: hsl(var(--accent-hue), 70%, 68%, 0.27);
 
   --clr-grp-button-text: hsl(0, 0%, 70%);
   --clr-grp-button-text-checked: hsl(var(--accent-hue), 90%, 72%);
 
-  --border-radius-small: .5625rem;
+  --clr-ribbon-button-hover: hsl(0, 0%, 20%);
+  --clr-ribbon-button-active: hsl(0, 0%, 23%);
+  --clr-ribbon-button-checked: var(--clr-text);
+  --clr-ribbon-button-checked-active: hsl(0, 0%, 80%);
+  --clr-ribbon-button-checked-hover: var(--clr-text-soft);
 
   --text-green: hsl(118, 70.6%, 66.7%);
   --text-yellow: hsl(53.5, 98.1%, 59.4%);
   --text-red: hsl(351.5, 100%, 69.4%);
+}
+
+
+:root {
+  @include light-mode;
 
   @media (prefers-color-scheme: dark) {
-
+    @include dark-mode;
   }
 
   --font-scale: 1;
@@ -73,8 +135,17 @@ $bodyPaddingInline: .75rem;
   --letter-spacing: 0ch;
 }
 
+.light-mode {
+  @include light-mode;
+}
+
+.dark-mode {
+  @include dark-mode;
+}
+
 html {
   color-scheme: dark light;
+  background-color: var(--clr-background);
 }
 
 body {
@@ -143,10 +214,11 @@ h2 {
 #game-heading {
   display: flex;
   flex-direction: row;
-  margin-block-end: .35rem;
+  margin-block-end: .3rem;
   padding-inline: .125rem;
 
   &> h1 {
+    color: var(--clr-text-accent);
     scale: calc(var(--client-width, 1) / var(--scroll-width, 1));
     font-size: calc(var(--font-scale) * 1.8rem);
     height: 2.4rem;
@@ -161,8 +233,9 @@ h2 {
   }
 
   &> button {
-    align-self: stretch;
-    padding: 0 0.6rem;
+    align-self: center;
+    padding: .45rem .6rem;
+    margin-bottom: .1rem;
   }
 }
 
@@ -268,7 +341,7 @@ button {
   border: 1px solid var(--clr-border-soft);
   border-radius: $borderRadiusSmall;
   cursor: pointer;
-  color: var(--clr-text);
+  color: var(--clr-button-text);
   transition: background $transitionButton, border $transitionButton;
 
   @media (hover: hover) {
@@ -288,16 +361,8 @@ button {
 }
 
 #stop-game-button {
-  background: hsl(0, 0%, 30%);
-
-  @media (hover: hover) {
-    &:hover {
-      background: hsl(0, 0%, 35%);
-    }
-  }
-
-  &:active {
-    background: hsl(0, 0%, 40%);
+  @each $suffix in ("", "-hover", "-active") {
+    --clr-button#{$suffix}: var(--clr-button-grey#{$suffix});
   }
 }
 
@@ -325,7 +390,7 @@ input[type="text"] {
 select {
   font-weight: 550;
   padding: .4em .625em;
-  background: var(--clr-surface);
+  background: var(--clr-surface-standout);
 }
 
 .styled-select > select {
@@ -374,8 +439,9 @@ input[type="range"] {
   &::-webkit-slider-thumb {
     -webkit-appearance: none;
     margin-top: -.2rem;
-    color: var(--clr-text);
-    background: var(--clr-text);
+    color: white;
+    background: white;
+    box-shadow: 0 0 2px hsla(0, 0%, 0%,0.5);
     border: none;
     outline: none;
     cursor: pointer;
@@ -385,34 +451,27 @@ input[type="range"] {
   }
 
   &::-moz-range-thumb {
-    background: var(--clr-text);
+    background: white;
+    box-shadow: 0 0 2px hsla(0, 0%, 0%,0.5);
     border: none;
     outline: none;
     cursor: pointer;
   }
 
   &::-webkit-slider-runnable-track {
-    background: #{'linear-gradient(to right, var(--accent-bg) calc(var(--range-progress) * 100%), var(--clr-input) calc(var(--range-progress) * 100%))'};
+    background: #{'linear-gradient(to right, var(--accent-bg) calc(var(--range-progress) * 100%), var(--clr-range) calc(var(--range-progress) * 100%))'};
     height: .6rem;
     border-radius: $borderRadiusSmall;
   }
 
   &::-moz-range-track {
-    background: #{'linear-gradient(to right, var(--accent-bg) calc(var(--range-progress) * 100%), var(--clr-input) calc(var(--range-progress) * 100%))'};
+    background: #{'linear-gradient(to right, var(--accent-bg) calc(var(--range-progress) * 100%), var(--clr-range) calc(var(--range-progress) * 100%))'};
     height: .6rem;
     border-radius: $borderRadiusSmall;
   }
 
   &:focus {
     outline: none;
-
-    &::-webkit-slider-thumb {
-      box-shadow: inset 0 0 .25rem 0 hsla(0, 0%, 0%, 40%);
-    }
-
-    &::-moz-range-thumb {
-      box-shadow: inset 0 0 .25rem 0 hsla(0, 0%, 0%, 40%);
-    }
   }
 }
 
@@ -459,7 +518,6 @@ input[type="range"] {
 
 
 #datasetSelect {
-  margin-top: 0.25rem;
   font-size: 1.35rem;
   padding: 0.4rem 0.7rem;
 
@@ -487,26 +545,23 @@ input[type="range"] {
   background: var(--clr-surface);
   --padding: .8rem;
   padding: var(--padding);
+  border: 1px solid var(--clr-surface-border);
   border-radius: .8rem;
   display: flex;
   flex-direction: column;
   gap: .6rem;
-  transition: background $transitionHide;
+  transition: background $transitionHide, border $transitionHide;
 
   .ribbon-buttons {
     transition: translate $transitionHide;
     gap: .5rem;
-    --clr-grp-button: var(--clr-surface);
-    --clr-grp-button-border: var(--clr-surface);
-    --clr-grp-button-hover: hsl(0, 0%, 20%);
-    --clr-grp-button-active: hsl(0, 0%, 23%);
-    --clr-grp-button-checked: var(--clr-text);
-    --clr-grp-button-checked-hover: var(--clr-text-soft);
-    --clr-grp-button-checked-border: var(--clr-surface);
-    --clr-grp-button-checked-active: hsl(0, 0%, 80%);
+    --clr-grp-button-border: transparent;
+    --clr-grp-button-checked-border: transparent;
+    --clr-grp-button-text-checked: var(--clr-background);
 
-    //--clr-grp-button-text: hsl(0, 0%, 70%);
-    --clr-grp-button-text-checked: var(--clr-surface);
+    @each $suffix in ("", "-hover", "-active", "-checked", "-checked-hover", "-checked-active") {
+      --clr-grp-button#{$suffix}: var(--clr-ribbon-button#{$suffix});
+    }
 
     &> .button {
       border-radius: $borderRadiusSmall;
@@ -521,24 +576,29 @@ input[type="range"] {
     }
   }
 
-
-
   &:has(> .ribbon-contents.hidden) {
     background: transparent;
+    border-color: transparent;
 
     .ribbon-buttons {
       translate: calc(-1 * var(--padding)) calc(-1 * var(--padding));
+      
+      &> .button {
+        --clr-grp-button: var(--clr-surface-standout);
+      }
     }
   }
 }
 
 #live-settings {
   position: relative;
-  margin-block-start: .5rem;
+  margin-block-start: .6rem;
+  --clr-surface: var(--clr-surface-standout);
+  border-color: transparent;
 
   .ribbon-buttons {
     position: absolute;
-    top: -2.85rem;
+    top: -3rem;
     left: 0;
     translate: 0;
   }
@@ -606,8 +666,8 @@ body:not(.playing) #game-container, .playing #new-game-settings {
 
 /******************** GAME ******************************/
 #progress-bar {
-  background: var(--clr-input);
-  border-radius: .15rem;
+  background: var(--clr-range);
+  border-radius: .2rem;
   --height: .4rem;
   height: var(--height);
   width: 100%;

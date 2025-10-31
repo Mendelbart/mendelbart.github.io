@@ -238,7 +238,7 @@ export class Game {
     }
 
     displaySymbol(symbol) {
-        document.querySelector("#symbol-current .symbol-string").textContent = symbol;
+        document.querySelector("#symbol-current .symbol-string").replaceChildren(document.createTextNode(symbol));
     }
 
     clearSymbol() {

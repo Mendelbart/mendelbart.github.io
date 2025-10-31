@@ -1,7 +1,7 @@
 {
   "name": "Elder Futhark",
   "metadata": {
-    "gameHeading": {"string": "kadmoz", "font": {"family": "Junicode", "styleset": "Elder-futhark", "shift": 0.16, "scale": 1.2}},
+    "gameHeading": {"string": "kadmos", "font": {"family": "Junicode", "styleset": "Elder-futhark", "shift": 0.16, "scale": 1.2}},
     "terms": {"symbol": "rune", "symbols": "runes"}
   },
   "displayData": {

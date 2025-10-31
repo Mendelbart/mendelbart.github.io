@@ -24,17 +24,29 @@ const TEMPLATES_HTML = {
     headingElement: `<div class="heading-element"><span class="heading-element-number"></span><span class="heading-element-symbol"></span></div>`
 }
 
+let IdPrefixCounter = 0;
 
 /**
- * @type {{[p: string]: HTMLElement}}
+ * @type {Record<string. HTMLElement>}
  */
-export const TEMPLATES = objectMap(TEMPLATES_HTML, (html) => {
+const TEMPLATES = objectMap(TEMPLATES_HTML, (html) => {
     const template = document.createElement("TEMPLATE");
     template.insertAdjacentHTML("beforeend",  html);
     return template;
 });
 
-let IdPrefixCounter = 0;
+
+
+/**
+ * @param {string} key
+ * @returns {HTMLElement}
+ */
+export function getTemplate(key) {
+    if (!(key in TEMPLATES)) {
+        console.error("Unknown template key " + key);
+    }
+    return TEMPLATES[key].firstChild.cloneNode(true);
+}
 
 
 /**
@@ -276,33 +288,6 @@ export function classesToList(classes) {
 }
 
 /**
- * Return the `n`th child of `container`.
- * If `n` is negative, return `-n`th last child.
- * @param {Element} container
- * @param {number} n
- * @returns {Element}
- */
-export function nthChild(container, n) {
-    const children = container.children;
-    if (n < 0) {
-        return children[children.length + n];
-    } else {
-        return children[n];
-    }
-}
-
-/**
- * @param {string} key
- * @returns {HTMLElement}
- */
-export function getTemplate(key) {
-    if (!(key in TEMPLATES)) {
-        console.error("Unknown template key " + key);
-    }
-    return TEMPLATES[key].firstChild.cloneNode(true);
-}
-
-/**
  * @param {Element} element
  * @param {boolean} with_padding
  * @returns {[number,number]} [width,height]
@@ -319,18 +304,6 @@ export function elementSize(element, with_padding = false) {
 
     return [width, height];
 }
-
-/**
- * Set global CSS, or specify an element.
- * @param {Object<string,string>} data
- * @param {HTMLElement} element
- */
-export function setCSS(data, element = document.documentElement) {
-    for (const [property, value] of Object.entries(data)) {
-        element.style.setProperty(property, value);
-    }
-}
-
 
 /**
  * @param {[function, ...*][]} updates

@@ -94,7 +94,7 @@ function setupRibbon(container, closable = false) {
 
             const previousShown = contents.querySelector(".ribbon-content:not(.hidden)");
             if (input.checked) {
-                if (previousShown) {
+                if (!contents.classList.contains("hidden") && previousShown) {
                     DOMHelper.addClass(previousShown, "hidden");
                     container.querySelector(`.ribbon-buttons input[type=checkbox][data-content-id="${previousShown.id}"]`).checked = false;
                 }
