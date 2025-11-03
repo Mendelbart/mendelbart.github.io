@@ -11,6 +11,8 @@ export function createInput(attrs) {
     return new SingleNodeValueElement(node);
 }
 
+
+DOMHelper.registerTemplate("buttonGroupContainer", `<div class="button-group" role="group"></div>`)
 /**
  *
  * @param {Record<string,string> | string[]} data
@@ -81,6 +83,11 @@ export function createButtonGroup(data, {
     return new ButtonGroup(container, exclusive, decheckable);
 }
 
+
+DOMHelper.registerTemplate("slider", `<div class="slider-container">
+    <span class="range-min"></span><span class="range-value"></span><span class="range-max"></span>
+    <input type="range" class="form-range">
+</div>`)
 
 /**
  * @param {number} min

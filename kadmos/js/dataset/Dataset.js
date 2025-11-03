@@ -1,7 +1,12 @@
 import {ItemProperty, QuizItem} from "./symbol.js";
-import {DOMHelper, ObjectHelper, ArrayHelper, FontHelper} from '../helpers/helpers.js';
-import {Filterer} from "./filterer.js";
+import {DOMHelper, ObjectHelper, FontHelper} from '../helpers/helpers.js';
+import ItemSelector from "./selector.js";
 import {Setting, SettingsCollection, SettingsHelper as SH} from "../settings/settings.js";
+
+DOMHelper.registerTemplate(
+    "headingElement",
+    `<div class="heading-element"><span class="heading-element-number"></span><span class="heading-element-symbol"></span></div>`
+);
 
 export const DATASETS_METADATA = {
     elements: {name: "Atomic Elements", file: "./json/datasets/elements.json"},
@@ -20,7 +25,8 @@ const DEFAULT_METADATA = {
 const DEFAULT_FORMSDATA = {
     keys: ["default"],
     setting: {default: {label: "Default", "active": true}},
-    defaultForm: "default"
+    defaultForm: "default",
+    singleForm: true
 };
 
 const DEFAULT_LANGUAGEDATA = {
@@ -43,6 +49,7 @@ export class Dataset {
         this.formsData = data.formsData ?? DEFAULT_FORMSDATA;
         this.filters = this.standardizeFilters(data.filters ?? {});
         this.propsData = data.propsData;
+        this.selectorData = data.selectorData ?? {};
 
         this.languageData = data.languageData ?? DEFAULT_LANGUAGEDATA;
         this.languageData.default ??= this.languageData.languages[0];
@@ -91,6 +98,12 @@ export class Dataset {
         }
     }
 
+    getSettings(checkedProperties, checkedLanguage) {
+        return SettingsCollection.createFrom({
+            properties: this.propertySetting(checkedProperties),
+            language: this.languageSetting(checkedLanguage)
+        });
+    }
 
     propertySetting(checked = null) {
         return Setting.create("Properties", SH.createButtonGroup(
@@ -109,15 +122,8 @@ export class Dataset {
         ));
     }
 
-    formsSetting(checked = null) {
-        const label = this.formsData.label ?? (this.formsData.exclusive ? "Form" : "Forms");
-        return Setting.create(label, SH.createButtonGroup(
-            ObjectHelper.map(this.formsData.setting, (p) => p.label),
-            {
-                exclusive: !!this.formsData.exclusive,
-                checked: checked ?? ObjectHelper.map(this.formsData.setting, (p) => p.active),
-            },
-        ));
+    getItemSelector() {
+        return new ItemSelector(this.items, this.formsData, this.selectorData);
     }
 
     /**
@@ -137,84 +143,45 @@ export class Dataset {
         return setting;
     }
 
-    _getFilterer() {
-        const filters = ObjectHelper.map(
-            this.filters, filter => ObjectHelper.map(filter.values, () => [])
-        );
 
-        for (const [key, item] of Object.entries(this.items)) {
-            for (const [filterKey, filter] of Object.entries(filters)) {
-                if (!(item.filters[filterKey] in filter)) {
-                    console.warn(`Invalid filter value ${item.filters[filterKey]} for filter ${filterKey}`);
-                } else {
-                    filter[item.filters[filterKey]].push(key);
-                }
-            }
-        }
-
-        return new Filterer(Object.keys(this.items), filters);
-    }
-
-    /**
-     * @returns {[Filterer, SettingsCollection]}
-     */
-    getFilterSettings(checked = null) {
-        const filterer = this._getFilterer();
-        checked ??= {};
-
-        const sc = SettingsCollection.createFrom(
-            ObjectHelper.map(this.filters, (filter, key) => {
-                const buttonGroupData = ObjectHelper.map(filter.values, x => x.label);
-
-                checked[key] ??= filter.defaultActive ?? "all";
-
-                return Setting.create(
-                    filter.label,
-                    SH.createButtonGroup(buttonGroupData,{checked: checked[key]})
-                );
-            })
-        );
-
-        for (const [filterKey, setting] of Object.entries(sc.settings)) {
-            setting.valueElement.addUpdateListener((value) => {
-                filterer.updateFilterState(filterKey, value);
-            });
-            filterer.updateFilterState(filterKey, setting.valueElement.value);
-        }
-
-        return [filterer, sc];
-    }
 
     /**
      * @param symbolsData
-     * @returns {Record<string,DatasetItem>}
+     * @returns {DatasetItem[]}
      */
     processItems(symbolsData) {
-        let rows = symbolsData.format === "columns" ?
-            this.symbolsDataColumnsToRows(symbolsData.columns) :
-            symbolsData.rows;
+        const rows = symbolsData.rows;
 
-        if (Array.isArray(rows)) {
-            rows = Object.assign({}, rows);
+        if (!Array.isArray(rows)) {
+            throw new Error("symbol rows must be an array.");
         }
 
         if (symbolsData.template) {
             this.applyTemplateToRows(rows, symbolsData.template);
         }
 
-        const items = ObjectHelper.map(rows, itemData => {
-            const data = this.standardizeItemData(itemData);
-            return new DatasetItem(data.displayForms, data.properties, data.filters);
-        });
-        return this.setItemFilterValues(items);
+        const items = new Array(rows.length);
+        let item;
+        for (const [index, itemData] of rows.entries()) {
+            try {
+                item = this.processItem(itemData);
+            } catch (e) {
+                console.warn("Error occured processing item with key", key);
+                console.error(e);
+                continue;
+            }
+            items[index] = item;
+        }
+
+        return items;
     }
 
     /**
-     * @param {Record<string,*[]>} rows
+     * @param {Array} rows
      * @param {string[]} template
      */
     applyTemplateToRows(rows, template) {
-        for (const [itemKey, item] of Object.entries(rows)) {
+        for (const [i, item] of rows.entries()) {
             if (!Array.isArray(item)) {
                 continue;
             }
@@ -223,23 +190,20 @@ export class Dataset {
             for (const [index, value] of item.entries()) {
                 row[template[index]] = value;
             }
-            rows[itemKey] = row;
+            rows[i] = row;
         }
+        return rows;
     }
 
-    /**
-     * @param itemData
-     * @returns {{displayForms, properties, filters}}
-     */
-    standardizeItemData(itemData) {
-        itemData = this.standardizeDisplayForms(itemData);
+    processItem(itemData) {
+        return new DatasetItem(
+            this.processDisplayForms(itemData.display),
+            this.processItemProperties(itemData)
+        );
+    }
 
-        const newData = {
-            displayForms: itemData.displayForms ?? {},
-            properties: itemData.properties ?? {},
-            filters: itemData.filters ?? {},
-        };
-
+    processItemProperties(itemData) {
+        const properties = {};
         for (const [taggedKey, value] of Object.entries(itemData)) {
             if (taggedKey.includes(":")) {
                 const splitKey = taggedKey.split(":");
@@ -250,82 +214,56 @@ export class Dataset {
                 const [tag, key] = splitKey;
 
                 if (tag === "p") {
-                    newData.properties[key] = value;
-                } else if (tag === "f") {
-                    newData.filters[key] = value;
+                    properties[key] = value;
                 } else {
-                    console.warn("Ignored invalid symbol key.");
+                    console.warn("Ignored invalid tagged symbol key.");
                 }
             }
         }
-
-        return newData;
+        return properties;
     }
 
-    standardizeDisplayForms(itemData) {
-        if ("display" in itemData || typeof itemData.displayForms === "string") {
-            if ("display" in itemData && "displayForms" in itemData) {
-                console.error("Cannot have display and displayForms on symbolData row.");
-            }
-            const formValue = "display" in itemData ? itemData.display : itemData.displayForms;
-
-            itemData.displayForms = {};
-            itemData.displayForms[this.formsData.defaultForm] = formValue;
-        } else {
-            if (!("displayForms" in itemData)) {
-                console.error("display / displayForms missing on symbolData row.");
-            }
-
-            if (Array.isArray(itemData.displayForms)) {
-                const newDisplayForms = {};
-                for (const [i, value] of itemData.displayForms.entries()) {
-                    newDisplayForms[this.formsData.keys[i]] = value;
-                }
-                itemData.displayForms = newDisplayForms;
-            }
+    /**
+     * @param {Array|Record<string,*>|any} display
+     * @returns {Record<string,Node>}
+     */
+    processDisplayForms(display) {
+        if (this.formsData.singleForm) {
+            return Object.fromEntries([[this.formsData.defaultForm, display]]);
         }
 
-        return itemData;
+        if (Array.isArray(display)) {
+            const forms = {};
+            for (const [i, value] of display.entries()) {
+                forms[this.formsData.keys[i]] = value;
+            }
+            return forms;
+        }
+
+        if (typeof display !== "object") {
+            throw new Error("Invalid display format: need array or object.");
+        }
+
+        const result = {};
+        for (const [key, value] of Object.entries(display)) {
+            if (!this.formsData.keys.includes(key)) {
+                throw new Error(`Invalid display Form key "${key}".`);
+            }
+            result[key] = this.getDisplayNode(value);
+        }
+
+        return result;
     }
 
-    setItemFilterValues(items) {
-        for (const [filterKey, filter] of Object.entries(this.filters)) {
-            for (const [value, params] of Object.entries(filter.values)) {
-                if (params.keys) {
-                    for (const key of params.keys) {
-                        if (filterKey in items[key].filters) {
-                            console.warn("Mixed filter values from keys and symbolsData.");
-                        }
-                        items[key].filters[filterKey] = value;
-                    }
-                }
-            }
-
-            if (filter.defaultValue) {
-                for (const item of Object.values(items)) {
-                    if (!(filterKey in item.filters)) {
-                        item.filters[filterKey] = filter.defaultValue;
-                    }
-                }
-            }
+    /**
+     * @param data
+     * @returns {Node}
+     */
+    getDisplayNode(data) {
+        if (this.displayData.type === "string") {
+            return document.createTextNode(data);
         }
-        return items;
-    }
-
-    symbolsDataColumnsToRows(columns) {
-        const n = Object.values(columns)[0].length;
-        const rows = new Array(n).fill(0).map(() => Object());
-
-        for (const [key, column] of Object.entries(columns)) {
-            if (column.length !== n) {
-                console.error("Processing symbolsData: Column lengths don't match.");
-            }
-            for (let i = 0; i < n; i++) {
-                rows[i][key] = column[i];
-            }
-        }
-
-        return rows;
+        throw new Error("Invalid displayData type.")
     }
 
     formsFromSettingsValue(forms) {
@@ -341,46 +279,22 @@ export class Dataset {
     }
 
     /**
-     * @param {Record<string,boolean>} active
-     * @param {string[]} forms
-     * @returns {number}
-     */
-    quizItemsCount(active, forms) {
-        forms = this.formsFromSettingsValue(forms);
-
-        return ArrayHelper.sum(
-            ObjectHelper.filterKeys(active, x => x).map(
-                key => Object.values(ObjectHelper.onlyKeys(this.items[key].displayForms, forms)).length
-            )
-        );
-    }
-
-    quizItemsCountString(active, forms) {
-        const count = this.quizItemsCount(active, forms);
-        const term = count === 1 ? this.metadata.terms.symbol : this.metadata.terms.symbols;
-        return count.toString() + " " + term;
-    }
-
-    /**
-     * @param {string[]} itemKeys
+     * @param {number[]} itemIndices
      * @param {string[]} forms
      * @param {string[]} properties
      * @param {string} [language]
-     * @returns {Record<string,QuizItem>}
+     * @returns {QuizItem[]}
      */
-    getQuizItems(itemKeys, forms, properties, language = "default") {
-        const items = {};
+    getQuizItems(itemIndices, forms, properties, language = "default") {
+        const items = [];
 
         forms = this.formsFromSettingsValue(forms);
 
-        for (const key of itemKeys) {
-            Object.assign(items, ObjectHelper.mapKeys(
-                this.items[key].getQuizItems(forms, this.propsData, properties, language),
-                form => key + "_" + form
-            ));
+        for (const key of itemIndices) {
+            items.push(this.items[key].getQuizItems(forms, this.propsData, properties, language))
         }
 
-        return items;
+        return [].concat(...items);
     }
 
     referenceSymbols(forms) {
@@ -388,8 +302,8 @@ export class Dataset {
             console.error("Not implemented Symbol concatenation for non-string symbols.");
         }
 
-        return ObjectHelper.map(this.items,
-        item => Object.values(ObjectHelper.onlyKeys(item.displayForms, forms)).join()
+        return this.items.map(
+            item => Object.values(ObjectHelper.onlyKeys(item.displayForms, forms)).join()
         );
     }
 
@@ -404,14 +318,10 @@ export class Dataset {
         }
 
         const result = {};
-        for (const [itemKey, item] of Object.entries(this.items)) {
-            for (let key of item.properties[propertyKey].solutions[0]) {
-                if (this.propsData[propertyKey].type === "istring") {
-                    key = key.toLowerCase();
-                }
-                result[key] = referenceSymbols[itemKey];
-            }
+        for (const [index, item] of this.items.entries()) {
+            // TODO
         }
+        console.error("TODO: Not implemented!");
 
         return result;
     }
@@ -456,14 +366,12 @@ export class Dataset {
 
 class DatasetItem {
     /**
-     * @param {Record<string,*>} displayForms
+     * @param {Record<string,Node>} displayForms
      * @param {Record<string,*>} properties
-     * @param {Record<string,*>} filters
      */
-    constructor(displayForms, properties, filters) {
+    constructor(displayForms, properties) {
         this.displayForms = displayForms;
         this.properties = properties;
-        this.filters = filters;
     }
 
     /**
@@ -471,17 +379,16 @@ class DatasetItem {
      * @param {Record<string,*>} propsData
      * @param {string[]} properties
      * @param {string} language
-     * @returns {Record<string, QuizItem>}
+     * @returns {QuizItem[]}
      */
     getQuizItems(forms, propsData, properties, language = "default") {
-        const items = {};
+        const items = [];
         for (const form of forms) {
             if (form in this.displayForms) {
-                items[form] = new QuizItem(
+                items.push(new QuizItem(
                     this.displayForms[form],
-                    this.getQuizProperties(properties, propsData, language),
-                    this.filters
-                );
+                    this.getQuizProperties(properties, propsData, language)
+                ));
             }
         }
 
@@ -515,5 +422,13 @@ class DatasetItem {
         }
 
         return ObjectHelper.map(result, (prop, key) => ItemProperty.fromData(prop, propsData[key]));
+    }
+
+    /**
+     * @param {string[]} forms
+     * @returns {Text}
+     */
+    getFormsDisplayNode(forms) {
+        return document.createTextNode(forms.map(form => this.displayForms[form]).join(""));
     }
 }

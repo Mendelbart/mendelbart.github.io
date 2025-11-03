@@ -15,12 +15,19 @@ export class GameContext {
         /** @type {?Dataset} */
         this.dataset = null;
         /**
-         * @type {{generic: SettingsCollection, filters?: SettingsCollection, properties?: Setting, forms?: Setting, language?: Setting}}
+         * @type {?SettingsCollection}
          */
-        this.settings = {generic: this.constructor.genericSettings()};
+        this.sc = null;
+
+        this.genericSettings = this.constructor.generateGenericSettings();
+
+        /**
+         * @type {?ItemSelector}
+         */
+        this.itemSelector = null;
     }
 
-    static genericSettings() {
+    static generateGenericSettings() {
         return SettingsCollection.createFrom({
             seed: Setting.create("Seed (optional)", SH.createInput({type: "text"}), {id: "game-seed"})
         });
@@ -38,22 +45,20 @@ export class GameContext {
         let cachedSettings = window.localStorage.getItem(this.localStorageSettingsKey());
         cachedSettings = cachedSettings ? JSON.parse(cachedSettings) : {};
 
-        const [filterer, filterSettings] = this.dataset.getFilterSettings(cachedSettings.filters);
-        this.symbolFilterer = filterer;
-        this.settings.filters = filterSettings;
-        this.settings.properties = this.dataset.propertySetting(cachedSettings.properties);
-        this.settings.forms = this.dataset.formsSetting(cachedSettings.forms);
-        this.settings.language = this.dataset.languageSetting(cachedSettings.language);
+        this.itemSelector = this.dataset.getItemSelector();
+        this.itemSelector.setup(cachedSettings.items, cachedSettings.forms, this.datasetKey);
+        this.sc = this.dataset.getSettings(cachedSettings.properties, cachedSettings.language);
+        this.sc.extend(this.genericSettings);
 
-        for (const key of ["forms", "language"]) {
-            const singleButton = this.settings[key].valueElement.buttonCount() === 1;
+        for (const key of ["language"]) {
+            const singleButton = this.sc.getValueElement(key).buttonCount() === 1;
             if (singleButton) {
-                DOMHelper.hide(this.settings[key].node);
+                DOMHelper.hide(this.sc.getNode(key));
             }
-            DOMHelper.classIfElse(singleButton, this.settings[key].node, "hidden");
+            DOMHelper.classIfElse(singleButton, this.sc.getNode(key), "hidden");
         }
 
-        this.settings.properties.valueElement.disableIfSingleButton();
+        this.sc.settings.properties.valueElement.disableIfSingleButton();
         const gameHeading = this.dataset.metadata.gameHeading;
         const fonts = "font" in gameHeading && "family" in gameHeading.font ? [gameHeading.font.family] : [];
         DOMHelper.batchUpdate([
@@ -62,23 +67,21 @@ export class GameContext {
                 document.querySelector("#game-heading h1")
             ],
             [
-                (e, ...args) => e.replaceChildren(...args),
+                (e, selector) => {
+                    e.replaceChildren(selector.node);
+                    selector.scaleButtons();
+                },
                 document.getElementById("dataset-settings"),
-                this.settings.forms.node,
-                ...this.settings.filters.nodeList()
+                this.itemSelector
             ],
             [
                 (e, ...args) => e.replaceChildren(...args),
                 document.getElementById("game-settings"),
-                this.settings.properties.node,
-                this.settings.language.node,
-                ...this.settings.generic.nodeList()
+                ...this.sc.nodeList()
             ]
         ], fonts);
 
-        // this.setupSymbolCount();
-
-        for (const setting of this.settingsList()) {
+        for (const setting of Object.values(this.sc.settings)) {
             setting.valueElement.addUpdateListener(() => {
                 this.saveSettings();
             });
@@ -90,28 +93,6 @@ export class GameContext {
         }
     }
 
-    /**
-     * @returns {Setting[]}
-     */
-    settingsList() {
-        return [...Object.values(this.settings.filters.settings), this.settings.properties, this.settings.forms, this.settings.language];
-    }
-
-    setupSymbolCount() {
-        this.updateSymbolCount();
-
-        const func = this.updateSymbolCount.bind(this);
-        for (const setting of Object.values(this.settings.filters.settings)) {
-            setting.valueElement.addUpdateListener(func);
-        }
-        this.settings.forms.valueElement.addUpdateListener(func);
-    }
-
-    updateSymbolCount() {
-        document.getElementById("totalSymbolCount").textContent =
-            this.dataset.quizItemsCountString(this.symbolFilterer.active, this.settings.forms.getValue());
-    }
-
     localStorageSettingsKey() {
         return "settings_" + this.datasetKey;
     }
@@ -120,10 +101,10 @@ export class GameContext {
         window.localStorage.setItem("dataset", this.datasetKey);
 
         window.localStorage.setItem(this.localStorageSettingsKey(this.datasetKey), JSON.stringify({
-            filters: this.settings.filters.getValues(),
-            properties: this.settings.properties.getValue(),
-            forms: this.settings.forms.getValue(),
-            language: this.settings.language.getValue()
+            items: this.itemSelector.itemsActive.map(bool => Number(bool)),
+            forms: this.itemSelector.activeForms(),
+            properties: this.sc.getValue("properties"),
+            language: this.sc.getValue("language")
         }));
     }
 
@@ -134,16 +115,16 @@ export class GameContext {
 
         this.saveSettings();
 
-        const properties = this.settings.properties.getValue();
+        const properties = this.sc.getValue("properties");
         const items = this.dataset.getQuizItems(
-            this.symbolFilterer.activeItemsList(),
-            this.settings.forms.getValue(),
+            this.itemSelector.activeIndices(),
+            this.itemSelector.activeForms(),
             properties,
-            this.settings.language.getValue()
+            this.sc.getValue("language")
         );
 
         this.game = new Game(this.dataset, items, properties);
-        const seed = this.settings.generic.getValue("seed");
+        const seed = this.sc.getValue("seed");
 
         if (seed) {
             this.game.seed(seed);

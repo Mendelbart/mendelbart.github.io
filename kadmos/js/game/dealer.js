@@ -7,7 +7,7 @@ export class ItemDealer {
 
     /**
      *
-     * @param {string[]} items
+     * @param {any[]} items
      */
     constructor(items) {
         this.items = items;

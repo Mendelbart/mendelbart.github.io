@@ -62,3 +62,33 @@ export function arraysEqual(a, b) {
     return a.length === b.length &&
         a.every((element, index) => element === b[index]);
 }
+
+/**
+ * @template T
+ * @param {Array<T>} arr
+ * @param {function(T, number, Array<T>)} callback
+ * @returns {number[]}
+ */
+export function filterIndices(arr, callback) {
+    return Array.from(
+        arr.entries()
+            .filter(([i, v]) => callback(v, i, arr))
+            .map(([i, _]) => i)
+    );
+}
+
+/**
+ * @param {number} start
+ * @param {?number} [stop]
+ * @param {number} step
+ */
+export function range(start, stop = null, step = 1) {
+    if (stop === null) {
+        stop = start;
+        start = 0;
+    }
+
+    const n = Math.ceil((stop - start) / step);
+
+    return new Array(n).fill(0).map((_, i) => start + step * i);
+}

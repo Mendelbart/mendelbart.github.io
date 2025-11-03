@@ -37,6 +37,13 @@ export class SettingsCollection {
     }
 
     /**
+     * @param {SettingsCollection} sc
+     */
+    extend(sc) {
+        this.put(sc.settings, sc.keys);
+    }
+
+    /**
      * @param {string} key
      * @param {Setting} setting
      * @param {"begin"|"end"|"beforeKey"|"afterKey"} [position] default "end"
@@ -105,12 +112,33 @@ export class SettingsCollection {
     getValue(key) {
         return this.settings[key].getValue();
     }
-    
+
+    /**
+     * @param {string} key
+     * @returns {HTMLElement}
+     */
+    getNode(key) {
+        return this.settings[key].node;
+    }
+
+    /**
+     * @param {string} key
+     * @returns {ValueElement}
+     */
+    getValueElement(key) {
+        return this.settings[key].valueElement;
+    }
+
+    /**
+     * @returns {HTMLElement[]}
+     */
     nodeList() {
         return this.keys.map(key => this.settings[key].node);
     }
 }
 
+
+DH.registerTemplate("setting", `<div class="setting labeled-value-element"></div>`);
 
 export class Setting {
     static idCounter = 0;

@@ -4,14 +4,12 @@ import {ArrayHelper, ObjectHelper} from "../helpers/helpers.js";
 export class QuizItem {
     /**
      *
-     * @param {*} display
+     * @param {Node} display
      * @param {Record<string,ItemProperty>} properties
-     * @param {Record<string,*>} filters
      */
-    constructor(display, properties, filters) {
+    constructor(display, properties) {
         this.display = display;
         this.properties = properties;
-        this.filters = filters;
     }
 }
 
@@ -241,8 +239,6 @@ export class ListProperty extends StringProperty {
                 }
             }
         }
-
-        console.log(valueScores);
 
         const grade = this.listMode === "best"
             ? Math.max(...valueScores)

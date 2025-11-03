@@ -12,7 +12,8 @@ const FONT_PROPERTY_KEYS = {
     scale: "--font-scale",
     shift: "--font-shift",
     styleset: "font-variant-alternates",
-    letterSpacing: "--letter-spacing"
+    letterSpacing: "--letter-spacing",
+    lineHeight: "--line-height",
 };
 
 const FONT_TRANSFORM_PROPERTIES = ["shift", "scale", "letterSpacing"];

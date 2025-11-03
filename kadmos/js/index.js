@@ -22,6 +22,12 @@ const datasetSelect = document.getElementById("datasetSelect");
             element.style.setProperty("--client-width", element.clientWidth);
             element.style.setProperty("--offset-width", element.offsetWidth);
         });
+
+        window.addEventListener("resize", () => {
+            if (ctx.itemSelector) {
+                ctx.itemSelector.scaleButtons();
+            }
+        })
     });
 
     datasetSelect.addEventListener("change", (e) => {

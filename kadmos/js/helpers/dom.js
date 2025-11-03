@@ -1,40 +1,38 @@
-import {map as objectMap} from './object.js';
-
 /**
  * @typedef {Element | NodeListOf<Element> | Element[] | HTMLCollection} Elements
  */
 
-const TEMPLATES_HTML = {
-    slider:
-        `<div class="slider-container">
-            <span class="range-min"></span><span class="range-value"></span><span class="range-max"></span>
-            <input type="range" class="form-range">
-        </div>`,
-    buttonLabel: `<label class="button"></label>`,
-    buttonInput: `<input class="button-check form-input" autocomplete="off">`,
-    buttonGroupContainer: `<div class="button-group" role="group"></div>`,
-    switch:
-        `<div class="form-check form-switch">
-            <input class="form-check-input" type="checkbox" role="switch">
-        </div>`,
-    setting: `<div class="setting labeled-value-element"></div>`,
-    eval: `<div class="item-eval">
-        <span class="submitted"></span><span class="solution"></span>
-    </div>`,
-    headingElement: `<div class="heading-element"><span class="heading-element-number"></span><span class="heading-element-symbol"></span></div>`
-}
 
 let IdPrefixCounter = 0;
 
 /**
- * @type {Record<string. HTMLElement>}
+ * @type {Record<string. HTMLTemplateElement>}
  */
-const TEMPLATES = objectMap(TEMPLATES_HTML, (html) => {
+const TEMPLATES = {};
+
+/**
+ * @param {Record<string,string>} htmls
+ */
+export function registerTemplates(htmls) {
+    for (const [key, html] of Object.entries(htmls)) {
+        registerTemplate(key, html);
+    }
+}
+
+/**
+ * Register a template, which can be retrieved as a Node using `getTemplate(key)`.
+ * @param {string} key
+ * @param {string} html
+ */
+export function registerTemplate(key, html) {
+    if (key in TEMPLATES) {
+        console.warn(`Overwriting existing template key ${key}.`);
+    }
+
     const template = document.createElement("TEMPLATE");
     template.insertAdjacentHTML("beforeend",  html);
-    return template;
-});
-
+    TEMPLATES[key] = template;
+}
 
 
 /**
@@ -48,17 +46,21 @@ export function getTemplate(key) {
     return TEMPLATES[key].firstChild.cloneNode(true);
 }
 
+registerTemplates({
+    buttonLabel: `<label class="button"></label>`,
+    buttonInput: `<input class="button-check form-input" autocomplete="off">`
+});
 
 /**
  * @param {string} type
  * @param {string} value
- * @param {string} labelContent
+ * @param {string | Node | null} labelContent
  * @param {string | null} id
- * @returns {[HTMLElement, HTMLElement]} [labelNode, inputNode]
+ * @returns {[HTMLElement, HTMLElement]} [inputNode, labelNode]
  */
-export function button(type, value, labelContent, id = null) {
-    const label = getTemplate("buttonLabel");
+export function button(type, value, labelContent = null, id = null) {
     const input = getTemplate("buttonInput");
+    const label = getTemplate("buttonLabel");
     id ??= uniqueIdPrefix("button") + value;
 
     setAttrs(input, {
@@ -67,7 +69,13 @@ export function button(type, value, labelContent, id = null) {
         id: id
     });
     label.setAttribute("for", id);
-    label.innerHTML = labelContent;
+
+    if (labelContent) {
+        if (typeof labelContent === "string") {
+            labelContent = document.createTextNode(labelContent);
+        }
+        label.appendChild(labelContent);
+    }
 
     return [input, label];
 }
@@ -83,8 +91,52 @@ export function label(element, content, defaultId = null) {
         element = setDefaultId(element, defaultId);
     }
     label.setAttribute("for", element);
-    label.innerHTML = content;
+    label.textContent = content;
     return label;
+}
+
+/**
+ * @param {string} html
+ * @returns {HTMLCollection}
+ */
+export function htmlToElements(html) {
+    const template = document.createElement("TEMPLATE");
+    template.innerHTML = html;
+    return template.content.children;
+}
+
+/**
+ * @param {string} html
+ */
+export function htmlToElement(html) {
+    const elements = htmlToElements(html);
+    if (elements.length !== 1) {
+        throw new Error("HTML doesn't contain exactly one element.");
+    }
+    return elements[0];
+}
+
+/**
+ * @param {string} str of the format tag#id.class1.class2 etc
+ */
+export function createElement(str) {
+    const [tagId, ...classes] = str.split(".");
+
+    let tag, id;
+    if (tagId.includes("#")) {
+        [tag, id] = tagId.split("#");
+    } else {
+        tag = tagId;
+        id = null;
+    }
+
+    const element = document.createElement(tag);
+    if (id) {
+        element.id = id;
+    }
+
+    element.classList.add(...classes);
+    return element;
 }
 
 /**
@@ -283,26 +335,130 @@ export function toggleShown(showFirst, first, second) {
 export function classesToList(classes) {
     classes ??= [];
     if (typeof classes === "string")
+    if (typeof classes === "string")
         return classes.split(" ");
     return Array.from(classes);
 }
 
 /**
- * @param {Element} element
- * @param {boolean} with_padding
- * @returns {[number,number]} [width,height]
+ * @param {Element} element element
+ * @param {"content-box" | "padding-box" | "border-box"} [box] default `"border-box"`
+ * @param {boolean} [scrollSize] default `false`
+ * @returns {[number,number]} [width, height]
  */
-export function elementSize(element, with_padding = false) {
-    let width = element.clientWidth;
-    let height = element.clientHeight;
+export function elementSize(element, box = "border-box", scrollSize = false) {
+    let width = scrollSize ? element.scrollWidth : element.clientWidth;
+    let height = scrollSize ? element.scrollHeight : element.clientHeight;
 
-    if (!with_padding) {
-        const computedStyle = getComputedStyle(element);
-        width -= parseFloat(computedStyle.paddingLeft) + parseFloat(computedStyle.paddingRight);
-        height -= parseFloat(computedStyle.paddingTop) + parseFloat(computedStyle.paddingBottom);
+    const style = window.getComputedStyle(element);
+
+    let scale = style.scale;
+    if (!scale || scale === "none") {
+        scale = 1;
+    } else {
+        scale = parseFloat(scale);
+    }
+
+    if (box === "border-box") {
+        width += scale * (parseFloat(style.borderLeftWidth || 0) + parseFloat(style.borderRightWidth || 0));
+        height += scale * (parseFloat(style.borderTopWidth || 0) + parseFloat(style.borderBottomWidth || 0));
+    } else if (box === "content-box") {
+        width -= scale * (parseFloat(style.paddingLeft || 0) + parseFloat(style.paddingRight || 0));
+        height -= scale * (parseFloat(style.paddingTop || 0) + parseFloat(style.paddingBottom || 0));
+    } else if (box !== "padding-box") {
+        console.error("Invalid value for element size box, use padding-box, content-box or border-box.");
     }
 
     return [width, height];
+}
+
+
+/**
+ * @param {Element} element
+ * @param {?Element} container - default `element.parentElement`
+ * @param {"width" | "height" | "both"} dimension
+ * @param {"content-box" | "padding-box" | "border-box"} elementBox
+ * @param {"content-box" | "padding-box" | "border-box"} containerBox
+ * @param {boolean} grow
+ */
+export function scaleToFit(element, {
+    container = null,
+    dimension = "width",
+    elementBox = "border-box",
+    containerBox = "content-box",
+    grow = false
+}) {
+    container ??= element.parentElement;
+
+    let [elementWidth, elementHeight] = elementSize(element, elementBox, true);
+    let [containerWidth, containerHeight] = elementSize(container, containerBox);
+
+    const scaleWidth = getScale(elementWidth, containerWidth, grow);
+    const scaleHeight = getScale(elementHeight, containerHeight, grow);
+
+    if (!["width", "height", "both"].includes(dimension)) {
+        console.error("Invalid dimension, use 'width', 'height' or 'both'.");
+        dimension = "width";
+    }
+    return dimension === "width" ? scaleWidth : dimension === "height" ? scaleHeight : Math.min(scaleWidth, scaleHeight);
+}
+
+
+/**
+ * @param {Element[]} elements
+ * @param options
+ */
+export function scaleAllToFit(elements, options) {
+    const uniformFactor = options.uniform ?? 0;
+    const containers = options.containers ?? elements.map(element => element.parentElement);
+    if ("container" in options) {
+        console.warn("Can't set single container for scaleAllToFit.");
+        delete options.container;
+    }
+
+    if (!Array.isArray(containers) || containers.length !== elements.length) {
+        console.error("Containers and elements length don't match.");
+        return;
+    }
+
+    const scales = elements.map(
+        (element, index) => scaleToFit(
+            element,
+            Object.assign(options, {container: containers[index]})
+        )
+    );
+
+    if (uniformFactor > 0) {
+        const minScale = Math.min(...scales);
+        const newMaxScale = minScale / uniformFactor;
+        for (const [index, scale] of scales.entries()) {
+            scales[index] = Math.min(newMaxScale, scale);
+        }
+    }
+
+    for (const [index, element] of elements.entries()) {
+        element.style.scale = scales[index];
+    }
+}
+
+function getScale(elementSize, containerSize, grow = false) {
+    if (elementSize === 0) {
+        console.warn("getScale: Element's size is 0.");
+        return 1;
+    }
+
+    if (isNaN(elementSize)) {
+        console.error("Element size is NaN.");
+        return 1;
+    }
+    if (isNaN(containerSize)) {
+        console.error("Container size is NaN.");
+        return 1;
+    }
+
+    let scale = containerSize / elementSize;
+
+    return grow ? scale : Math.min(scale, 1);
 }
 
 /**

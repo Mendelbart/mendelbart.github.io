@@ -28,32 +28,38 @@
     },
     "defaultForm": "normal"
   },
+  "selectorData": {
+    "font": {"family" : "Noto Serif Hebrew", "lineHeight": 1.1, "shift": -0.1},
+    "block": {"mode": "flex"},
+    "label": {"property": "name", "splitFirst": true},
+    "style": {"buttonWidth": "4ch"}
+  },
   "symbolsData": {
     "format": "rows",
-    "template": ["displayForms", "p:name", "p:num"],
+    "template": ["display", "p:name", "p:num"],
     "rows": [
-      ["א", "Aleph/Alef", 1],
-      ["ב", "Bet", 2],
-      ["ג", "Gimel", 3],
-      ["ד", "Dalet", 4],
-      ["ה", "He", 5],
-      ["ו", "Vav", 6],
-      ["ז", "Zayin", 7],
-      ["ח", "Chet", 8],
-      ["ט", "Tet", 9],
-      ["י", "Yod", 10],
+      [["א"], "Aleph/Alef", 1],
+      [["ב"], "Bet", 2],
+      [["ג"], "Gimel", 3],
+      [["ד"], "Dalet", 4],
+      [["ה"], "He", 5],
+      [["ו"], "Vav", 6],
+      [["ז"], "Zayin", 7],
+      [["ח"], "Chet", 8],
+      [["ט"], "Tet", 9],
+      [["י"], "Yod", 10],
       [["כ", "ך"], "Kaf", 20],
-      ["ל", "Lamed", 30],
+      [["ל"], "Lamed", 30],
       [["מ", "ם"], "Mem", 40],
       [["נ", "ן"], "Nun", 50],
-      ["ס", "Samekh", 60],
-      ["ע", "Ayin", 70],
+      [["ס"], "Samekh", 60],
+      [["ע"], "Ayin", 70],
       [["פ", "ף"], "Pe", 80],
       [["צ", "ץ"], "Tsadi", 90],
-      ["ק", "Qof", 100],
-      ["ר", "Resh", 200],
-      ["ש", "Shin", 300],
-      ["ת", "Tav", 400]
+      [["ק"], "Qof", 100],
+      [["ר"], "Resh", 200],
+      [["ש"], "Shin", 300],
+      [["ת"], "Tav", 400]
     ]
   }
 }

@@ -19,17 +19,10 @@
   "propsData": {
     "name": {"type": "list", "label": "Name", "maxDist": 1, "identifier": true, "active": true}
   },
-  "filters": {
-    "type": {
-      "label": "Type",
-      "values": {
-        "vowel": {
-          "label": "Vowel", "keys": [0, 4, 8, 14, 19, 23]},
-        "consonant": {
-          "label": "Consonant"}
-      },
-      "defaultValue": "consonant"
-    }
+  "selectorData": {
+    "font": {"family": "Noto Serif"},
+    "label": {"property": "name"},
+    "style": {"buttonWidth": "5ch", "symbolSize": 1.35}
   },
   "formsData": {
     "label": "Case",
@@ -42,7 +35,7 @@
   },
   "symbolsData": {
     "format": "rows",
-    "template": ["displayForms", "p:name", "p:name_de"],
+    "template": ["display", "p:name", "p:name_de"],
     "rows": [
       [["Α", "α"], "alpha", "Alpha"],
       [["Β", "β"], "beta", "Beta"],

@@ -4,24 +4,28 @@ import {Setting, SettingsCollection, SettingsHelper} from "../settings/settings.
 import {ListProperty} from "../dataset/symbol.js";
 
 
+DOMHelper.registerTemplate("eval", `<div class="item-eval">
+    <span class="submitted"></span><span class="solution"></span>
+</div>`);
+
 export class Game {
     /**
      * @param {Dataset} dataset
-     * @param {Record<string,QuizItem>} items
+     * @param {QuizItem[]} items
      * @param {string[]} properties
      */
 
     constructor(dataset, items, properties) {
         this.dataset = dataset;
         this.properties = properties;
-        this.items = items;
-        this.dealer = new ItemDealer(Object.keys(items));
+        this.dealer = new ItemDealer(items);
         this.onFinish = [];
 
         this.updateProgressBar();
     }
 
     setup() {
+        this.setupSymbolContainer();
         this.setupInputs();
         this.setupEvals();
         this.setupFontSettings();
@@ -42,6 +46,10 @@ export class Game {
         }
 
         return "text";
+    }
+
+    setupSymbolContainer() {
+        document.querySelector("#symbol-current .symbol").classList.add("symbol-" + this.dataset.displayData.type);
     }
 
     setupInputs() {
@@ -113,7 +121,7 @@ export class Game {
         document.querySelector("#font-settings").replaceChildren(...this.fontSettings.nodeList());
 
         this.fontSettings.settings.family.valueElement.addUpdateListener(key => {
-            document.querySelectorAll("#game-symbols .symbol > .symbol-string").forEach(element => {
+            document.querySelectorAll("#game-symbols .symbol-string").forEach(element => {
                 this.setSymbolFont(element, key);
             });
         });
@@ -154,7 +162,7 @@ export class Game {
     }
 
     currentSymbol() {
-        return this.items[this.dealer.currentItem()];
+        return this.dealer.currentItem();
     }
 
     submitRound() {
@@ -226,7 +234,7 @@ export class Game {
         }
 
         this.dealer.nextItem();
-        this.displaySymbol(this.currentSymbol().display);
+        this.displaySymbol(this.currentSymbol());
 
         this.clearInputs();
         this.show("inputs");
@@ -237,11 +245,14 @@ export class Game {
         this.inputs[this.properties[0]].focus({preventScroll: true});
     }
 
+    /**
+     * @param {QuizItem} symbol
+     */
     displaySymbol(symbol) {
-        document.querySelector("#symbol-current .symbol-string").replaceChildren(document.createTextNode(symbol));
+        document.querySelector("#symbol-current .symbol").replaceChildren(symbol.display);
     }
 
     clearSymbol() {
-        this.displaySymbol("");
+        document.querySelector("#symbol-current .symbol").replaceChildren();
     }
 }

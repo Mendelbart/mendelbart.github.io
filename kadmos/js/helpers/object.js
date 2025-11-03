@@ -68,16 +68,21 @@ export function extractKeys(object, keys, appendObject = true) {
 
 /**
  * @param {Object} object
- * @param {Array} keys
+ * @param {Iterable} keys
+ * @param {boolean} warnOtherKeys
  * @returns {Object}
  */
-export function onlyKeys(object, keys) {
+export function onlyKeys(object, keys, warnOtherKeys = false) {
+    const keySet = new Set(keys);
     const result = {};
-    for (const key of keys) {
-        if (key in object) {
-            result[key] = object[key];
+    for (const [key, value] of Object.entries(object)) {
+        if (keySet.has(key)) {
+            result[key] = value;
+        } else if (warnOtherKeys) {
+            console.warn(`Filtered out key "${key}".`);
         }
     }
+
     return result;
 }
 
