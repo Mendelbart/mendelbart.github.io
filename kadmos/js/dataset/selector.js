@@ -364,7 +364,7 @@ export default class ItemSelector {
         block.node.addEventListener("pointermove", (function(event) {
             const element = document.elementFromPoint(event.clientX, event.clientY);
             const label = element.closest("label");
-            if (label) {
+            if (label && label.parentElement === block.node) {
                 const indexWithinBlock = label.dataset.indexWithinBlock;
                 if (block.rangeSelectStopIndex === indexWithinBlock) {
                     return;
@@ -392,8 +392,9 @@ export default class ItemSelector {
                     return;
                 }
 
+                const element = document.elementFromPoint(event.clientX, event.clientY);
                 if (block.rangeSelectionActiveIndices) {
-                    if (event.target.closest(".selector-block") === block.node) {
+                    if (element.closest(".selector-block") === block.node) {
                         this.toggleItems(block.rangeSelectionActiveIndices);
                     }
                     this.labelsClassIfElse(false, block.rangeSelectionActiveIndices, "active");

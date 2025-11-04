@@ -1,6 +1,6 @@
 $borderRadiusSmall: .5rem;
 $transitionHide: 75ms;
-$transitionButton: 30ms;
+$transitionButton: 25ms;
 $bodyPaddingInline: .75rem;
 
 
@@ -77,7 +77,7 @@ $bodyPaddingInline: .75rem;
   --clr-selector-button-text: hsla(0, 0%, 50%, 0.7);
   --clr-selector-button-checked: hsla(0, 0%, 50%, 0.12);
   --clr-selector-button-checked-hover: hsla(0, 0%, 50%, 0.18);
-  --clr-selector-button-checked-active: hsla(0, 0%, 50%, 0.25);
+  --clr-selector-button-checked-active: hsla(0, 0%, 50%, 0.32);
   --clr-selector-button-checked-text: var(--clr-text);
   --clr-selector-button-checked-border: hsl(0, 0%, 50%);
 
@@ -753,8 +753,10 @@ $selectorBorderRadius: .2rem;
 
 
     input:checked + .button {
-      &> .symbol {
-        color: var(--clr-text);
+      color: var(--clr-text);
+
+      &:active, &.active {
+        color: hsl(0, 0%, 85%);
       }
 
       &> .symbol-label {
