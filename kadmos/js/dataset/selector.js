@@ -12,7 +12,8 @@ const STYLE_PROPERTIES = {
 
 const BLOCK_KEYS = [
     "mode", "indices", "transpose", "nColumns", "dblclickGroups",
-    "rowLabels", "columnLabels", "rowLabelPosition", "columnLabelPosition"
+    "rowLabels", "columnLabels", "rowLabelPosition", "columnLabelPosition",
+    "rangeSelectionMode"
 ];
 
 
@@ -110,6 +111,7 @@ export default class ItemSelector {
             block.node.setAttribute("data-block-index", blockIndex);
             this.applyBlockStyle(block, this.selectorData.style, block.style);
             this.processListenerIndices(block);
+            this.setupRangeSelection(block);
 
             this.node.append(block.node);
 
@@ -121,7 +123,7 @@ export default class ItemSelector {
             }
         }
 
-        this.addDblClickListeners();
+        this.addDblClickListeners(this.labels);
     }
 
     addBlockLabels(block) {
@@ -140,14 +142,15 @@ export default class ItemSelector {
 
             for (const [index, labelString] of block.rowLabels.entries()) {
                 let labelElement = this._labelElement("row", labelString, index);
-                labelElement.addEventListener("click", this._blockLabelListener("row"));
+                this.applyBlockLabelListeners(labelElement, "row");
                 if (block.rowLabelStart) {
                     block.elements[index * m].insertAdjacentElement("beforebegin", labelElement);
                 }
+
                 if (block.rowLabelEnd) {
                     if (block.rowLabelStart) {
                         labelElement = labelElement.cloneNode(true);
-                        labelElement.addEventListener("click", this._blockLabelListener("row"));
+                        this.applyBlockLabelListeners(labelElement, "row");
                     }
 
                     if (index === m - 1) {
@@ -169,7 +172,7 @@ export default class ItemSelector {
             let labelElements = block.columnLabels.map(
                 (labelString, index) => this._labelElement("column", labelString, index)
             );
-            this._addBlockLabelListeners(labelElements, "column");
+            this.applyBlockLabelListeners(labelElements, "column");
             if ("rowLabels" in block) {
                 if (block.rowLabelStart) {
                     labelElements.splice(0, 0, this._gridGapElement());
@@ -184,7 +187,7 @@ export default class ItemSelector {
             if (block.columnLabelEnd) {
                 if (block.columnLabelStart) {
                     labelElements = labelElements.map(node => node.cloneNode(true));
-                    this._addBlockLabelListeners(labelElements, "column");
+                    this.applyBlockLabelListeners(labelElements, "column");
                 }
                 block.node.append(...labelElements);
             }
@@ -229,24 +232,48 @@ export default class ItemSelector {
         return element;
     }
 
-    _addBlockLabelListeners(elts, type) {
-        for (const elt of elts) {
-            elt.addEventListener("click", this._blockLabelListener(type));
-        }
+    labelsClassIfElse(boolean, indices, trueClasses, falseClasses = null) {
+        const elements = indices.filter(index => index !== null).map(index => this.labels[index]);
+        DOMHelper.classIfElse(boolean, elements, trueClasses, falseClasses);
     }
 
-    /**
-     * @param {"row" | "column"} type
-     * @returns {function}
-     * @private
-     */
-    _blockLabelListener(type) {
-        const key =  type === "row" ? "indicesByRow" : "indicesByColumn";
-        return (function(event) {
+    applyBlockLabelListeners(element, type) {
+        if (Array.isArray(element)) {
+            for (const el of element) {
+                this.applyBlockLabelListeners(el, type);
+            }
+            return;
+        }
+
+        const indicesKey = type === "row" ? "indicesByRow" : "indicesByColumn";
+        element.addEventListener("click", (function(event) {
             const index = event.target.dataset.index;
             const blockIndex = event.target.parentElement.dataset.blockIndex;
-            this.toggleItems(this.blocks[blockIndex][key][index]);
-        }).bind(this);
+            this.toggleItems(this.blocks[blockIndex][indicesKey][index]);
+        }).bind(this));
+
+        const listeners = [
+            ["mouseover", "hover", true],
+            ["mouseout", "hover", false],
+        ];
+
+        for (const [event, cls, bool] of listeners) {
+            element.addEventListener(event, (function(event) {
+                const index = event.target.dataset.index;
+                const blockIndex = event.target.parentElement.dataset.blockIndex;
+                this.labelsClassIfElse(bool, this.blocks[blockIndex][indicesKey][index], cls);
+            }).bind(this));
+        }
+
+        element.addEventListener("pointerdown", (function(event) {
+            const index = event.target.dataset.index;
+            const blockIndex = event.target.parentElement.dataset.blockIndex;
+            this.labelsClassIfElse(true, this.blocks[blockIndex][indicesKey][index], "active");
+
+            document.addEventListener("pointerup", (function() {
+                this.labelsClassIfElse(false, this.blocks[blockIndex][indicesKey][index], "active");
+            }).bind(this), {once: true});
+        }).bind(this));
     }
 
     /**
@@ -278,6 +305,12 @@ export default class ItemSelector {
             );
         }
 
+        for (const [indexWithinBlock, index] of block.indices.entries()) {
+            if (index !== null) {
+                this.labels[index].dataset.indexWithinBlock = indexWithinBlock;
+            }
+        }
+
         block.dblclickGroups ??= [range(block.indices.length)];
         block.dblclickGroups = this.processIndexSubsets(block.dblclickGroups, block.indices.length)
             .map(indices => indices.map(index => {
@@ -291,25 +324,130 @@ export default class ItemSelector {
         }
     }
 
-    addDblClickListeners() {
-        for (const [index, label] of this.labels.entries()) {
-            label.addEventListener("click", this.dblClickListener(index));
+    addDblClickListeners(label, index = null) {
+        if (Array.isArray(label)) {
+            for (const [index, lbl] of label.entries()) {
+                this.addDblClickListeners(lbl, index);
+            }
+            return;
         }
-    }
 
-    dblClickListener(index) {
         const input = this.inputs[index];
         const blockIndex = input.parentElement.dataset.blockIndex;
         const dblClickGroups = this.blocks[blockIndex].dblclickGroups;
         const groupIndex = input.dataset.dblclickGroup;
 
-        return (function(event) {
+        label.addEventListener("click", (function(event) {
             if (event.detail % 2 === 0) {
                 event.preventDefault();
                 this.toggleItems([index], false);
                 this.toggleItems(dblClickGroups[groupIndex]);
             }
-        }).bind(this);
+        }).bind(this));
+
+        label.addEventListener("mousedown", (function(event) {
+            if (event.detail % 2 === 0) {
+                this.labelsClassIfElse(true, dblClickGroups[groupIndex], "active");
+                document.addEventListener("mouseup", (function() {
+                    this.labelsClassIfElse(false, dblClickGroups[groupIndex], "active");
+                }).bind(this), {once: true});
+            }
+        }).bind(this));
+    }
+
+    setupRangeSelection(block) {
+        block.rangeSelecting = false;
+        block.rangeSelectStartIndex = null;
+        block.rangeSelectStopIndex = null;
+        block.rangeSelectionActiveIndices = null;
+
+        for (const index of block.indices) {
+            if (index === null) {
+                continue;
+            }
+
+            this.labels[index].addEventListener("pointerenter", (function(event) {
+                if (block.rangeSelecting) {
+                    if (block.rangeSelectStartIndex === null) {
+                        block.rangeSelectStartIndex = event.target.dataset.indexWithinBlock;
+                    }
+                    block.rangeSelectStopIndex = event.target.dataset.indexWithinBlock;
+                    this.updateRangeSelection(block);
+                }
+            }).bind(this));
+        }
+
+        block.node.addEventListener("pointerdown", (function(event) {
+            block.rangeSelecting = true;
+            const label = event.target.closest("label")
+            if (label) {
+                block.rangeSelectStartIndex = label.dataset.indexWithinBlock;
+            }
+
+            document.addEventListener("pointerup", (function(event) {
+                if (!block.rangeSelecting) {
+                    return;
+                }
+
+                if (block.rangeSelectionActiveIndices) {
+                    if (event.target.closest(".selector-block") === block.node) {
+                        this.toggleItems(block.rangeSelectionActiveIndices);
+                    }
+                    this.labelsClassIfElse(false, block.rangeSelectionActiveIndices, "active");
+                }
+
+                block.rangeSelectionActiveIndices = null;
+                block.rangeSelectStartIndex = null;
+                block.rangeSelectStopIndex = null;
+                block.rangeSelectionActiveIndices = null;
+
+                block.rangeSelecting = false;
+            }).bind(this), {once: true});
+        }).bind(this));
+    }
+
+    updateRangeSelection(block) {
+        if (block.rangeSelectionActiveIndices) {
+            this.labelsClassIfElse(false, block.rangeSelectionActiveIndices, "active");
+        }
+        block.rangeSelectionActiveIndices = this.getIndicesInRangeSelection(block);
+        this.labelsClassIfElse(true, block.rangeSelectionActiveIndices, "active");
+    }
+
+    getIndicesInRangeSelection(block, startIndex = null, stopIndex = null) {
+        startIndex ??= block.rangeSelectStartIndex;
+        stopIndex ??= block.rangeSelectStopIndex;
+
+        [startIndex, stopIndex] = minmax(startIndex, stopIndex);
+
+        if (block.mode === "grid") {
+            block.rangeSelectionMode ??= "grid";
+            if (block.rangeSelectionMode === "grid") {
+                let [startRow, startColumn] = divrem(startIndex, block.nColumns);
+                let [stopRow, stopColumn] = divrem(stopIndex, block.nColumns);
+
+                [startRow, stopRow] = minmax(startRow, stopRow);
+                [startColumn, stopColumn] = minmax(startColumn, stopColumn);
+
+                return range(startRow, stopRow + 1)
+                    .map(index => range(
+                        index * block.nColumns + startColumn, index * block.nColumns + stopColumn + 1
+                    ))
+                    .flat().map(index => block.indices[index]);
+            } else if (block.rangeSelectionMode === "walkColumns") {
+                const transposedStartIndex = this.transposeIndex(startIndex, block.nRows, block.nColumns);
+                const transposedStopIndex = this.transposeIndex(stopIndex, block.nRows, block.nColumns);
+
+                const transposedRange = this.transposedRange(block.nColumns, block.nRows)
+                return range(transposedStartIndex, transposedStopIndex + 1).map(
+                    index => transposedRange[index]
+                ).map(index => block.indices[index]);
+            } else if (block.rangeSelectionMode !== "walkRows") {
+                console.error("Invalid range selection mode, use grid, walkRows or walkColumns.");
+            }
+        }
+
+        return range(startIndex, stopIndex + 1).map(index => block.indices[index]);
     }
 
     standardizeBlockIndices(block) {
@@ -342,13 +480,12 @@ export default class ItemSelector {
     }
 
     transposedRange(n, m) {
-        const result = new Array(n * m);
-        for (let i = 0; i < n; i++) {
-            for (let j = 0; j < m; j++) {
-                result[i * m + j] = i + j * n;
-            }
-        }
-        return result;
+        return range(n * m).map(index => this.transposeIndex(index, n, m));
+    }
+
+    transposeIndex(index, n, m) {
+        const [i, j] = divrem(index, m);
+        return j * n + i;
     }
 
     processIndexSubsets(subsets, n, allowGaps) {
@@ -525,8 +662,7 @@ export default class ItemSelector {
             label.append(symbolLabelElement);
         }
 
-
-        label.setAttribute("data-index", index);
+        label.dataset.index = index;
 
         return [input, label];
     }
@@ -649,4 +785,13 @@ export default class ItemSelector {
         }
         return result;
     }
+}
+
+
+function divrem(a, b) {
+    return [Math.floor(a / b), a % b];
+}
+
+function minmax(a, b) {
+    return [Math.min(a, b), Math.max(a, b)];
 }

@@ -264,7 +264,7 @@ export function forEachElement(elements, callback) {
  * @param {string | string[]} trueClasses
  * @param {string | string[]} [falseClasses]
  */
-export function classIfElse(bool, elements, trueClasses, falseClasses = []) {
+export function classIfElse(bool, elements, trueClasses, falseClasses = null) {
     if (!bool) {
         [trueClasses, falseClasses] = [falseClasses, trueClasses];
     }
@@ -334,7 +334,6 @@ export function toggleShown(showFirst, first, second) {
  */
 export function classesToList(classes) {
     classes ??= [];
-    if (typeof classes === "string")
     if (typeof classes === "string")
         return classes.split(" ");
     return Array.from(classes);
