@@ -361,21 +361,24 @@ export default class ItemSelector {
         block.rangeSelectStopIndex = null;
         block.rangeSelectionActiveIndices = null;
 
-        for (const index of block.indices) {
-            if (index === null) {
-                continue;
-            }
+        block.node.addEventListener("pointermove", (function(event) {
+            const element = document.elementFromPoint(event.clientX, event.clientY);
+            const label = element.closest("label");
+            if (label) {
+                const indexWithinBlock = label.dataset.indexWithinBlock;
+                if (block.rangeSelectStopIndex === indexWithinBlock) {
+                    return;
+                }
 
-            this.labels[index].addEventListener("pointerenter", (function(event) {
                 if (block.rangeSelecting) {
                     if (block.rangeSelectStartIndex === null) {
-                        block.rangeSelectStartIndex = event.target.dataset.indexWithinBlock;
+                        block.rangeSelectStartIndex = indexWithinBlock;
                     }
-                    block.rangeSelectStopIndex = event.target.dataset.indexWithinBlock;
+                    block.rangeSelectStopIndex = indexWithinBlock;
                     this.updateRangeSelection(block);
                 }
-            }).bind(this));
-        }
+            }
+        }).bind(this));
 
         block.node.addEventListener("pointerdown", (function(event) {
             block.rangeSelecting = true;
