@@ -12,7 +12,7 @@
   },
   "selectorData": {
     "font": {"family": "Junicode", "styleset": "Elder-futhark", "shift": 0.175, "scale": 1.2, "weight": 700},
-    "block": {"mode": "grid", "nColumns": 3, "transpose": true, "columnLabels": [1,2,3]},
+    "block": {"mode": "grid", "nColumns": 3, "transpose": true, "columnLabels": [1,2,3], "rangeSelectionMode": "walkColumns"},
     "label": {"property": "name", "position": "right"},
     "style": {"buttonMinWidth": "4ch", "buttonMaxWidth": "7ch", "labelGap": "0.15rem"}
   },

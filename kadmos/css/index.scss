@@ -60,7 +60,7 @@ $bodyPaddingInline: .75rem;
   --clr-grp-button-checked-active: hsl(var(--accent-hue), 70%, 60%, 0.27);
 
   --clr-grp-button-text: hsl(0, 0%, 40%);
-  --clr-grp-button-text-checked: hsl(var(--accent-hue), 64%, 44%);
+  --clr-grp-button-checked-text: hsl(var(--accent-hue), 64%, 44%);
 
   --clr-ribbon-button: var(--clr-surface);
   --clr-ribbon-button-hover: hsl(0, 0%, 90%);
@@ -68,6 +68,18 @@ $bodyPaddingInline: .75rem;
   --clr-ribbon-button-checked: hsl(0, 0%, 20%);
   --clr-ribbon-button-checked-hover: hsl(0, 0%, 24%);
   --clr-ribbon-button-checked-active: hsl(0, 0%, 28%);
+  --clr-ribbon-button-checked-text: var(--clr-surface);
+
+  --clr-selector-button: transparent;
+  --clr-selector-button-hover: hsla(0, 0%, 50%, 0.07);
+  --clr-selector-button-active: hsla(0, 0%, 50%, 0.12);
+  --clr-selector-button-border: hsla(0, 0%, 50%, 0.3);
+  --clr-selector-button-text: hsla(0, 0%, 50%, 0.7);
+  --clr-selector-button-checked: hsla(0, 0%, 50%, 0.12);
+  --clr-selector-button-checked-hover: hsla(0, 0%, 50%, 0.18);
+  --clr-selector-button-checked-active: hsla(0, 0%, 50%, 0.25);
+  --clr-selector-button-checked-text: var(--clr-text);
+  --clr-selector-button-checked-border: hsl(0, 0%, 50%);
 
   --text-green: hsl(118.1, 91.9%, 33.9%);
   --text-yellow: hsl(59.2, 100%, 31.2%);
@@ -108,7 +120,7 @@ $bodyPaddingInline: .75rem;
   --clr-grp-button-checked-active: hsl(var(--accent-hue), 70%, 68%, 0.27);
 
   --clr-grp-button-text: hsl(0, 0%, 70%);
-  --clr-grp-button-text-checked: hsl(var(--accent-hue), 90%, 72%);
+  --clr-grp-button-checked-text: hsl(var(--accent-hue), 90%, 73%);
 
   --clr-ribbon-button-hover: hsl(0, 0%, 20%);
   --clr-ribbon-button-active: hsl(0, 0%, 23%);
@@ -191,6 +203,22 @@ body {
 }
 
 
+@mixin button-events($clr-var-prefix) {
+  background-color: var(#{$clr-var-prefix});
+  border-color: var(#{$clr-var-prefix}-border, transparent);
+  color: var(#{$clr-var-prefix}-text);
+
+  @media (hover: hover) {
+    &:hover, &.hover {
+      background-color: var(#{$clr-var-prefix}-hover);
+    }
+  }
+
+  &:active, &.active {
+    background-color: var(#{$clr-var-prefix}-active);
+  }
+}
+
 
 /****************** HEADINGS ******************/
 h1 {
@@ -265,8 +293,6 @@ h2 {
 /********************** BUTTONS *******************/
 .button {
   padding: .4em .625em;
-  background: var(--clr-grp-button);
-  color: var(--clr-grp-button-text);
   font-weight: 650;
   font-size: 1rem;
   text-wrap: nowrap;
@@ -288,30 +314,6 @@ input[type="checkbox"], input[type="radio"] {
     cursor: default;
     pointer-events: none;
   }
-
-  &:checked + .button {
-    background: var(--clr-grp-button-checked);
-    color: var(--clr-grp-button-text-checked);
-    border: 1px solid var(--clr-grp-button-checked-border);
-  }
-
-  @media(hover: hover) {
-    + .button:hover {
-      background: var(--clr-grp-button-hover);
-    }
-
-    &:checked + .button:hover {
-      background: var(--clr-grp-button-checked-hover);
-    }
-  }
-
-  + .button:active {
-    background: var(--clr-grp-button-active);
-  }
-
-  &:checked + .button:active {
-    background: var(--clr-grp-button-checked-active);
-  }
 }
 
 
@@ -322,6 +324,7 @@ input[type="checkbox"], input[type="radio"] {
 
   &> .button {
     border-radius: 0;
+    @include button-events("--clr-grp-button");
 
     &:first-of-type {
       border-top-left-radius: $borderRadiusSmall;
@@ -332,6 +335,9 @@ input[type="checkbox"], input[type="radio"] {
       border-top-right-radius: $borderRadiusSmall;
       border-bottom-right-radius: $borderRadiusSmall;
     }
+  }
+  &> input:checked + .button {
+    @include button-events("--clr-grp-button-checked");
   }
 }
 
@@ -564,8 +570,12 @@ input[type="range"] {
     --clr-grp-button-checked-border: transparent;
     --clr-grp-button-text-checked: var(--clr-background);
 
-    @each $suffix in ("", "-hover", "-active", "-checked", "-checked-hover", "-checked-active") {
-      --clr-grp-button#{$suffix}: var(--clr-ribbon-button#{$suffix});
+    &> .button {
+      @include button-events("--clr-ribbon-button");
+    }
+
+    &> input:checked + .button {
+      @include button-events("--clr-ribbon-button-checked");
     }
 
     &> .button {
@@ -645,6 +655,8 @@ $selectorBorderRadius: .2rem;
     gap: .25rem;
     align-self: center;
     max-width: 100%;
+    user-select: none;
+    touch-action: none;
 
     --clr-grp-button-text: hsl(0, 0%, 62%);
     --clr-grp-button-checked: hsla(0, 0%, 100%, .1);
@@ -684,12 +696,14 @@ $selectorBorderRadius: .2rem;
         font-size: .8rem;
       }
 
-      .block-label:hover {
-        background: hsla(0, 0%, 50%, .15);
+      @media (hover: hover) {
+        .block-label:hover {
+          background: var(--clr-selector-button-hover);
+        }
       }
 
       .block-label:active {
-        background: hsla(0, 0%, 50%, .25);
+        background: var(--clr-selector-button-active);
       }
     }
 
@@ -709,6 +723,10 @@ $selectorBorderRadius: .2rem;
     }
 
     .button {
+      @include button-events("--clr-selector-button");
+
+      transition: background 100ms, border $transitionButton, color $transitionButton;
+
       padding: .3rem 0;
 
       display: flex;
@@ -718,6 +736,10 @@ $selectorBorderRadius: .2rem;
       gap: var(--label-gap);
 
       border-radius: $selectorBorderRadius;
+    }
+
+    input:checked + .button {
+      @include button-events("--clr-selector-button-checked");
     }
 
     &.labels-right {
