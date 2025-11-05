@@ -58,9 +58,6 @@ export default class ItemSelector {
             this.labels[index] = label;
             input.addEventListener("change", this.inputEventListener.bind(this));
         }
-
-        const inputsContainer = DOMHelper.createElement("div.selector-inputs");
-        inputsContainer.append(...this.inputs);
     }
 
     setupBlocks() {
@@ -92,8 +89,8 @@ export default class ItemSelector {
                     block.elements.push(gap);
                     block.node.append(gap);
                 } else {
-                    block.node.append(this.inputs[index], this.labels[index]);
-                    block.elements.push(this.inputs[index]);
+                    block.node.append(this.labels[index]);
+                    block.elements.push(this.labels[index]);
                 }
             }
 
@@ -351,7 +348,7 @@ export default class ItemSelector {
         }
 
         const input = this.inputs[index];
-        const blockIndex = input.parentElement.dataset.blockIndex;
+        const blockIndex = label.parentElement.dataset.blockIndex;
         const dblClickGroups = this.blocks[blockIndex].dblclickGroups;
         const groupIndex = input.dataset.dblclickGroup;
         const indices = dblClickGroups[groupIndex];
@@ -649,6 +646,8 @@ export default class ItemSelector {
      */
     getItemButton(item, forms, index) {
         const [input, label] = DOMHelper.button("checkbox", index);
+        input.setAttribute("name", input.id);
+        label.prepend(input);
         const symbolElement = DOMHelper.createElement("span.symbol.symbol-string");
 
         symbolElement.appendChild(item.getFormsDisplayNode(forms));

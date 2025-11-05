@@ -741,10 +741,24 @@ $selectorBorderRadius: .2rem;
       gap: var(--label-gap);
 
       border-radius: $selectorBorderRadius;
-    }
 
-    input:checked + .button {
-      @include button-events("--clr-selector-button-checked");
+      input {
+        display: none;
+      }
+
+      &:has(> input:checked) {
+        @include button-events("--clr-selector-button-checked");
+
+        color: var(--clr-text);
+
+        &:active, &.active {
+          color: var(--clr-selector-button-checked-active-symbol);
+        }
+
+        &> .symbol-label {
+          color: var(--clr-selector-button-checked-active-label);
+        }
+      }
     }
 
     &.labels-right {
@@ -753,19 +767,6 @@ $selectorBorderRadius: .2rem;
       .button {
         flex-direction: row;
         align-items: center;
-      }
-    }
-
-
-    input:checked + .button {
-      color: var(--clr-text);
-
-      &:active, &.active {
-        color: var(--clr-selector-button-checked-active-symbol);
-      }
-
-      &> .symbol-label {
-        color: var(--clr-selector-button-checked-active-label);
       }
     }
 
