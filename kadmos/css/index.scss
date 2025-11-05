@@ -1,6 +1,6 @@
 $borderRadiusSmall: .5rem;
 $transitionHide: 75ms;
-$transitionButton: 25ms;
+$transitionButton: 10ms;
 $bodyPaddingInline: .75rem;
 
 
@@ -80,6 +80,8 @@ $bodyPaddingInline: .75rem;
   --clr-selector-button-checked-active: hsla(0, 0%, 50%, 0.32);
   --clr-selector-button-checked-text: var(--clr-text);
   --clr-selector-button-checked-border: hsl(0, 0%, 50%);
+  --clr-selector-button-checked-active-symbol: hsl(0, 0%, 10%);
+  --clr-selector-button-checked-active-label: hsl(0, 0%, 15%);
 
   --text-green: hsl(118.1, 91.9%, 33.9%);
   --text-yellow: hsl(59.2, 100%, 31.2%);
@@ -114,10 +116,11 @@ $bodyPaddingInline: .75rem;
 
   --clr-grp-button: transparent;
   --clr-grp-button-border: hsla(0, 0%, 100%, .3);
-  --clr-grp-button-hover: hsla(0, 0%, 100%, 0.06);
+  --clr-grp-button-hover: hsla(0, 0%, 100%, 0.03);
+  --clr-grp-button-active: hsla(0, 0%, 100%, 0.065);
   --clr-grp-button-checked: hsl(var(--accent-hue), 100%, 68%, 0.17);
-  --clr-grp-button-checked-hover: hsl(var(--accent-hue), 100%, 68%, 0.22);
-  --clr-grp-button-checked-active: hsl(var(--accent-hue), 70%, 68%, 0.27);
+  --clr-grp-button-checked-hover: hsl(var(--accent-hue), 100%, 68%, 0.21);
+  --clr-grp-button-checked-active: hsl(var(--accent-hue), 70%, 68%, 0.25);
 
   --clr-grp-button-text: hsl(0, 0%, 70%);
   --clr-grp-button-checked-text: hsl(var(--accent-hue), 90%, 73%);
@@ -127,6 +130,12 @@ $bodyPaddingInline: .75rem;
   --clr-ribbon-button-checked: var(--clr-text);
   --clr-ribbon-button-checked-active: hsl(0, 0%, 80%);
   --clr-ribbon-button-checked-hover: var(--clr-text-soft);
+
+  --clr-selector-button: transparent;
+  --clr-selector-button-text: hsla(0, 0%, 50%, 0.7);
+  --clr-selector-button-checked-active-symbol: hsl(0, 0%, 90%);
+  --clr-selector-button-checked-active-label: hsl(0, 0%, 85%);
+
 
   --text-green: hsl(118, 70.6%, 66.7%);
   --text-yellow: hsl(53.5, 98.1%, 59.4%);
@@ -656,7 +665,6 @@ $selectorBorderRadius: .2rem;
     align-self: center;
     max-width: 100%;
     user-select: none;
-    touch-action: none;
 
     --clr-grp-button-text: hsl(0, 0%, 62%);
     --clr-grp-button-checked: hsla(0, 0%, 100%, .1);
@@ -725,7 +733,7 @@ $selectorBorderRadius: .2rem;
     .button {
       @include button-events("--clr-selector-button");
 
-      transition: background 100ms, border $transitionButton, color $transitionButton;
+      touch-action: none;
 
       padding: .3rem 0;
 
@@ -756,11 +764,11 @@ $selectorBorderRadius: .2rem;
       color: var(--clr-text);
 
       &:active, &.active {
-        color: hsl(0, 0%, 85%);
+        color: var(--clr-selector-button-checked-active-symbol);
       }
 
       &> .symbol-label {
-        color: hsl(0, 0%, 90%);
+        color: var(--clr-selector-button-checked-active-label);
       }
     }
 
