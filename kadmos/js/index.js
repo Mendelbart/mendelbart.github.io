@@ -7,62 +7,66 @@ const datasetSelect = document.getElementById("datasetSelect");
 
 
 // --------------- GAME SETUP -----------------
-(function() {
-    const ctx = new GameContext();
+try {
+    (function () {
+        const ctx = new GameContext();
 
-    DOMHelper.setOptions(
-        datasetSelect,
-        ObjectHelper.map(DATASETS_METADATA, data => data.name),
-        window.localStorage.getItem("dataset") ?? DEFAULT_DATASET
-    );
-
-    window.addEventListener("resize", () => {
-        document.querySelectorAll(".track-width").forEach(element => {
-            element.style.setProperty("--scroll-width", element.scrollWidth);
-            element.style.setProperty("--client-width", element.clientWidth);
-            element.style.setProperty("--offset-width", element.offsetWidth);
-        });
+        DOMHelper.setOptions(
+            datasetSelect,
+            ObjectHelper.map(DATASETS_METADATA, data => data.name),
+            window.localStorage.getItem("dataset") ?? DEFAULT_DATASET
+        );
 
         window.addEventListener("resize", () => {
-            if (ctx.itemSelector) {
-                ctx.itemSelector.scaleButtons();
-            }
-        })
-    });
+            document.querySelectorAll(".track-width").forEach(element => {
+                element.style.setProperty("--scroll-width", element.scrollWidth);
+                element.style.setProperty("--client-width", element.clientWidth);
+                element.style.setProperty("--offset-width", element.offsetWidth);
+            });
 
-    datasetSelect.addEventListener("change", (e) => {
-        ctx.selectDataset(e.target.value);
-    });
+            window.addEventListener("resize", () => {
+                if (ctx.itemSelector) {
+                    ctx.itemSelector.scaleButtons();
+                }
+            })
+        });
 
-    document.getElementById("start-game-button").addEventListener("click", () => {
-        ctx.startGame();
-    });
+        datasetSelect.addEventListener("change", (e) => {
+            ctx.selectDataset(e.target.value);
+        });
 
-    document.getElementById("stop-game-button").addEventListener("click", () => {
-        ctx.game.finish();
-    });
-
-    document.getElementById("item-submit-button").addEventListener("click", () => {
-        ctx.game.submitRound();
-    });
-
-    document.getElementById("item-next-button").addEventListener("click", () => {
-        ctx.game.newRound();
-    });
-
-    ctx.selectDataset(datasetSelect.value).then(() => {
-        ctx.setPlaying(false);
-
-        const searchParams = new URLSearchParams(window.location.search);
-        if (["1", "true"].includes(searchParams.get("autoplay"))) {
+        document.getElementById("start-game-button").addEventListener("click", () => {
             ctx.startGame();
-        }
-    });
+        });
 
-    document.querySelectorAll(".ribbon").forEach((element) => {
-        setupRibbon(element, element.classList.contains("ribbon-closable"));
-    });
-})();
+        document.getElementById("stop-game-button").addEventListener("click", () => {
+            ctx.game.finish();
+        });
+
+        document.getElementById("item-submit-button").addEventListener("click", () => {
+            ctx.game.submitRound();
+        });
+
+        document.getElementById("item-next-button").addEventListener("click", () => {
+            ctx.game.newRound();
+        });
+
+        ctx.selectDataset(datasetSelect.value).then(() => {
+            ctx.setPlaying(false);
+
+            const searchParams = new URLSearchParams(window.location.search);
+            if (["1", "true"].includes(searchParams.get("autoplay"))) {
+                ctx.startGame();
+            }
+        });
+
+        document.querySelectorAll(".ribbon").forEach((element) => {
+            setupRibbon(element, element.classList.contains("ribbon-closable"));
+        });
+    })();
+} catch (e) {
+    document.querySelector("body").prepend(document.createTextNode(`There was a ${e.name}: ${e.message}`));
+}
 
 
 /**
