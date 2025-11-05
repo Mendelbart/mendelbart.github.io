@@ -476,5 +476,9 @@ export function batchUpdate(updates, fonts = []) {
 
 
 export function printError(error) {
-    document.body.prepend(document.createTextNode(error.toString()), document.createElement("br"));
+    const searchParams = new URLSearchParams(window.location.search);
+    if (searchParams.has("logonscreen", "true")) {
+        document.getElementById("errorlog").append(document.createTextNode(error.toString()), document.createElement("br"));
+    }
+    console.error(error);
 }

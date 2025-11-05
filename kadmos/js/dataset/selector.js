@@ -142,7 +142,7 @@ export default class ItemSelector {
 
             for (const [index, labelString] of block.rowLabels.entries()) {
                 let labelElement = this._labelElement("row", labelString, index);
-                this.applyBlockLabelListeners(labelElement, "row");
+                this.applyBlockLabelListeners(labelElement, "row", block);
                 if (block.rowLabelStart) {
                     block.elements[index * m].insertAdjacentElement("beforebegin", labelElement);
                 }
@@ -150,7 +150,7 @@ export default class ItemSelector {
                 if (block.rowLabelEnd) {
                     if (block.rowLabelStart) {
                         labelElement = labelElement.cloneNode(true);
-                        this.applyBlockLabelListeners(labelElement, "row");
+                        this.applyBlockLabelListeners(labelElement, "row", block);
                     }
 
                     if (index === m - 1) {
@@ -166,13 +166,13 @@ export default class ItemSelector {
             if (!Array.isArray(block.columnLabels) || block.columnLabels.length !== m) {
                 throw new Error("Column labels no array or don't match number of columns.");
             }
-            const [pos, labelStart, labelEnd] = this._processLabelPosition(block.columnLabelPosition);
+            const [_, labelStart, labelEnd] = this._processLabelPosition(block.columnLabelPosition);
             [block.columnLabelStart, block.columnLabelEnd] = [labelStart, labelEnd];
 
             let labelElements = block.columnLabels.map(
                 (labelString, index) => this._labelElement("column", labelString, index)
             );
-            this.applyBlockLabelListeners(labelElements, "column");
+            this.applyBlockLabelListeners(labelElements, "column", block);
             if ("rowLabels" in block) {
                 if (block.rowLabelStart) {
                     labelElements.splice(0, 0, this._gridGapElement());
@@ -187,7 +187,7 @@ export default class ItemSelector {
             if (block.columnLabelEnd) {
                 if (block.columnLabelStart) {
                     labelElements = labelElements.map(node => node.cloneNode(true));
-                    this.applyBlockLabelListeners(labelElements, "column");
+                    this.applyBlockLabelListeners(labelElements, "column", block);
                 }
                 block.node.append(...labelElements);
             }
@@ -237,41 +237,38 @@ export default class ItemSelector {
         DOMHelper.classIfElse(boolean, elements, trueClasses, falseClasses);
     }
 
-    applyBlockLabelListeners(element, type) {
+    applyBlockLabelListeners(element, type, block) {
         if (Array.isArray(element)) {
             for (const el of element) {
-                this.applyBlockLabelListeners(el, type);
+                this.applyBlockLabelListeners(el, type, block);
             }
             return;
         }
 
         const indicesKey = type === "row" ? "indicesByRow" : "indicesByColumn";
-        element.addEventListener("click", (function(event) {
-            const index = event.target.dataset.index;
-            const blockIndex = event.target.parentElement.dataset.blockIndex;
-            this.toggleItems(this.blocks[blockIndex][indicesKey][index]);
+        const index = element.dataset.index;
+        const indices = block[indicesKey][index];
+
+        element.addEventListener("click", (function() {
+            this.toggleItems(indices);
         }).bind(this));
 
         const listeners = [
-            ["mouseover", "hover", true],
-            ["mouseout", "hover", false],
+            ["pointerover", "hover", true],
+            ["pointerleave", "hover", false],
         ];
 
         for (const [event, cls, bool] of listeners) {
-            element.addEventListener(event, (function(event) {
-                const index = event.target.dataset.index;
-                const blockIndex = event.target.parentElement.dataset.blockIndex;
-                this.labelsClassIfElse(bool, this.blocks[blockIndex][indicesKey][index], cls);
+            element.addEventListener(event, (function() {
+                this.labelsClassIfElse(bool, indices, cls);
             }).bind(this));
         }
 
-        element.addEventListener("pointerdown", (function(event) {
-            const index = event.target.dataset.index;
-            const blockIndex = event.target.parentElement.dataset.blockIndex;
-            this.labelsClassIfElse(true, this.blocks[blockIndex][indicesKey][index], "active");
+        element.addEventListener("pointerdown", (function() {
+            this.labelsClassIfElse(true, indices, "active");
 
             document.addEventListener("pointerup", (function() {
-                this.labelsClassIfElse(false, this.blocks[blockIndex][indicesKey][index], "active");
+                this.labelsClassIfElse(false, indices, "active");
             }).bind(this), {once: true});
         }).bind(this));
     }
@@ -336,22 +333,10 @@ export default class ItemSelector {
         const blockIndex = input.parentElement.dataset.blockIndex;
         const dblClickGroups = this.blocks[blockIndex].dblclickGroups;
         const groupIndex = input.dataset.dblclickGroup;
+        const indices = dblClickGroups[groupIndex];
 
-        label.addEventListener("click", (function(event) {
-            if (event.detail % 2 === 0) {
-                event.preventDefault();
-                this.toggleItems([index], false);
-                this.toggleItems(dblClickGroups[groupIndex]);
-            }
-        }).bind(this));
-
-        label.addEventListener("mousedown", (function(event) {
-            if (event.detail % 2 === 0) {
-                this.labelsClassIfElse(true, dblClickGroups[groupIndex], "active");
-                document.addEventListener("mouseup", (function() {
-                    this.labelsClassIfElse(false, dblClickGroups[groupIndex], "active");
-                }).bind(this), {once: true});
-            }
+        label.addEventListener("dblclick", (function() {
+            this.toggleItems(indices);
         }).bind(this));
     }
 
@@ -387,16 +372,13 @@ export default class ItemSelector {
                 block.rangeSelectStartIndex = label.dataset.indexWithinBlock;
             }
 
-            document.addEventListener("pointerup", (function(event) {
+            document.addEventListener("pointerup", (function() {
                 if (!block.rangeSelecting) {
                     return;
                 }
 
-                const element = document.elementFromPoint(event.clientX, event.clientY);
                 if (block.rangeSelectionActiveIndices) {
-                    if (element.closest(".selector-block") === block.node) {
-                        this.toggleItems(block.rangeSelectionActiveIndices);
-                    }
+                    this.toggleItems(block.rangeSelectionActiveIndices);
                     this.labelsClassIfElse(false, block.rangeSelectionActiveIndices, "active");
                 }
 
@@ -439,8 +421,10 @@ export default class ItemSelector {
                     ))
                     .flat().map(index => block.indices[index]);
             } else if (block.rangeSelectionMode === "walkColumns") {
-                const transposedStartIndex = this.transposeIndex(startIndex, block.nRows, block.nColumns);
-                const transposedStopIndex = this.transposeIndex(stopIndex, block.nRows, block.nColumns);
+                let transposedStartIndex = this.transposeIndex(startIndex, block.nRows, block.nColumns);
+                let transposedStopIndex = this.transposeIndex(stopIndex, block.nRows, block.nColumns);
+
+                [transposedStartIndex, transposedStopIndex] = minmax(transposedStartIndex, transposedStopIndex);
 
                 const transposedRange = this.transposedRange(block.nColumns, block.nRows)
                 return range(transposedStartIndex, transposedStopIndex + 1).map(

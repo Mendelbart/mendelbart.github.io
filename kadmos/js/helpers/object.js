@@ -125,6 +125,7 @@ export function subsetToBoolRecord(subset, keys) {
     if (!arraysEqual(Object.keys(subset).sort(), keys.sort())) {
         console.log(subset, keys);
         console.warn("Subset object keys don't match keys list.");
+        console.log(Object.keys(subset).sort(), keys.sort());
     }
     return Object.fromEntries(keys.map(key => [key, !!subset[key]]));
 }
