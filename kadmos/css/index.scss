@@ -732,8 +732,6 @@ $selectorBorderRadius: .2rem;
     .button {
       @include button-events("--clr-selector-button");
 
-      touch-action: none;
-
       padding: .3rem 0;
 
       display: flex;

@@ -123,7 +123,28 @@ export default class ItemSelector {
             }
         }
 
+        this.windowRangeSelectingListeners();
+
         this.addDblClickListeners(this.labels);
+    }
+
+    windowRangeSelectingListeners() {
+        window.rangeSelecting = false;
+        window.addEventListener('touchstart', function(e) {
+            if (e.target.closest('.selector-block > label')) {
+                window.rangeSelecting = true
+            }
+        });
+        window.addEventListener('touchend', function(e) {
+            if (e.target.closest('.selector-block > label')) {
+                window.rangeSelecting = false
+            }
+        });
+        window.addEventListener('touchmove', function(e) {
+            if (window.rangeSelecting) {
+                e.preventDefault();
+            }
+        }, {passive: false});
     }
 
     addBlockLabels(block) {
