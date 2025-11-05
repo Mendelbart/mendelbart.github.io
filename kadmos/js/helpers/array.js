@@ -70,11 +70,9 @@ export function arraysEqual(a, b) {
  * @returns {number[]}
  */
 export function filterIndices(arr, callback) {
-    return Array.from(
-        arr.entries()
+    return Array.from(arr.entries())
             .filter(([i, v]) => callback(v, i, arr))
-            .map(([i, _]) => i)
-    );
+            .map(([i, _]) => i);
 }
 
 /**
