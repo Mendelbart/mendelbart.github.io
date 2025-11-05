@@ -72,7 +72,7 @@ export class Dataset {
             return this._cache[key];
         }
 
-        const data = await fetch(DATASETS_METADATA[key].file).then(response => response.json());
+        const data = await fetch(DATASETS_METADATA[key].file).then(response => response.json()).catch(DOMHelper.printError);
         const dataset = new this(data);
         this._cache[key] = dataset;
         return dataset;

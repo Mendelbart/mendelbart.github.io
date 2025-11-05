@@ -7,8 +7,8 @@ const datasetSelect = document.getElementById("datasetSelect");
 
 
 // --------------- GAME SETUP -----------------
-try {
-    (function () {
+(function () {
+    try {
         const ctx = new GameContext();
 
         DOMHelper.setOptions(
@@ -58,15 +58,17 @@ try {
             if (["1", "true"].includes(searchParams.get("autoplay"))) {
                 ctx.startGame();
             }
-        });
+            throw new Error("No Error yay");
+        }).catch(DOMHelper.printError);
 
         document.querySelectorAll(".ribbon").forEach((element) => {
             setupRibbon(element, element.classList.contains("ribbon-closable"));
         });
-    })();
-} catch (e) {
-    document.querySelector("body").prepend(document.createTextNode(`There was a ${e.name}: ${e.message}`));
-}
+    } catch (e) {
+        DOMHelper.printError(e);
+    }
+})();
+
 
 
 /**

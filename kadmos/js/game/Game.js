@@ -138,7 +138,7 @@ export class Game {
                     : [100, 900];
             weightRange.setMin(min);
             weightRange.setMax(max);
-        });
+        }).catch(DOMHelper.printError);
     }
 
     seed(seed) {

@@ -1,5 +1,5 @@
 import * as ObjectHelper from "./object.js";
-import {classIfElse} from './dom.js';
+import {classIfElse, printError} from './dom.js';
 
 /**
  * @type {Record<string,Record<string,*>>}
@@ -164,6 +164,6 @@ function setStylesets(element, stylesets, family) {
             const ssIDs = stylesets.map(name => FONT_DATA[family].styleset[name]);
             const ssIDsStr = ssIDs.map(id => `"ss${id.toString().padStart(2, "0")}"`).join(', ');
             element.style.setProperty("font-feature-settings", ssIDsStr);
-        });
+        }).catch(printError);
     }
 }
