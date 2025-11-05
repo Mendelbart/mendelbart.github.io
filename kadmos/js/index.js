@@ -58,7 +58,6 @@ const datasetSelect = document.getElementById("datasetSelect");
             if (["1", "true"].includes(searchParams.get("autoplay"))) {
                 ctx.startGame();
             }
-            throw new Error("No Error yay");
         }).catch(DOMHelper.printError);
 
         document.querySelectorAll(".ribbon").forEach((element) => {
