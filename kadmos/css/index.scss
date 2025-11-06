@@ -732,8 +732,12 @@ $selectorBorderRadius: .2rem;
     .selector-item-button {
       @include button-events("--clr-selector-button");
       touch-action: none;
+      cursor: pointer;
 
       padding: .3rem 0;
+
+      border-width: 1px;
+      border-style: solid;
 
       display: flex;
       flex-direction: column;
@@ -775,6 +779,7 @@ $selectorBorderRadius: .2rem;
       min-width: var(--symbol-min-width);
       text-align: center;
       padding-inline: .25em;
+      font-weight: 600;
     }
 
     .selector-item-label {
@@ -782,7 +787,7 @@ $selectorBorderRadius: .2rem;
       font-size: .8rem;
       text-overflow: ellipsis;
       padding-inline: .25em;
-      cursor: pointer;
+      pointer-events: none;
     }
   }
 

@@ -333,6 +333,10 @@ export default class ItemSelector {
         const indices = block.dblclickGroups[groupIndex];
 
         button.addEventListener("click", (event) => {
+            if (event.target.closest("input")) {
+                return;
+            }
+
             if (event.detail % 2 === 0) {
                 if (block.lastClicked === index) {
                     this.toggleItems(indices);
@@ -631,7 +635,7 @@ export default class ItemSelector {
      * @returns {[HTMLElement, HTMLInputElement]}
      */
     getItemButton(item, forms, index) {
-        const button = DOMHelper.createElement("button.selector-item-button");
+        const button = DOMHelper.createElement("div.selector-item-button");
         const input = document.createElement("input");
 
         const id = DOMHelper.uniqueIdPrefix("selectorButton") + index.toString();
@@ -651,8 +655,7 @@ export default class ItemSelector {
 
         button.append(input, symbolElement);
 
-        button.addEventListener("click", (event) => {
-            event.preventDefault();
+        button.addEventListener("click", () => {
             input.checked = !input.checked;
         });
 
