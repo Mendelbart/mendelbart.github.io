@@ -723,14 +723,15 @@ $selectorBorderRadius: .2rem;
         flex-direction: row-reverse;
       }
 
-      .button {
+      .selector-item-button {
         min-width: var(--button-min-width);
         max-width: var(--button-max-width);
       }
     }
 
-    .button {
+    .selector-item-button {
       @include button-events("--clr-selector-button");
+      touch-action: none;
 
       padding: .3rem 0;
 
@@ -764,7 +765,7 @@ $selectorBorderRadius: .2rem;
     &.labels-right {
       --label-gap: .3rem;
 
-      .button {
+      .selector-item-button {
         flex-direction: row;
         align-items: center;
       }
@@ -776,11 +777,12 @@ $selectorBorderRadius: .2rem;
       padding-inline: .25em;
     }
 
-    .symbol-label {
+    .selector-item-label {
       font-weight: 400;
       font-size: .8rem;
       text-overflow: ellipsis;
       padding-inline: .25em;
+      cursor: pointer;
     }
   }
 

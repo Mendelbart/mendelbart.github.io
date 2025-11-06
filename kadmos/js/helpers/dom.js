@@ -118,6 +118,7 @@ export function htmlToElement(html) {
 
 /**
  * @param {string} str of the format tag#id.class1.class2 etc
+ * @returns {HTMLElement}
  */
 export function createElement(str) {
     const [tagId, ...classes] = str.split(".");
