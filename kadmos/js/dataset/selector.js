@@ -328,12 +328,18 @@ export default class ItemSelector {
 
         const input = this.inputs[index];
         const blockIndex = button.parentElement.dataset.blockIndex;
-        const dblClickGroups = this.blocks[blockIndex].dblclickGroups;
+        const block = this.blocks[blockIndex];
         const groupIndex = input.dataset.dblclickGroup;
-        const indices = dblClickGroups[groupIndex];
+        const indices = block.dblclickGroups[groupIndex];
 
-        button.addEventListener("dblclick", () => {
-            this.toggleItems(indices);
+        button.addEventListener("click", (event) => {
+            if (event.detail % 2 === 0) {
+                if (block.lastClicked === index) {
+                    this.toggleItems(indices);
+                }
+            } else {
+                block.lastClicked = index;
+            }
         });
     }
 
@@ -645,8 +651,9 @@ export default class ItemSelector {
 
         button.append(input, symbolElement);
 
-        button.addEventListener("click", () => {
-            input.click();
+        button.addEventListener("click", (event) => {
+            event.preventDefault();
+            input.checked = !input.checked;
         });
 
         if (this.selectorData.label) {
