@@ -246,7 +246,7 @@ export default class ItemSelector {
         const index = element.dataset.index;
         const indices = block[indicesKey][index];
 
-        element.addEventListener("click", () => {
+        DOMHelper.addClickTapListener(element, () => {
             this.toggleItems(indices);
         });
 
@@ -355,20 +355,26 @@ export default class ItemSelector {
 
         block.node.addEventListener("pointermove", (event) => {
             const element = document.elementFromPoint(event.clientX, event.clientY);
-            const button = element.closest(".selector-item-button");
-            if (button && button.parentElement === block.node) {
-                const indexWithinBlock = button.dataset.indexWithinBlock;
-                if (block.rangeSelectStopIndex === indexWithinBlock) {
-                    return;
-                }
+            if (!element) {
+                return;
+            }
 
-                if (block.rangeSelecting) {
-                    if (block.rangeSelectStartIndex === null) {
-                        block.rangeSelectStartIndex = indexWithinBlock;
-                    }
-                    block.rangeSelectStopIndex = indexWithinBlock;
-                    this.updateRangeSelection(block);
+            const button = element.closest(".selector-item-button");
+            if (!button || button.parentElement !== block.node) {
+                return;
+            }
+
+            const indexWithinBlock = button.dataset.indexWithinBlock;
+            if (block.rangeSelectStopIndex === indexWithinBlock) {
+                return;
+            }
+
+            if (block.rangeSelecting) {
+                if (block.rangeSelectStartIndex === null) {
+                    block.rangeSelectStartIndex = indexWithinBlock;
                 }
+                block.rangeSelectStopIndex = indexWithinBlock;
+                this.updateRangeSelection(block);
             }
         });
 
@@ -655,7 +661,7 @@ export default class ItemSelector {
 
         button.append(input, symbolElement);
 
-        button.addEventListener("click", () => {
+        DOMHelper.addClickTapListener(button, () => {
             input.checked = !input.checked;
         });
 

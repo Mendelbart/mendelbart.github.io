@@ -4,6 +4,7 @@
 
 
 let IdPrefixCounter = 0;
+window.hasTouch = 'ontouchstart' in window;
 
 /**
  * @type {Record<string. HTMLTemplateElement>}
@@ -483,3 +484,45 @@ export function printError(error) {
     }
     console.error(error);
 }
+
+/**
+ * @param {Element} element
+ * @param {function} listener
+ */
+export function addTapListener(element, listener) {
+    element.addEventListener("touchend", (e) => {
+        const touch = e.changedTouches[0];
+        if (elementContainsPoint(element, touch.clientX, touch.clientY)) {
+            listener(e);
+        }
+    });
+}
+
+export function addClickTapListener(element, listener) {
+    if (window.hasTouch) {
+        addTapListener(element, listener);
+    } else {
+        element.addEventListener('click', listener);
+    }
+}
+
+/**
+ * @param {DOMRect} rect
+ * @param {number} clientX
+ * @param {number} clientY
+ * @returns {boolean}
+ */
+export function rectContainsPoint(rect, clientX, clientY) {
+    return rect.x <= clientX && rect.x + rect.width >= clientX && rect.y <= clientY && rect.y + rect.height >= clientY;
+}
+
+/**
+ * @param {Element} element
+ * @param {number} clientX
+ * @param {number} clientY
+ * @returns {boolean}
+ */
+export function elementContainsPoint(element, clientX, clientY) {
+    return rectContainsPoint(element.getBoundingClientRect(), clientX, clientY);
+}
+
