@@ -29,10 +29,10 @@
     "defaultForm": "normal"
   },
   "selectorData": {
-    "font": {"family" : "Noto Serif Hebrew", "lineHeight": 1.1, "shift": -0.1},
+    "font": {"family" : "Noto Serif Hebrew", "lineHeight": 1.35, "shift": -0.18, "scale": 1.35},
     "block": {"mode": "flex"},
     "label": {"property": "name", "splitFirst": true},
-    "style": {"buttonWidth": "4ch"}
+    "style": {"buttonWidth": "5ch"}
   },
   "symbolsData": {
     "format": "rows",

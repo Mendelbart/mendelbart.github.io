@@ -28,8 +28,7 @@
     "label": "Case",
     "keys": ["upper", "lower", "final"],
     "setting": {
-      "upper": {
-        "label": "Uppercase", "active": true},
+      "upper": {"label": "Uppercase", "active": true},
       "lower": {"keys": ["lower", "final"], "label": "Lowercase", "active": true}
     }
   },

@@ -1,4 +1,4 @@
-import {DOMHelper, ObjectHelper, FontHelper, ArrayHelper} from "../helpers/helpers.js";
+import {DOMHelper, ObjectHelper, FontHelper, ArrayHelper, FunctionStack} from "../helpers/helpers.js";
 const range = ArrayHelper.range;
 import {Setting, SettingsHelper} from "../settings/settings.js";
 
@@ -27,6 +27,7 @@ export default class ItemSelector {
         this.items = items;
         this.formsData = formsData;
         this.selectorData = selectorData;
+        this.updateListeners = new FunctionStack();
     }
 
     /**
@@ -48,8 +49,11 @@ export default class ItemSelector {
     }
 
     setupButtons(forms) {
+        /** @type {boolean[]} */
         this.itemsActive = new Array(this.items.length).fill(false);
+        /** @type {HTMLElement[]} */
         this.buttons = new Array(this.items.length);
+        /** @type {HTMLInputElement[]} */
         this.inputs = new Array(this.items.length);
 
         for (const [index, item] of this.items.entries()) {
@@ -489,7 +493,13 @@ export default class ItemSelector {
         return j * n + i;
     }
 
-    processIndexSubsets(subsets, n, allowGaps) {
+    /**
+     * @param {any[]} subsets
+     * @param {number} n
+     * @param {boolean} [allowGaps]
+     * @returns {number[][]}
+     */
+    processIndexSubsets(subsets, n, allowGaps = false) {
         const result = [];
         const covered = new Array(n).fill(false);
         for (const [i, subset] of subsets.entries()) {
@@ -527,48 +537,94 @@ export default class ItemSelector {
     updateButtons() {
         const forms = this.activeForms();
         for (const [index, item] of this.items.entries()) {
-            this.buttons[index].querySelector(".symbol").replaceChildren(item.getFormsDisplayNode(forms));
+            if (item.countQuizItems(forms) === 0) {
+                this.updateButtonForms(index, this.formsData.keys);
+                this.inputs[index].setAttribute('disabled', 'disabled');
+            } else {
+                this.updateButtonForms(index, forms);
+                this.inputs[index].removeAttribute('disabled');
+            }
         }
     }
 
     /**
-     * @param {(number | null)[]} indices
-     * @param {boolean} updateInputs
+     * @param {number} index
+     * @param {string[]} forms
      */
-    toggleItems(indices, updateInputs = true) {
+    updateButtonForms(index, forms) {
+        const formsString = this.items[index].getFormsDisplayNode(forms)
+        this.buttons[index].querySelector(".symbol").replaceChildren(formsString);
+    }
+
+    /**
+     * @param {(number | null)[]} indices
+     * @param {boolean} [updateInputs]
+     * @param {boolean} [updateIfDisabled]
+     */
+    toggleItems(indices, {updateInputs = true, updateIfDisabled = false} = {}) {
         indices = indices.filter(index => index !== null);
         const checked = indices.map(index => this.itemsActive[index]).includes(false);
         for (const index of indices) {
-            this.updateItem(index, checked, updateInputs);
+            this.updateItem(index, checked, {
+                updateInputs: updateInputs,
+                updateIfDisabled: updateIfDisabled,
+                callUpdateListeners: false
+            });
         }
+
+        this.updateListeners.call(this);
     }
 
     /**
      * @param {number} index
      * @param {boolean} checked
      * @param {boolean} [updateInput]
+     * @param {boolean} [updateIfDisabled]
+     * @param {boolean} [callUpdateListeners]
      */
-    updateItem(index, checked, updateInput = true) {
-        const prevChecked = this.itemsActive[index];
+    updateItem(index, checked, {updateInput = true, updateIfDisabled = false, callUpdateListeners = true} = {}) {
         this.itemsActive[index] = checked;
-        this.itemCount += checked - prevChecked;
-        if (updateInput) {
+        if (updateInput && (!this.inputs[index].hasAttribute('disabled') || updateIfDisabled)) {
             this.inputs[index].checked = checked;
+        }
+
+        if (callUpdateListeners) {
+            this.updateListeners.call(this);
         }
     }
 
+    /**
+     * @returns {number}
+     */
+    activeQuizItemCount() {
+        const forms = this.activeForms();
+        let count = 0;
+        for (const [index, item] of this.items.entries()) {
+            if (this.itemsActive[index]) {
+                count += item.countQuizItems(forms);
+            }
+        }
+
+        return count;
+    }
+
+    /**
+     * @param {Event} event
+     */
     inputEventListener(event) {
-        this.updateItem(parseInt(event.target.value), event.target.checked, false);
+        this.updateItem(parseInt(event.target.value), event.target.checked, {updateInput: false});
     }
 
     scaleButtons() {
         for (const block of this.blocks) {
-            const buttons = block.indices.filter(index => index !== null)
-                .map(index => this.buttons[index])
+            const buttons = block.indices
+                .filter(index => index !== null)
+                .map(index => this.buttons[index]);
             DOMHelper.scaleAllToFit(
                 buttons.map(button => button.querySelector(".symbol")),
                 {containers: buttons, uniform: 0.75}
             );
+
             if (this.selectorData.label) {
                 DOMHelper.scaleAllToFit(
                     buttons.map(button => button.querySelector("label")),
@@ -578,6 +634,10 @@ export default class ItemSelector {
         }
     }
 
+    /**
+     * @param {boolean[]} itemsActive
+     * @returns {boolean[]}
+     */
     processItemsActive(itemsActive) {
         if (!itemsActive || !Array.isArray(itemsActive) || itemsActive.length !== this.items.length) {
             if (itemsActive) {
@@ -610,10 +670,11 @@ export default class ItemSelector {
 
     defaultItemsActive() {
         let val = this.selectorData.defaultActive ?? "all";
-        const itemsActive = new Array(this.items.length).fill(false);
         if (val === "all" || val === "none") {
             return new Array(this.items.length).fill(val === "all");
         }
+
+        const itemsActive = new Array(this.items.length).fill(false);
         if (val.substring(0,5) === "block") {
             try {
                 const blockIndices = this.processIndices(val.substring(5));
@@ -623,14 +684,15 @@ export default class ItemSelector {
                 return itemsActive;
             }
         }
+
         if (!Array.isArray(val)) {
             console.error("Invalid defaultActive.");
             return itemsActive;
         }
+
         for (const index of val) {
             itemsActive[index] = true;
         }
-
         return itemsActive;
     }
 
@@ -663,6 +725,7 @@ export default class ItemSelector {
 
         DOMHelper.addClickTapListener(button, () => {
             input.checked = !input.checked;
+            input.dispatchEvent(new Event('change'));
         });
 
         if (this.selectorData.label) {
@@ -698,25 +761,28 @@ export default class ItemSelector {
             },
         ));
 
-        this.formsSetting.valueElement.addUpdateListener(this.updateButtons.bind(this));
+        this.formsSetting.valueElement.updateListeners.push(this.updateButtons.bind(this), () => this.updateListeners.call(this));
 
         this.node.prepend(this.formsSetting.node);
     }
 
+    /**
+     * @returns {string[]}
+     */
     activeForms() {
-        if (this.formsSetting) {
-            const result = [];
-            for (const key of this.formsSetting.getValue()) {
-                if ("keys" in this.formsData.setting[key]) {
-                    result.push(...this.formsData.setting[key].keys);
-                } else {
-                    result.push(key);
-                }
-            }
-            return result;
+        if (!this.formsSetting) {
+            return Object.keys(this.formsData.setting);
         }
 
-        return Object.keys(this.formsData.setting);
+        const result = [];
+        for (const key of this.formsSetting.getValue()) {
+            if ("keys" in this.formsData.setting[key]) {
+                result.push(...this.formsData.setting[key].keys);
+            } else {
+                result.push(key);
+            }
+        }
+        return result;
     }
 
     activeIndices() {
@@ -726,7 +792,7 @@ export default class ItemSelector {
     /**
      * @param {number | number[] | string} indices
      * @param {boolean} [allowGaps]
-     * @returns {number[]}
+     * @returns {(number|null)[]}
      */
     processIndices(indices, allowGaps = false) {
         if (typeof indices === "string") {
@@ -753,7 +819,7 @@ export default class ItemSelector {
     /**
      * @param {string} str
      * @param {boolean} [allowGaps]
-     * @returns {number[]}
+     * @returns {(number|null)[]}
      */
     parseRanges(str, allowGaps = false) {
         return [].concat(...str.split(",").map(range => {
@@ -804,11 +870,22 @@ export default class ItemSelector {
     }
 }
 
-
+/**
+ * @param {number} a
+ * @param {number} b
+ * @returns {[number, number]}
+ */
 function divrem(a, b) {
-    return [Math.floor(a / b), a % b];
+    const rem = a % b;
+    const div = Math.round((a - rem) / b);
+    return [div, rem];
 }
 
+/**
+ * @param {number} a
+ * @param {number} b
+ * @returns {[number, number]}
+ */
 function minmax(a, b) {
     return [Math.min(a, b), Math.max(a, b)];
 }

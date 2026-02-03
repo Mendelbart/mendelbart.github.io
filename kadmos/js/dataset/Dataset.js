@@ -266,18 +266,6 @@ export class Dataset {
         throw new Error("Invalid displayData type.")
     }
 
-    formsFromSettingsValue(forms) {
-        const result = [];
-        for (const key of forms) {
-            if ("keys" in this.formsData.setting[key]) {
-                result.push(...this.formsData.setting[key].keys);
-            } else {
-                result.push(key);
-            }
-        }
-        return result;
-    }
-
     /**
      * @param {number[]} itemIndices
      * @param {string[]} forms
@@ -287,8 +275,6 @@ export class Dataset {
      */
     getQuizItems(itemIndices, forms, properties, language = "default") {
         const items = [];
-
-        forms = this.formsFromSettingsValue(forms);
 
         for (const key of itemIndices) {
             items.push(this.items[key].getQuizItems(forms, this.propsData, properties, language))
@@ -429,6 +415,19 @@ class DatasetItem {
      * @returns {Text}
      */
     getFormsDisplayNode(forms) {
-        return document.createTextNode(forms.map(form => this.displayForms[form]).join(""));
+        return document.createTextNode(
+            forms.filter(form => form in this.displayForms)
+                 .map(form => this.displayForms[form])
+                 .join("")
+        );
+    }
+
+    /**
+     * Counts the number of QuizItems this DatasetItem supplies, i.e. the number of form keys that are set
+     * for this item.
+     * @param forms
+     */
+    countQuizItems(forms) {
+        return forms.reduce((acc, form) => form in this.displayForms ? acc + 1 : acc, 0);
     }
 }

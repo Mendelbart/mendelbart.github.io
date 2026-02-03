@@ -26,10 +26,10 @@ $bodyPaddingInline: .75rem;
   --accent-bg-hover: hsl(var(--accent-hue), 73%, 51%);
 
   --clr-background: #ffffff;
-  --clr-surface: var(--clr-background);
+  --clr-surface: hsl(0, 0%, 95%);
   --clr-surface-border: var(--clr-border-soft);
   --clr-symbol-bg: hsla(var(--accent-hue), 30%, 68%, 0.12);
-  --clr-input: var(--clr-background);
+  --clr-input: hsla(0, 0%, 50%, 0.04);
   --clr-range: hsl(0, 0%, 0%, 0.08);
   --clr-surface-standout: hsl(0, 0%, 95%);
 
@@ -63,23 +63,23 @@ $bodyPaddingInline: .75rem;
   --clr-grp-button-checked-text: hsl(var(--accent-hue), 64%, 44%);
 
   --clr-ribbon-button: var(--clr-surface);
-  --clr-ribbon-button-hover: hsl(0, 0%, 90%);
-  --clr-ribbon-button-active: hsl(0, 0%, 85%);
+  --clr-ribbon-button-hover: hsl(0, 0%, 92%);
+  --clr-ribbon-button-active: hsl(0, 0%, 88%);
   --clr-ribbon-button-checked: hsl(0, 0%, 20%);
   --clr-ribbon-button-checked-hover: hsl(0, 0%, 24%);
   --clr-ribbon-button-checked-active: hsl(0, 0%, 28%);
   --clr-ribbon-button-checked-text: var(--clr-surface);
 
   --clr-selector-button: transparent;
-  --clr-selector-button-hover: hsla(0, 0%, 50%, 0.07);
+  --clr-selector-button-hover: hsla(0, 0%, 50%, 0.06);
   --clr-selector-button-active: hsla(0, 0%, 50%, 0.12);
   --clr-selector-button-border: hsla(0, 0%, 50%, 0.3);
-  --clr-selector-button-text: hsla(0, 0%, 50%, 0.7);
-  --clr-selector-button-checked: hsla(0, 0%, 50%, 0.12);
-  --clr-selector-button-checked-hover: hsla(0, 0%, 50%, 0.18);
-  --clr-selector-button-checked-active: hsla(0, 0%, 50%, 0.32);
+  --clr-selector-button-text: hsl(0, 0%, 50%);
+  --clr-selector-button-checked: hsla(0, 0%, 50%, 0.06);
+  --clr-selector-button-checked-hover: hsla(0, 0%, 50%, 0.12);
+  --clr-selector-button-checked-active: hsla(0, 0%, 50%, 0.16);
   --clr-selector-button-checked-text: var(--clr-text);
-  --clr-selector-button-checked-border: hsl(0, 0%, 50%);
+  --clr-selector-button-checked-border: hsl(0, 0%, 50%, 0.8);
   --clr-selector-button-checked-active-symbol: hsl(0, 0%, 10%);
   --clr-selector-button-checked-active-label: hsl(0, 0%, 15%);
 
@@ -377,9 +377,15 @@ button {
     outline: 2px solid var(--accent-border-light);
     outline-offset: -2px;
   }
+
+  &:disabled {
+    opacity: 0.8;
+    pointer-events: none;
+    filter: grayscale(0.85);
+  }
 }
 
-#stop-game-button {
+#stop-game-button, .pages-back-button {
   @each $suffix in ("", "-hover", "-active") {
     --clr-button#{$suffix}: var(--clr-button-grey#{$suffix});
   }
@@ -613,15 +619,46 @@ input[type="range"] {
   }
 }
 
+.pages-container {
+  padding: .5rem 0;
+
+  .pages-header {
+    display: flex;
+    padding: .5rem .25rem;
+    border-bottom: 1px solid var(--clr-border-soft);
+    align-items: center;
+
+    .pages-headings {
+      flex: 1;
+
+      h2 {
+        margin: 0;
+      }
+    }
+
+    .pages-buttons {
+      gap: .5rem;
+    }
+
+    button {
+      padding: .4375rem .5625rem;
+    }
+  }
+
+  .pages-contents {
+    padding: .5rem .25rem;
+  }
+}
+
 #live-settings {
   position: relative;
-  margin-block-start: .6rem;
+  margin-block-start: .4rem;
   --clr-surface: var(--clr-surface-standout);
   border-color: transparent;
 
   .ribbon-buttons {
     position: absolute;
-    top: -3rem;
+    top: -2.75rem;
     left: 0;
     translate: 0;
   }
@@ -634,6 +671,8 @@ input[type="range"] {
 }
 
 #font-settings-button + label {
+  padding-block: .25em;
+
   transition: background $transitionHide;
 
   &::before, &::after {
@@ -652,6 +691,7 @@ input[type="range"] {
 
 
 
+
 $selectorBorderRadius: .2rem;
 
 .item-selector {
@@ -664,6 +704,7 @@ $selectorBorderRadius: .2rem;
     align-self: center;
     max-width: 100%;
     user-select: none;
+    padding: 0 1rem;
 
     --clr-grp-button-text: hsl(0, 0%, 62%);
     --clr-grp-button-checked: hsla(0, 0%, 100%, .1);
@@ -674,7 +715,7 @@ $selectorBorderRadius: .2rem;
     --button-min-width: 0;
     --button-max-width: 1fr;
     --label-gap: .1rem;
-    --symbol-size: 1.25;
+    --symbol-size: 1.4;
 
     &.selector-block-grid {
       --gridTemplateColumns: repeat(var(--columns), minmax(var(--button-min-width), var(--button-max-width)));
@@ -712,6 +753,11 @@ $selectorBorderRadius: .2rem;
       .block-label:active {
         background: var(--clr-selector-button-active);
       }
+
+      &:has(> input:disabled) {
+        pointer-events: none;
+        visibility: hidden;
+      }
     }
 
     &.selector-block-flex {
@@ -726,6 +772,11 @@ $selectorBorderRadius: .2rem;
       .selector-item-button {
         min-width: var(--button-min-width);
         max-width: var(--button-max-width);
+
+        &:has(> input:disabled) {
+          pointer-events: none;
+          display: none;
+        }
       }
     }
 
@@ -780,6 +831,7 @@ $selectorBorderRadius: .2rem;
       text-align: center;
       padding-inline: .25em;
       font-weight: 600;
+      transform-origin: center;
     }
 
     .selector-item-label {
@@ -895,8 +947,8 @@ body:not(.playing) #game-container, .playing #new-game-settings {
 /*************** SYMBOLS, EVAL *******************/
 .symbol-string {
   font-size: calc(var(--font-scale, 1) * var(--symbol-size, 1) * 1rem);
-  line-height: calc(var(--symbol-size, 1) * var(--line-height, 1) * 1rem);
-  height: calc(var(--symbol-size, 1) * var(--line-height, 1) * 1rem);
+  line-height: calc(var(--font-scale, 1) * var(--symbol-size, 1) * var(--line-height, 1.1) * 1rem);
+  height: calc(var(--symbol-size, 1) * var(--line-height, 1.1) * 1rem);
 }
 
 .symbol-container {

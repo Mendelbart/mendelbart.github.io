@@ -17,7 +17,6 @@
 
         <div id="game-heading">
             <h1>Kadmos</h1>
-            <button id="start-game-button">Start</button>
             <button id="stop-game-button">Exit</button>
         </div>
 
@@ -27,16 +26,23 @@
                     <select id="datasetSelect" aria-label="Select Dataset"></select>
                 </div>
 
-                <div id="game-settings-ribbon" class="ribbon">
-                    <div class="ribbon-buttons button-group">
-                        <input type="checkbox" value="font" name="game-settings-ribbon" id="dataset-settings-button" data-content-id="dataset-settings">
-                        <label for="dataset-settings-button" class="button">Filters</label>
-                        <input type="checkbox" value="font" name="game-settings-ribbon" id="game-settings-button" data-content-id="game-settings">
-                        <label for="game-settings-button" class="button">Game Settings</label>
+                <div id="game-settings-pages" class="pages-container">
+                    <div class="pages-header">
+                        <div class="pages-headings">
+                            <h2 class="page-heading" data-for="game-filters">Filters</h2>
+                            <h2 class="page-heading" data-for="game-settings" style="display:none">Settings</h2>
+                        </div>
+
+                        <div class="pages-buttons button-group">
+                            <button class="pages-button pages-back-button" style="display:none">Back</button>
+                            <button class="pages-button pages-next-button">Next</button>
+                            <button class="pages-button pages-finish-button" id="start-game-button" style="display:none">Play</button>
+                        </div>
                     </div>
-                    <div class="ribbon-contents">
-                        <div id="dataset-settings" class="settings ribbon-content"></div>
-                        <div id="game-settings" class="settings ribbon-content"></div>
+
+                    <div class="pages-contents">
+                        <div id="game-filters" class="settings page-content"></div>
+                        <div id="game-settings" class="settings page-content" style="display:none"></div>
                     </div>
                 </div>
 

@@ -71,7 +71,7 @@ export class GameContext {
                     e.replaceChildren(selector.node);
                     selector.scaleButtons();
                 },
-                document.getElementById("dataset-settings"),
+                document.getElementById("game-filters"),
                 this.itemSelector
             ],
             [
@@ -87,10 +87,15 @@ export class GameContext {
             });
         }
 
-        const filtersButton = document.querySelector("#game-settings-ribbon [data-content-id=\"dataset-settings\"]");
-        if (!filtersButton.checked) {
-            filtersButton.click();
+        DOMHelper.showPage(document.getElementById('game-filters'));
+        const checkPagesNextButton = () => {
+            DOMHelper.setAttrs(
+                document.querySelector('.pages-next-button'),
+                {disabled: this.itemSelector.activeQuizItemCount() === 0}
+            );
         }
+        this.itemSelector.updateListeners.push(checkPagesNextButton);
+        checkPagesNextButton();
     }
 
     localStorageSettingsKey() {
@@ -135,6 +140,7 @@ export class GameContext {
         this.setPlaying(true);
         this.game.focus();
         this.game.addOnFinish(() => {
+            DOMHelper.showPage(document.getElementById('game-filters'));
             this.setPlaying(false);
         });
     }

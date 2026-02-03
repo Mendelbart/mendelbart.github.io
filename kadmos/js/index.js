@@ -63,11 +63,15 @@ const datasetSelect = document.getElementById("datasetSelect");
         document.querySelectorAll(".ribbon").forEach((element) => {
             setupRibbon(element, element.classList.contains("ribbon-closable"));
         });
+
+        document.querySelectorAll(".pages-container").forEach((element) => {
+            DOMHelper.setupPages(element);
+        });
+
     } catch (e) {
         DOMHelper.printError(e);
     }
 })();
-
 
 
 /**

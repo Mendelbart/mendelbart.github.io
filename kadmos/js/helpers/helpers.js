@@ -3,3 +3,5 @@ export * as DOMHelper from './dom.js';
 export * as RandomHelper from './random.js';
 export * as ArrayHelper from './array.js';
 export * as FontHelper from './font.js';
+
+export {FunctionStack} from './classes.js';

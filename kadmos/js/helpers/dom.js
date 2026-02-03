@@ -200,12 +200,16 @@ export function setAttrOnKeys(elements, keys, attr, value = "") {
 /**
  * Set the `attrs` on the `object`.
  * @param {Element} element
- * @param {Object.<string,string>} attrs
+ * @param {Object.<string,string | boolean>} attrs
  */
 export function setAttrs(element, attrs) {
     for (const [key, value] of Object.entries(attrs)) {
-        if (value === false) {
-            element.removeAttribute(key);
+        if (typeof value === "boolean") {
+            if (value) {
+                element.setAttribute(key, key);
+            } else {
+                element.removeAttribute(key);
+            }
         } else if (key === "class") {
             addClass(element, value);
         } else {
@@ -318,15 +322,19 @@ export function hide(elements) {
 /**
  * @param {boolean} showFirst
  * @param {Elements} first
- * @param {Elements} second
+ * @param {Elements} [second]
  */
-export function toggleShown(showFirst, first, second) {
+export function toggleShown(showFirst, first, second = null) {
     if (showFirst) {
-        hide(second);
+        if (second) {
+            hide(second);
+        }
         show(first);
     } else {
         hide(first);
-        show(second);
+        if (second) {
+            show(second);
+        }
     }
 }
 
@@ -524,5 +532,43 @@ export function rectContainsPoint(rect, clientX, clientY) {
  */
 export function elementContainsPoint(element, clientX, clientY) {
     return rectContainsPoint(element.getBoundingClientRect(), clientX, clientY);
+}
+
+
+
+
+/**
+ * @param {HTMLElement} container
+ */
+export function setupPages(container) {
+    showPage(container.querySelector('.page-content'), container);
+
+    container.querySelector('.pages-next-button').addEventListener('click', () => {
+        showPage(document.getElementById(container.dataset.openPage).nextElementSibling, container);
+    });
+    container.querySelector('.pages-back-button').addEventListener('click', () => {
+        showPage(document.getElementById(container.dataset.openPage).previousElementSibling, container);
+    });
+}
+
+/**
+ * @param {HTMLElement} page
+ * @param {HTMLElement} [container]
+ */
+export function showPage(page, container = null) {
+    container ??= page.closest('.pages-container');
+    hide(container.querySelectorAll('.page-content'));
+    hide(container.querySelectorAll('.page-heading'));
+    show(page);
+    show(container.querySelector(`.page-heading[data-for="${page.id}"]`));
+
+    container.dataset.openPage = page.id;
+
+    toggleShown(!!page.previousElementSibling, container.querySelector('.pages-back-button'));
+    toggleShown(
+        !!page.nextElementSibling,
+        container.querySelector('.pages-next-button'),
+        container.querySelector('.pages-finish-button')
+    );
 }
 

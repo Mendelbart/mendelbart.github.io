@@ -1,4 +1,4 @@
-import {ObjectHelper} from "../helpers/helpers.js";
+import {FunctionStack, ObjectHelper} from "../helpers/helpers.js";
 
 const valueNodeTagNames = ["INPUT", "SELECT", "TEXTAREA"];
 const valueNodeQuery = valueNodeTagNames.join(", ");
@@ -15,7 +15,7 @@ export class ValueElement {
      */
     constructor (node) {
         this.node = node;
-        this.updateListeners = [];
+        this.updateListeners = new FunctionStack();
     }
 
     setup(updateEvent = this.defaultUpdateEvent) {
@@ -28,16 +28,11 @@ export class ValueElement {
     }
 
     removeUpdateListener(listener) {
-        const index = this.updateListeners.indexOf(listener);
-        if (index > -1) {
-            this.updateListeners.splice(index, 1);
-        }
+        this.updateListeners.remove(listener);
     }
-
+f
     runUpdateListeners(...args) {
-        for (const listener of this.updateListeners) {
-            listener(this.value, ...args);
-        }
+        this.updateListeners.call(this, this.value, ...args);
     }
 
     isCheckbox() {
