@@ -7,7 +7,7 @@
   "displayData": {
     "type": "string",
     "fonts": {
-      "junicode": {"family": "Junicode", "styleset": "Elder-futhark", "shift": 0.08, "scale": 1.2, "weight": 500}
+      "junicode": {"family": "Junicode", "styleset": "Elder-futhark", "shift": 0.08, "scale": 1.2}
     }
   },
   "selectorData": {

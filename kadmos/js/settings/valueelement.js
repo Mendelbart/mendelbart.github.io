@@ -178,6 +178,7 @@ export class ButtonGroup extends ValueElement {
         for (const [key, input] of Object.entries(this.inputs)) {
             input.checked = checked[key];
         }
+        this.readValue();
     }
 
     setDisabled(disabled) {
@@ -187,8 +188,19 @@ export class ButtonGroup extends ValueElement {
         this.node.setAttribute("aria-disabled", disabled.toString());
     }
 
-    disableIfSingleButton() {
-        this.setDisabled(this.buttonCount() === 1);
+    /**
+     * If there's only one button, disable the button group and optionally set the button's checked state.
+     * @param {boolean | null} [checked] default null
+     */
+    disableIfSingleButton(checked = null) {
+        if (this.buttonCount() === 1) {
+            this.setDisabled(true);
+            if (checked !== null) {
+                this.setValue(checked ? Object.keys(this.inputs) : false);
+            }
+        } else {
+            this.setDisabled(false);
+        }
     }
 }
 

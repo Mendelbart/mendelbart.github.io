@@ -109,7 +109,7 @@ export class Game {
             family: this.dataset.fontSetting(),
             weight: Setting.create(
                 "Weight",
-                SettingsHelper.createSlider(100, 900, this.dataset.displayData.defaultWeight ?? 400)
+                SettingsHelper.createSlider(100, 900, this.dataset.displayData.defaultWeight ?? 500)
             )
         });
 

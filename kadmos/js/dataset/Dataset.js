@@ -14,6 +14,7 @@ export const DATASETS_METADATA = {
     elder_futhark: {name: "Elder Futhark", file: "./json/datasets/elder_futhark.json"},
     greek: {name: "Greek", file: "./json/datasets/greek.json"},
     hebrew: {name: "Hebrew", file: "./json/datasets/hebrew.json"},
+    japanese: {name: "Japanese Kana", file: "./json/datasets/japanese.json"}
 }
 export const DEFAULT_DATASET = "elder_futhark";
 
@@ -138,7 +139,7 @@ export class Dataset {
                 checked: checked ?? this.displayData.defaultFont ?? Object.keys(this.displayData.fonts)[0]
             }
         ));
-        setting.valueElement.disableIfSingleButton();
+        setting.valueElement.disableIfSingleButton(true);
         setting.node.classList.add("font-family-setting");
         return setting;
     }

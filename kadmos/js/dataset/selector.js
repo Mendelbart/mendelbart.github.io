@@ -775,7 +775,13 @@ export default class ItemSelector {
         }
 
         const result = [];
-        for (const key of this.formsSetting.getValue()) {
+
+        let keys = this.formsSetting.getValue();
+        if (this.formsSetting.valueElement.exclusive) {
+            keys = [keys];
+        }
+
+        for (const key of keys) {
             if ("keys" in this.formsData.setting[key]) {
                 result.push(...this.formsData.setting[key].keys);
             } else {

@@ -29,47 +29,6 @@ const fontDataReady = fetch("/kadmos/json/fonts.json")
         }
     });
 
-// const fontSetupPromise = Promise.all([
-//     fetch("/kadmos/json/fonts.json").then(response => response.json()),
-//     document.fonts.ready
-// ]).then(([json, fontFaceSet]) => {
-//     for (const fontData of json) {
-//         FONT_DATA[fontData.family] = fontData;
-//
-//         const weight = fontData.weight ??
-//             ("variationSettings" in fontData && "wght" in fontData.variationSettings
-//             ?  fontData.variationSettings.wght
-//             : 400);
-//
-//         const descriptors = {
-//             weight: weight,
-//             style: fontData.style ?? "normal",
-//             display: "swap"
-//         };
-//
-//         if ("variationSettings" in fontData) {
-//            descriptors.variationSettings = variationSettingsString(fontData.variationSettings);
-//         }
-//
-//         const source = `url("/kadmos/assets/fonts/subset/${fontData.subsetFilename}")`;
-//
-//         fontFaceSet.add(new FontFace(fontData.family, source, descriptors));
-//     }
-// });
-//
-//
-// function variationSettingsString(params) {
-//     return Object.entries(params)
-//         .filter(([k,_]) => k !== "wght")
-//         .map(([key, value]) => `"${key}" ${value}`)
-//         .join(",");
-// }
-//
-// async function loadFontFamily(family) {
-//     await fontSetupPromise;
-//     await document.fonts.load(`1rem "${family}"`);
-// }
-
 /**
  * @param {HTMLElement} element
  * @param {{family, weight?, shift?, scale?, styleset?}} properties
@@ -77,11 +36,20 @@ const fontDataReady = fetch("/kadmos/json/fonts.json")
 export function setFont(element, properties) {
     clearFont(element);
     if ("family" in properties) {
-        setFontFamily(element, properties.family).then(() => {
-            setFontProperties(element, properties);
+        const family = properties.family;
+        setFontFamily(element, family).then(() => {
+            const newProps = Object.assign({}, properties);
+            const defaultData = FONT_DATA[family];
+            if ("shift" in defaultData) {
+                newProps.shift = defaultData.shift + (properties.shift ?? 0);
+            }
+            if ("scale" in defaultData) {
+                newProps.scale = defaultData.scale * (properties.scale ?? 1);
+            }
+            setFontProperties(element, newProps);
         });
     } else {
-        setFontProperties(element, properties);
+        throw new Error("Key 'family' in properties required. Otherwise use setFontProperties instead.");
     }
 }
 

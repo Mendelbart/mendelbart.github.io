@@ -2,6 +2,7 @@
   {
     "family": "Noto Serif Hebrew",
     "scale": 1.2,
+    "shift": -0.05,
     "fallback": "serif",
     "variationSettings": {
       "wght": "100 900",
@@ -11,6 +12,7 @@
   {
     "family": "Noto Sans Hebrew",
     "scale": 1.2,
+    "shift": -0.05,
     "variationSettings": {
       "wght": "100 900",
       "wdth": "100"
@@ -19,6 +21,7 @@
   {
     "family": "Noto Rashi Hebrew",
     "scale": 1.2,
+    "shift": -0.05,
     "fallback": "serif",
     "variationSettings": {
       "wght": "100 900"
@@ -37,6 +40,20 @@
     "variationSettings": {
       "wght": "100 900",
       "wdth": "100"
+    }
+  },
+  {
+    "family": "Noto Sans Japanese",
+    "shift": -0.06,
+    "variationSettings": {
+      "wght": "100 900"
+    }
+  },
+  {
+    "family": "Noto Serif Japanese",
+    "shift": -0.06,
+    "variationSettings": {
+      "wght": "100 900"
     }
   },
   {

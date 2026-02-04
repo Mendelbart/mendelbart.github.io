@@ -58,7 +58,7 @@ export class GameContext {
             DOMHelper.classIfElse(singleButton, this.sc.getNode(key), "hidden");
         }
 
-        this.sc.settings.properties.valueElement.disableIfSingleButton();
+        this.sc.settings.properties.valueElement.disableIfSingleButton(true);
         const gameHeading = this.dataset.metadata.gameHeading;
         const fonts = "font" in gameHeading && "family" in gameHeading.font ? [gameHeading.font.family] : [];
         DOMHelper.batchUpdate([
