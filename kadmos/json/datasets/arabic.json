@@ -1,7 +1,7 @@
 {
   "name": "Arabic",
   "metadata": {
-    "gameHeading": {"string": "قدموس"},
+    "gameHeading": {"string": "قدموس", "font": {"family": "Noto Naskh Arabic", "scale": 1.125}},
     "terms": {"symbol": "letter", "symbols": "letters"},
     "lang": "ar",
     "dir": "rtl"
@@ -17,7 +17,7 @@
     "defaultFont": "sans"
   },
   "propsData": {
-    "name": {"type": "list", "label": "Name", "maxDist": 1, "identifier": true, "active": true},
+    "name": {"type": "list", "label": "Name", "maxDist": 0, "identifier": true, "active": true},
     "roman": {"type": "list", "label": "Romanization", "maxDist": 0, "identifier": true}
   },
   "selectorData": {
