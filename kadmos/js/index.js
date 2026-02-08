@@ -8,6 +8,8 @@ const datasetSelect = document.getElementById("datasetSelect");
 
 // --------------- GAME SETUP -----------------
 (function () {
+    readDarkLightMode();
+
     try {
         const ctx = new GameContext();
 
@@ -72,6 +74,17 @@ const datasetSelect = document.getElementById("datasetSelect");
         DOMHelper.printError(e);
     }
 })();
+
+
+function readDarkLightMode() {
+    const params = new URLSearchParams(window.location.search);
+
+    if (["1", "true"].includes(params.get("darkmode"))) {
+        document.documentElement.classList.add("dark-mode");
+    } else if (["1", "true"].includes(params.get("lightmode"))) {
+        document.documentElement.classList.add("light-mode");
+    }
+}
 
 
 /**

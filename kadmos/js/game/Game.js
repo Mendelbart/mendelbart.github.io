@@ -9,7 +9,7 @@ DOMHelper.registerTemplates({
     <span class="submitted"></span><span class="solution"></span>
 </div>`,
     symbolContainer: `<div class="symbol-container">
-    <span class="symbol"></span>
+    <div class="symbol-display-container"><span class="symbol"></span></div>
     <div class="symbol-label-container"><span class="symbol-label"></span></div>
 </div>`
 });
