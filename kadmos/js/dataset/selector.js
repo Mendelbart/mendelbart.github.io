@@ -20,13 +20,13 @@ const BLOCK_KEYS = [
 export default class ItemSelector {
     /**
      * @param {DatasetItem[]} items
-     * @param formsData
-     * @param selectorData
+     * @param {Dataset} dataset
      */
-    constructor(items, formsData, selectorData) {
+    constructor(items, dataset) {
         this.items = items;
-        this.formsData = formsData;
-        this.selectorData = selectorData;
+        this.dataset = dataset;
+        this.formsData = dataset.formsData;
+        this.selectorData = dataset.selectorData;
         this.updateListeners = new FunctionStack();
     }
 
@@ -42,13 +42,15 @@ export default class ItemSelector {
         }
 
         this.setupFormsSetting(checkedForms);
-        this.setupButtons(this.activeForms());
+        this.setupButtons();
 
         this.setupBlocks();
         this.setActive(this.processItemsActive(itemsActive));
+
+        this.updateButtons();
     }
 
-    setupButtons(forms) {
+    setupButtons() {
         /** @type {boolean[]} */
         this.itemsActive = new Array(this.items.length).fill(false);
         /** @type {HTMLElement[]} */
@@ -57,7 +59,7 @@ export default class ItemSelector {
         this.inputs = new Array(this.items.length);
 
         for (const [index, item] of this.items.entries()) {
-            const [button, input] = this.getItemButton(item, forms, index.toString());
+            const [button, input] = this.getItemButton(item, index.toString());
             this.buttons[index] = button;
             this.inputs[index] = input;
             input.addEventListener("change", this.inputEventListener.bind(this));
@@ -103,13 +105,16 @@ export default class ItemSelector {
                 block.node.style.setProperty("--columns", block.nColumns);
             } else {
                 block.node.classList.add("selector-block-flex");
+                if (this.dataset.metadata.dir === "rtl") {
+                    block.node.classList.add("flex-rtl");
+                }
             }
 
             if (this.selectorData.label && this.selectorData.label.position === "right") {
                 this.node.classList.add("labels-right");
             }
 
-            block.node.setAttribute("data-block-index", blockIndex);
+            block.node.setAttribute("data-block-index", blockIndex.toString());
             this.applyBlockStyle(block, this.selectorData.style, block.style);
             this.processListenerIndices(block);
             this.setupRangeSelection(block);
@@ -545,6 +550,7 @@ export default class ItemSelector {
                 this.inputs[index].removeAttribute('disabled');
             }
         }
+        this.scaleButtons();
     }
 
     /**
@@ -619,7 +625,9 @@ export default class ItemSelector {
         for (const block of this.blocks) {
             const buttons = block.indices
                 .filter(index => index !== null)
+                .filter(index => !this.inputs[index].hasAttribute('disabled'))
                 .map(index => this.buttons[index]);
+
             DOMHelper.scaleAllToFit(
                 buttons.map(button => button.querySelector(".symbol")),
                 {containers: buttons, uniform: 0.75}
@@ -698,11 +706,10 @@ export default class ItemSelector {
 
     /**
      * @param {DatasetItem} item
-     * @param {string[]} forms
      * @param {string} index
      * @returns {[HTMLElement, HTMLInputElement]}
      */
-    getItemButton(item, forms, index) {
+    getItemButton(item, index) {
         const button = DOMHelper.createElement("div.selector-item-button");
         const input = document.createElement("input");
 
@@ -716,10 +723,13 @@ export default class ItemSelector {
 
         const symbolElement = DOMHelper.createElement("span.symbol.symbol-string");
 
-        symbolElement.appendChild(item.getFormsDisplayNode(forms));
         if (this.selectorData.font) {
             FontHelper.setFont(symbolElement, this.selectorData.font);
         }
+        DOMHelper.setAttrs(symbolElement, {
+            lang: this.dataset.metadata.lang,
+            dir: this.dataset.metadata.dir
+        });
 
         button.append(input, symbolElement);
 

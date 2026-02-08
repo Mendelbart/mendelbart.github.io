@@ -8,8 +8,8 @@
   "displayData": {
     "type": "string",
     "fonts": {
-      "serif": {"family": "Noto Serif"},
-      "sans": {"family": "Noto Sans"}
+      "serif": {"family": "Noto Serif", "label": "Serif"},
+      "sans": {"family": "Noto Sans", "label": "Sans"}
     },
     "defaultFont": "serif"
   },

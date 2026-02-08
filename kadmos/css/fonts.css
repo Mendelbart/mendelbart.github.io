@@ -59,6 +59,39 @@
 }
 
 @font-face {
+  font-family: "Noto Sans Arabic";
+  src: url("/kadmos/assets/fonts/subset/NotoSansArabic.woff2");
+  font-display: swap;
+  font-weight: 100 900;
+  font-style: normal;
+  font-variation-settings: "wdth" 100;
+}
+
+@font-face {
+  font-family: "Noto Kufi Arabic";
+  src: url("/kadmos/assets/fonts/subset/NotoKufiArabic.woff2");
+  font-display: swap;
+  font-weight: 100 900;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "Noto Naskh Arabic";
+  src: url("/kadmos/assets/fonts/subset/NotoNaskhArabic.woff2");
+  font-display: swap;
+  font-weight: 400 700;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "Noto Nastaliq Urdu";
+  src: url("/kadmos/assets/fonts/subset/NotoNastaliqUrdu.woff2");
+  font-display: swap;
+  font-weight: 400 700;
+  font-style: normal;
+}
+
+@font-face {
   font-family: "Junicode";
   src: url("/kadmos/assets/fonts/subset/Junicode.woff2");
   font-display: swap;

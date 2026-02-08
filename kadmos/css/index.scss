@@ -28,7 +28,7 @@ $bodyPaddingInline: .75rem;
   --clr-background: #ffffff;
   --clr-surface: hsl(0, 0%, 95%);
   --clr-surface-border: var(--clr-border-soft);
-  --clr-symbol-bg: hsla(var(--accent-hue), 30%, 68%, 0.12);
+  --clr-symbol-bg: #f2f5f8;
   --clr-input: hsla(0, 0%, 50%, 0.04);
   --clr-range: hsl(0, 0%, 0%, 0.08);
   --clr-surface-standout: hsl(0, 0%, 95%);
@@ -95,7 +95,7 @@ $bodyPaddingInline: .75rem;
   --clr-background: hsl(0, 0%, 8%);
   --clr-surface: hsl(0, 0%, 15%);
   --clr-surface-border: var(--clr-surface);
-  --clr-symbol-bg: hsl(var(--accent-hue), 100%, 82%, 0.07);
+  --clr-symbol-bg: hsl(210, 9.1%, 12.9%);
   --clr-input: hsla(0, 0%, 100%, 0.07);
   --clr-range: var(--clr-input);
   --clr-surface-standout: var(--clr-surface);
@@ -234,6 +234,7 @@ h1 {
   font-weight: 700;
   font-size: 1.8rem;
   line-height: 1.25;
+  text-align: left;
 }
 
 h2 {
@@ -253,6 +254,10 @@ h2 {
   flex-direction: row;
   margin-block-end: .3rem;
   padding-inline: .125rem;
+
+  &:has(> h1[dir="rtl"]) {
+    flex-direction: row-reverse;
+  }
 
   &> h1 {
     color: var(--clr-text-accent);
@@ -329,6 +334,7 @@ input[type="checkbox"], input[type="radio"] {
 .button-group {
   display: flex;
   gap: .25rem;
+  overflow-x: auto;
 
   &> .button {
     border-radius: 0;
@@ -829,7 +835,7 @@ $selectorBorderRadius: .2rem;
     .symbol-string {
       min-width: var(--symbol-min-width);
       text-align: center;
-      padding-inline: .25em;
+      padding-inline: .125em;
       font-weight: 600;
       transform-origin: center;
     }
@@ -838,7 +844,7 @@ $selectorBorderRadius: .2rem;
       font-weight: 400;
       font-size: .8rem;
       text-overflow: ellipsis;
-      padding-inline: .25em;
+      padding-inline: .3em;
       pointer-events: none;
     }
   }
@@ -852,7 +858,10 @@ $selectorBorderRadius: .2rem;
         repeat(6, minmax(var(--button-min-width), var(--button-max-width)));
     }
   }
+}
 
+.flex-rtl {
+  flex-direction: row-reverse;
 }
 
 
@@ -896,12 +905,13 @@ body:not(.playing) #game-container, .playing #new-game-settings {
 
 /******************** GAME ******************************/
 #progress-bar {
-  background: var(--clr-range);
-  border-radius: .2rem;
+  width: 100%;
   --height: .4rem;
   height: var(--height);
-  width: 100%;
+  background: var(--clr-range);
+  border-radius: .2rem;
   transition: opacity $transitionHide;
+  margin-block-end: .25rem;
 
   &::after {
     --gradient-base-size: 0.5;
@@ -913,7 +923,7 @@ body:not(.playing) #game-container, .playing #new-game-settings {
     width: max(calc(var(--width) * 100%), var(--height));
     height: 100%;
     opacity: 1;
-    background: linear-gradient(to right, hsl(var(--accent-hue), 90%, 45%), hsl(var(--accent-secondary-hue), 55%, 60%));
+    background: linear-gradient(to right, hsl(var(--accent-hue), 90%, 45%), hsl(var(--accent-secondary-hue), 70%, 55%));
     background-size: calc(100% / (var(--gradient-scale) * var(--width)));
     border-radius: inherit;
 
@@ -921,12 +931,39 @@ body:not(.playing) #game-container, .playing #new-game-settings {
   }
 }
 
+#game-symbols-container {
+  margin-inline: 1rem;
+  padding-block: 1rem;
+  position: relative;
+
+  &::before, &::after {
+    position: absolute;
+    height: 100%;
+    top: 0;
+    content: " ";
+    width: 1rem;
+    z-index: 2;
+  }
+
+  &::before {
+    box-shadow: .5rem 0 .5rem -.25rem var(--clr-background) inset;
+    left: 0;
+  }
+
+  &::after {
+    box-shadow: -.5rem 0 .5rem -.25rem var(--clr-background) inset;
+    right: 0;
+  }
+}
+
 #game-symbols {
   display: flex;
-  gap: .6rem;
+  gap: .625rem;
   align-items: center;
-  justify-content: center;
-  margin-block: 1rem;
+  margin-inline: auto;
+  width: min-content;
+  max-width: 100%;
+  overflow-x: auto;
 }
 
 #game-inputs {
@@ -954,27 +991,59 @@ body:not(.playing) #game-container, .playing #new-game-settings {
 .symbol-container {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: end;
+  align-items: stretch;
 
   font-weight: var(--symbol-weight, 400);
 
-  box-sizing: content-box;
-  padding: 1.8rem 1.6rem;
   background: var(--clr-symbol-bg);
   border-radius: $borderRadiusSmall;
 
   pointer-events: none;
 
-  --symbol-size: 4;
+  --symbol-size: 3.5;
 
   &:hover {
     pointer-events: auto;
+  }
+
+  .symbol {
+    box-sizing: content-box;
+    padding: .25em .1em;
+    text-align: center;
+    min-width: .5em;
+  }
+
+  .symbol-label-container {
+    width: 100%;
+    height: 2.125em;
+    padding-inline: .5em;
+    border-top: 1px solid var(--clr-border);
+    font-size: 1rem;
+    font-weight: 600;
+    background: var(--clr-symbol-bg);
+    z-index: 1;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  &.symbol-reference {
+    padding: .3rem .625rem .1rem;
+
+    .symbol-label-container {
+      font-size: 0.875rem;
+    }
   }
 }
 
 #symbol-current {
   --symbol-size: 6.25;
+  padding: .4rem 1.25rem .2rem;
+
+  &:has(+ .symbol-reference) {
+    margin-inline: .5rem .25rem;
+  }
 }
 
 

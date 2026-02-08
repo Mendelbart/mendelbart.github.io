@@ -59,28 +59,18 @@ def main():
 
         template = False
         display_index = None
-        display_forms_index = None
         if "template" in dataset["symbolsData"]:
             template = True
             try:
                 display_index = dataset["symbolsData"]["template"].index("display")
             except ValueError:
-                try:
-                    display_forms_index = dataset["symbolsData"]["template"].index("displayForms")
-                except ValueError:
-                    raise ValueError("display and displayForms not in template.")
+                raise ValueError("display not in template.")
 
         for symbol in symbols:
             if template and isinstance(symbol, list):
-                if display_index is not None:
-                    chars = symbol[display_index]
-                else:
-                    chars = "".join(symbol[display_forms_index])
+                chars = "".join(symbol[display_index])
             else:
-                if "display" in symbol:
-                    chars = symbol["display"]
-                else:
-                    chars = "".join(symbol["displayForms"])
+                chars = "".join(symbol["display"])
 
             dataset_chars.update(list(chars))
 

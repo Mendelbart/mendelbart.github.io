@@ -19,7 +19,7 @@
   "propsData": {
     "name": {"type": "list", "maxDist": 1, "label": "Name", "identifier": true, "active": true},
     "pron": {"type": "list", "maxDist": 0, "label": "Pronunciation", "active": false},
-    "meaning": {"type": "list", "maxDist": 1, "label": "Meaning", "active":  false}
+    "meaning": {"type": "list", "maxDist": 1, "label": "Meaning", "active":  false, "reference": false}
   },
   "symbolsData": {
     "format": "rows",

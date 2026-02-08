@@ -9,6 +9,7 @@ DOMHelper.registerTemplate(
 );
 
 export const DATASETS_METADATA = {
+    arabic: {name: "Arabic", file: "./json/datasets/arabic.json"},
     elements: {name: "Atomic Elements", file: "./json/datasets/elements.json"},
     cyrillic: {name: "Cyrillic", file: "./json/datasets/cyrillic.json"},
     elder_futhark: {name: "Elder Futhark", file: "./json/datasets/elder_futhark.json"},
@@ -20,7 +21,9 @@ export const DEFAULT_DATASET = "elder_futhark";
 
 const DEFAULT_METADATA = {
     gameHeading: {string: "Alphabet Game"},
-    terms: {symbol: "symbol", symbols: "symbols"}
+    terms: {symbol: "symbol", symbols: "symbols"},
+    lang: "en",
+    dir: "ltr"
 };
 
 const DEFAULT_FORMSDATA = {
@@ -124,7 +127,7 @@ export class Dataset {
     }
 
     getItemSelector() {
-        return new ItemSelector(this.items, this.formsData, this.selectorData);
+        return new ItemSelector(this.items, this);
     }
 
     /**
@@ -230,30 +233,25 @@ export class Dataset {
      */
     processDisplayForms(display) {
         if (this.formsData.singleForm) {
-            return Object.fromEntries([[this.formsData.defaultForm, display]]);
+            return Object.fromEntries([[this.formsData.defaultForm, this.getDisplayNode(display)]]);
         }
 
         if (Array.isArray(display)) {
-            const forms = {};
-            for (const [i, value] of display.entries()) {
-                forms[this.formsData.keys[i]] = value;
-            }
-            return forms;
+            return Object.fromEntries(
+                display.map((value, index) => [this.formsData.keys[index], this.getDisplayNode(value)])
+            );
         }
 
         if (typeof display !== "object") {
             throw new Error("Invalid display format: need array or object.");
         }
 
-        const result = {};
-        for (const [key, value] of Object.entries(display)) {
-            if (!this.formsData.keys.includes(key)) {
-                throw new Error(`Invalid display Form key "${key}".`);
-            }
-            result[key] = this.getDisplayNode(value);
+        const invalidKeys = Object.keys(display).filter(key => !this.formsData.keys.includes(key))
+        if (invalidKeys.length > 0) {
+            throw new Error(`Invalid display Form key "${invalidKeys[0]}".`);
         }
 
-        return result;
+        return ObjectHelper.map(display, value => this.getDisplayNode(value));
     }
 
     /**
@@ -270,7 +268,7 @@ export class Dataset {
     /**
      * @param {number[]} itemIndices
      * @param {string[]} forms
-     * @param {string[]} properties
+     * @param {string[]} properties default "default"
      * @param {string} [language]
      * @returns {QuizItem[]}
      */
@@ -278,41 +276,59 @@ export class Dataset {
         const items = [];
 
         for (const key of itemIndices) {
-            items.push(this.items[key].getQuizItems(forms, this.propsData, properties, language))
+            const displayNodes = this.items[key].getDisplayNodes(forms);
+            const itemProperties = this.items[key].getItemProperties(properties, this.propsData, language);
+            items.push(...Object.entries(displayNodes).map(([form, node]) => new QuizItem(node, itemProperties, form)));
         }
 
-        return [].concat(...items);
+        return items;
     }
 
-    referenceSymbols(forms) {
-        if (this.displayData.type !== "string") {
-            console.error("Not implemented Symbol concatenation for non-string symbols.");
+
+    referencePropsData() {
+        const propsData = Object.assign({}, this.propsData);
+        for (const [property, propData] of Object.entries(propsData)) {
+            if ("referenceMaxDist" in propData) {
+                const newPropData = Object.assign({}, propData);
+                newPropData.maxDist = propData.referenceMaxDist;
+                propsData[property] = newPropData;
+            }
         }
 
-        return this.items.map(
-            item => Object.values(ObjectHelper.onlyKeys(item.displayForms, forms)).join()
-        );
+        return propsData;
     }
+
 
     /**
-     * @returns {Record<string,string>}
+     * @param {string[]} properties
+     * @param {string} [language] default "default"
+     * @returns {Record<string,QuizItem[]>}
      */
-    referenceSymbolsByIdentifier(propertyKey, forms) {
-        const referenceSymbols = this.referenceSymbols(forms);
+    getReferenceItems(properties, language = "default") {
+        let items;
+        const propsData = this.referencePropsData();
 
-        if (!this.propsData[propertyKey].identifier) {
-            console.error("Property Key is not an identifier.");
+        if (this.formsData.exclusive) {
+            const itemsProperties = this.items.map(
+                item => item.getItemProperties(properties, propsData, language)
+            );
+
+            const result = {};
+            for (const form of this.formsData.keys) {
+                result[form] = this.items.map((item, index) => new QuizItem(
+                    item.getFormsDisplayNode([form]), itemsProperties[index], form
+                ));
+            }
+            return result;
+        } else {
+            items = this.items.map(item => new QuizItem(
+                item.getFormsDisplayNode(this.formsData.keys),
+                item.getItemProperties(properties, propsData, language),
+                "all"
+            ));
+            return Object.fromEntries(this.formsData.keys.map(form => [form, items]));
         }
-
-        const result = {};
-        for (const [index, item] of this.items.entries()) {
-            // TODO
-        }
-        console.error("TODO: Not implemented!");
-
-        return result;
     }
-
 
     /**
      * @param {HTMLElement} element
@@ -340,12 +356,17 @@ export class Dataset {
                 container.replaceChildren(...els);
                 element.replaceChildren(container);
             } else {
-                element.replaceChildren(document.createTextNode(gameHeading.string));
+                element.replaceChildren(gameHeading.string);
             }
+
+            element.setAttribute("lang", gameHeading.lang ?? this.metadata.lang);
+            element.setAttribute("dir", gameHeading.dir ?? this.metadata.dir);
         }
         catch (error) {
             console.error(error);
-            element.replaceChildren(document.createTextNode("Kadmos"));
+            element.replaceChildren("Kadmos");
+            element.removeAttribute("lang");
+            element.removeAttribute("dir");
         }
     }
 }
@@ -362,24 +383,11 @@ class DatasetItem {
     }
 
     /**
-     * @param {string[]} forms
-     * @param {Record<string,*>} propsData
-     * @param {string[]} properties
-     * @param {string} language
-     * @returns {QuizItem[]}
+     * @param forms
+     * @returns {Record<string,Node>}
      */
-    getQuizItems(forms, propsData, properties, language = "default") {
-        const items = [];
-        for (const form of forms) {
-            if (form in this.displayForms) {
-                items.push(new QuizItem(
-                    this.displayForms[form],
-                    this.getQuizProperties(properties, propsData, language)
-                ));
-            }
-        }
-
-        return items;
+    getDisplayNodes(forms) {
+        return ObjectHelper.onlyKeys(this.displayForms, forms);
     }
 
     /**
@@ -388,7 +396,7 @@ class DatasetItem {
      * @param {string} [language]
      * @returns {Object<string,ItemProperty>}
      */
-    getQuizProperties(propertyKeys, propsData, language = "default") {
+    getItemProperties(propertyKeys, propsData, language = "default") {
         const result = {};
         for (const key of propertyKeys) {
             if (!(key in this.properties)) {
@@ -413,14 +421,10 @@ class DatasetItem {
 
     /**
      * @param {string[]} forms
-     * @returns {Text}
+     * @returns {HTMLElement}
      */
     getFormsDisplayNode(forms) {
-        return document.createTextNode(
-            forms.filter(form => form in this.displayForms)
-                 .map(form => this.displayForms[form])
-                 .join("")
-        );
+        return DOMHelper.groupNodes(Object.values(this.getDisplayNodes(forms)));
     }
 
     /**

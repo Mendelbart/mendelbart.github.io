@@ -1,4 +1,4 @@
-import {osaDistance} from "../game/string-metrics.js";
+import {levenshtein} from "../game/string-metrics.js";
 import {ArrayHelper, ObjectHelper} from "../helpers/helpers.js";
 
 export class QuizItem {
@@ -6,10 +6,12 @@ export class QuizItem {
      *
      * @param {Node} display
      * @param {Record<string,ItemProperty>} properties
+     * @param {string} form
      */
-    constructor(display, properties) {
+    constructor(display, properties, form) {
         this.display = display;
         this.properties = properties;
+        this.form = form;
     }
 }
 
@@ -33,7 +35,7 @@ export class ItemProperty {
         if (type === "number") {
             return new NumberProperty(data, maxDist, propData.distanceMode ?? "linear");
         } else if (type === "string") {
-            return new StringProperty(data, maxDist, propData.ignoreCase ?? true);
+            return new StringProperty(data, maxDist, propData.caseSensitive ?? false);
         } else if (type === "list") {
             let string;
             let alternatives = {};
@@ -69,6 +71,14 @@ export class ItemProperty {
             guess.length > 0 ? [this.markGradedText(guess, grade)] : [],
             [this.markGradedText(this.displayString, grade)]
         ];
+    }
+
+    /**
+     * @param {number} grade
+     * @returns {boolean}
+     */
+    static passes(grade) {
+        return grade >= 0.5;
     }
 
     gradeSingle(guess, sol) {
@@ -140,21 +150,27 @@ export class StringProperty extends ItemProperty {
     /**
      * @param {string} value
      * @param {number} maxDist
-     * @param {boolean} ignoreCase
+     * @param {boolean} caseSensitive
      */
-    constructor(value, maxDist, ignoreCase = true) {
+    constructor(value, maxDist, caseSensitive = false) {
         super(value, maxDist);
-        this.ignoreCase = ignoreCase;
+        this.caseSensitive = caseSensitive;
     }
 
+    /**
+     * @param {string} a
+     * @param {string} b
+     * @returns {number}
+     */
     distance(a, b) {
-        if (this.ignoreCase) {
+        if (!this.caseSensitive) {
             a = a.toLowerCase();
             b = b.toLowerCase();
         }
-        return osaDistance(a.trim(), b.trim());
+        return levenshtein(a.trim(), b.trim());
     }
 }
+
 
 export class ListProperty extends StringProperty {
     /**
@@ -162,7 +178,7 @@ export class ListProperty extends StringProperty {
      * @param {number} maxDist
      * @param {Record<string, string[] | string>} [alternatives]
      * @param {"best"|"avg"} listMode
-     * @param {boolean} ignoreCase
+     * @param {boolean} caseSensitive
      * @param {string} splitter - regex string of splitters
      * @param {string[]} excludeFromList
      */
@@ -171,13 +187,13 @@ export class ListProperty extends StringProperty {
         maxDist,
         alternatives = {}, {
             listMode = "best",
-            ignoreCase = true,
+            caseSensitive = false,
             splitter = "[,;/]",
             excludeFromList = ["\\(.*?\\)"]}) {
 
         displayString = displayString.trim();
 
-        super(displayString, maxDist, ignoreCase);
+        super(displayString, maxDist, caseSensitive);
 
         this.splitter = splitter;
         /**
@@ -343,38 +359,14 @@ class SubString {
     /**
      * @returns {SubString}
      */
-    trimStart() {
-        return this._trim(true);
-    }
+    trim() {
+        const startTrim = this.str.match(/^\s*/)[0].length;
+        const endTrim = this.str.match(/\s*$/)[0].length;
 
-    /**
-     * @returns {SubString}
-     */
-    trimEnd() {
-        return this._trim(false);
-    }
-
-    /**
-     * @param {boolean} atStart
-     * @returns {SubString}
-     * @private
-     */
-    _trim(atStart = true) {
-        const pattern = atStart ? /^\s*/ : /\s*$/;
-        const whiteSpaceLen = this.str.match(pattern)[0].length;
-        if (whiteSpaceLen === 0) {
+        if (startTrim === 0 && endTrim === 0) {
             return this;
         }
 
-        const start = atStart ? this.start + whiteSpaceLen : this.start;
-        const end = atStart ? this.end : this.end - whiteSpaceLen
-        return new this.constructor(this.source, start, end);
-    }
-
-    /**
-     * @returns {SubString}
-     */
-    trim() {
-        return this.trimStart().trimEnd();
+        return new this.constructor(this.source, this.start + startTrim, this.end - endTrim);
     }
 }

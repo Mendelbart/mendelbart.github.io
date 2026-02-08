@@ -47,6 +47,15 @@ export class GameContext {
 
         this.itemSelector = this.dataset.getItemSelector();
         this.itemSelector.setup(cachedSettings.items, cachedSettings.forms, this.datasetKey);
+        const checkPagesNextButton = () => {
+            DOMHelper.setAttrs(
+                document.querySelector('.pages-next-button'),
+                {disabled: this.itemSelector.activeQuizItemCount() === 0}
+            );
+        }
+        this.itemSelector.updateListeners.push(checkPagesNextButton);
+        checkPagesNextButton();
+
         this.sc = this.dataset.getSettings(cachedSettings.properties, cachedSettings.language);
         this.sc.extend(this.genericSettings);
 
@@ -81,21 +90,13 @@ export class GameContext {
             ]
         ], fonts);
 
+        DOMHelper.showPage(document.getElementById('game-filters'));
+
         for (const setting of Object.values(this.sc.settings)) {
             setting.valueElement.addUpdateListener(() => {
                 this.saveSettings();
             });
         }
-
-        DOMHelper.showPage(document.getElementById('game-filters'));
-        const checkPagesNextButton = () => {
-            DOMHelper.setAttrs(
-                document.querySelector('.pages-next-button'),
-                {disabled: this.itemSelector.activeQuizItemCount() === 0}
-            );
-        }
-        this.itemSelector.updateListeners.push(checkPagesNextButton);
-        checkPagesNextButton();
     }
 
     localStorageSettingsKey() {
@@ -121,25 +122,28 @@ export class GameContext {
         this.saveSettings();
 
         const properties = this.sc.getValue("properties");
+        const language = this.sc.getValue("language");
         const items = this.dataset.getQuizItems(
             this.itemSelector.activeIndices(),
             this.itemSelector.activeForms(),
             properties,
-            this.sc.getValue("language")
+            language
         );
+        const referenceItems = this.dataset.getReferenceItems(properties, language);
 
         this.game = new Game(this.dataset, items, properties);
-        const seed = this.sc.getValue("seed");
 
+        const seed = this.sc.getValue("seed");
         if (seed) {
             this.game.seed(seed);
         }
 
+        this.game.setReferenceItems(referenceItems);
         this.game.setup();
         this.game.newRound();
         this.setPlaying(true);
         this.game.focus();
-        this.game.addOnFinish(() => {
+        this.game.onFinish.push(() => {
             DOMHelper.showPage(document.getElementById('game-filters'));
             this.setPlaying(false);
         });

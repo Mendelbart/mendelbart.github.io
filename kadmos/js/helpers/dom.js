@@ -1,7 +1,6 @@
 /**
- * @typedef {Element | NodeListOf<Element> | Element[] | HTMLCollection} Elements
+ * @typedef {HTMLElement | NodeListOf<HTMLElement> | HTMLElement[] | HTMLCollection} HTMLElements
  */
-
 
 let IdPrefixCounter = 0;
 window.hasTouch = 'ontouchstart' in window;
@@ -245,12 +244,11 @@ export function setDefaultId(element, defaultId) {
 }
 
 /**
- * @param {Elements} elements
- * @param {function(Element): void} callback
+ * @param {HTMLElements} elements
+ * @param {function(HTMLElement): void} callback
  */
 export function forEachElement(elements, callback) {
     if (!elements) {
-        console.warn("No elements.");
         return;
     }
     if (elements instanceof Node) {
@@ -266,7 +264,7 @@ export function forEachElement(elements, callback) {
  * Toggle classes depending on the given `bool`: Add `trueClasses` and `falseClasses`
  * if `bool` is truthy, and vice versa.
  * @param {boolean} bool
- * @param {Elements} elements
+ * @param {HTMLElements} elements
  * @param {string | string[]} trueClasses
  * @param {string | string[]} [falseClasses]
  */
@@ -285,7 +283,7 @@ export function classIfElse(bool, elements, trueClasses, falseClasses = null) {
 }
 
 /**
- * @param {Elements} elements
+ * @param {HTMLElements} elements
  * @param {string | string[]} classes
  */
 export function addClass(elements, classes) {
@@ -293,7 +291,7 @@ export function addClass(elements, classes) {
 }
 
 /**
- * @param {Elements} elements
+ * @param {HTMLElements} elements
  * @param {string | string[]} classes
  */
 export function removeClass(elements, classes) {
@@ -301,41 +299,62 @@ export function removeClass(elements, classes) {
 }
 
 /**
- * @param {Elements} elements
+ * @param {HTMLElements} elements
+ * @param {"display"|"visibility"|"opacity"} [property] default "display"
  */
-export function show(elements) {
+export function show(elements, property = "display") {
     forEachElement(elements, elem => {
-        elem.style.display = "";
+        elem.style.removeProperty(property);
     });
-    removeClass(elements, "hidden");
 }
 
+
+const hideValues = {
+    display: "none",
+    visibility: "hidden",
+    opacity: "0"
+}
 /**
- * @param {Elements} elements
+ * @param {HTMLElements} elements
+ * @param {"display"|"visibility"|"opacity"} [property] default "display"
  */
-export function hide(elements) {
+export function hide(elements, property = "display") {
     forEachElement(elements, elem => {
-        elem.style.display = "none";
+        elem.style.setProperty(property, hideValues[property]);
     });
 }
 
 /**
  * @param {boolean} showFirst
- * @param {Elements} first
- * @param {Elements} [second]
+ * @param {HTMLElements} first
+ * @param {?HTMLElements} [second]
+ * @param {"display"|"visibility"|"opacity"} [property] default "display"
  */
-export function toggleShown(showFirst, first, second = null) {
+export function toggleShown(showFirst, first, second = null, property = "display") {
     if (showFirst) {
         if (second) {
-            hide(second);
+            hide(second, property);
         }
-        show(first);
+        show(first, property);
     } else {
-        hide(first);
+        hide(first, property);
         if (second) {
-            show(second);
+            show(second, property);
         }
     }
+}
+
+/**
+ * Checks if the element is visible, observing element style properties only.
+ * @param {HTMLElement} element
+ */
+export function isVisible(element) {
+    for (const [property, value] of Object.entries(hideValues)) {
+        if (element.style.getPropertyValue(property) === value) {
+            return false;
+        }
+    }
+    return true;
 }
 
 /**
@@ -572,3 +591,20 @@ export function showPage(page, container = null) {
     );
 }
 
+/**
+ *
+ * @param {Node[]} nodes
+ * @param {string} [containerType] default 'span'
+ * @param {boolean} [clone] whether to clone the nodes into the group, default true.
+ */
+export function groupNodes(nodes, containerType = "span", clone = true) {
+    if (clone) {
+        nodes = nodes.map(node => node.cloneNode());
+    }
+
+    const container = document.createElement(containerType);
+    addClass(container, "node-group");
+    container.append(...nodes);
+    container.normalize();
+    return container;
+}

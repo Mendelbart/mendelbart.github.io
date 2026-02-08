@@ -36,13 +36,13 @@
   "displayData": {
     "type": "string",
     "fonts": {
-      "sans": {"family": "Noto Sans", "scale": 0.9, "label": "Sans", "letterSpacing": "-.07ch"},
-      "serif": {"family": "Noto Serif", "scale": 0.9, "label": "Serif", "letterSpacing": "-.07ch"}
+      "sans": {"family": "Noto Sans", "scale": 0.85, "shift": 0.1, "label": "Sans", "letterSpacing": "-.07ch"},
+      "serif": {"family": "Noto Serif", "scale": 0.85, "shift": 0.1, "label": "Serif", "letterSpacing": "-.07ch"}
     },
     "defaultWeight": 700
   },
   "propsData": {
-    "name": {"type": "list", "maxDist": 1, "maxDistPerCharsNum": 4, "label": "Element", "identifier":  true, "active": true},
+    "name": {"type": "list", "maxDist": 1, "label": "Element", "identifier":  true, "active": true},
     "no": {"type": "number", "maxDist": 0, "label": "Atomic Number", "identifier": true}
   },
   "symbolsData": {

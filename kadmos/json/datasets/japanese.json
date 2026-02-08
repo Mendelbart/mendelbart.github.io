@@ -2,7 +2,8 @@
   "name": "Japanese Kana",
   "metadata": {
     "gameHeading": {"string": "カドモス", "font": {"family": "Noto Sans Japanese"}},
-    "terms": {"symbol": "symbol", "symbols": "symbols"}
+    "terms": {"symbol": "symbol", "symbols": "symbols"},
+    "lang": "ja"
   },
   "displayData": {
     "type": "string",

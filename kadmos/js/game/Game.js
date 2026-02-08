@@ -1,12 +1,18 @@
-import {DOMHelper, ObjectHelper, FontHelper} from "../helpers/helpers.js";
+import {DOMHelper, ObjectHelper, FontHelper, FunctionStack} from "../helpers/helpers.js";
 import {ItemDealer} from "./dealer.js";
 import {Setting, SettingsCollection, SettingsHelper} from "../settings/settings.js";
-import {ListProperty} from "../dataset/symbol.js";
+import {ItemProperty, ListProperty} from "../dataset/symbol.js";
 
 
-DOMHelper.registerTemplate("eval", `<div class="item-eval">
+DOMHelper.registerTemplates({
+    eval: `<div class="item-eval">
     <span class="submitted"></span><span class="solution"></span>
-</div>`);
+</div>`,
+    symbolContainer: `<div class="symbol-container">
+    <span class="symbol"></span>
+    <div class="symbol-label-container"><span class="symbol-label"></span></div>
+</div>`
+});
 
 export class Game {
     /**
@@ -19,7 +25,7 @@ export class Game {
         this.dataset = dataset;
         this.properties = properties;
         this.dealer = new ItemDealer(items);
-        this.onFinish = [];
+        this.onFinish = new FunctionStack();
 
         this.updateProgressBar();
     }
@@ -33,13 +39,6 @@ export class Game {
         document.getElementById("item-next-button").textContent = "Next";
     }
 
-    /**
-     * @param {function(Game): void} func
-     */
-    addOnFinish(func) {
-        this.onFinish.push(func);
-    }
-
     getInputMode(propType) {
         if (propType === "real" || propType === "integer") {
             return "numeric"
@@ -49,7 +48,10 @@ export class Game {
     }
 
     setupSymbolContainer() {
-        document.querySelector("#symbol-current .symbol").classList.add("symbol-" + this.dataset.displayData.type);
+        const symbol = document.querySelector("#symbol-current .symbol");
+        symbol.classList.add("symbol-" + this.dataset.displayData.type);
+        symbol.setAttribute("lang", this.dataset.metadata.lang);
+        symbol.setAttribute("dir", this.dataset.metadata.dir);
     }
 
     setupInputs() {
@@ -129,8 +131,14 @@ export class Game {
     }
 
     setSymbolFont(element, key) {
-        FontHelper.setFont(element, this.dataset.displayData.fonts[key]);
-        FontHelper.getFontData(this.dataset.displayData.fonts[key].family).then(data => {
+        const fonts = this.dataset.displayData.fonts;
+        if (!(key in fonts)) {
+            console.warn(`Unknown symbol font key "${key}".`);
+            key = Object.keys(fonts)[0];
+        }
+
+        FontHelper.setFont(element, fonts[key]);
+        FontHelper.getFontData(fonts[key].family).then(data => {
             const weightRange = this.fontSettings.settings.weight.valueElement;
             const [min, max] =
                 "variationSettings" in data
@@ -141,6 +149,13 @@ export class Game {
         }).catch(DOMHelper.printError);
     }
 
+    /**
+     * @param {Record<string,QuizItem[]>} referenceItems
+     */
+    setReferenceItems(referenceItems) {
+        this.referenceItems = referenceItems;
+    }
+
     seed(seed) {
         this.dealer.seed(seed);
     }
@@ -149,32 +164,39 @@ export class Game {
         for (const input of Object.values(this.inputs)) {
             input.remove();
         }
-        this.clearSymbol();
+        this.clearItemDisplay();
         this.updateProgressBar(0);
     }
 
     finish() {
         setTimeout(() => this.cleanup(), 100);
-
-        for (const func of this.onFinish) {
-            func(this);
-        }
+        this.onFinish.call(this);
     }
 
-    currentSymbol() {
+    /**
+     * @returns {QuizItem}
+     */
+    currentItem() {
         return this.dealer.currentItem();
     }
 
     submitRound() {
         let score = 0;
-        const symbol = this.currentSymbol();
+        const item = this.currentItem();
 
-        for (const [key, input] of Object.entries(this.inputs)) {
-            const evalElement = this.evals[key];
-            const property = symbol.properties[key];
+        for (const [propertyKey, input] of Object.entries(this.inputs)) {
+            const evalElement = this.evals[propertyKey];
+            const property = item.properties[propertyKey];
             const [grade, guessNodes, solutionNodes] = property.grade(input.value);
 
             score += grade;
+
+            if (!ItemProperty.passes(grade)) {
+                const referenceItems = this.getReferenceItems(item.form, propertyKey, input.value);
+                const referenceNodes = this.referenceItemsNodes(referenceItems, propertyKey);
+                document.getElementById("game-symbols").append(...referenceNodes);
+                this.fontSettings.settings.family.valueElement.runUpdateListeners();
+            }
 
             evalElement.querySelector(".submitted").replaceChildren(...guessNodes);
             evalElement.querySelector(".solution").replaceChildren(...solutionNodes);
@@ -182,7 +204,7 @@ export class Game {
                 property instanceof ListProperty && property.listMode === "best",
                 evalElement,
                 "best-mode"
-            )
+            );
         }
 
         score /= this.properties.length;
@@ -200,6 +222,53 @@ export class Game {
         }
     }
 
+    /**
+     * @param {string} form
+     * @param {string} property
+     * @param {string} guess
+     */
+    getReferenceItems(form, property, guess) {
+        if (!this.referenceItems) {
+            return [];
+        }
+
+        const items = [];
+        for (const item of this.referenceItems[form]) {
+            const grade = item.properties[property].grade(guess)[0];
+            if (grade === 1) {
+                return [item];
+            } else if (ItemProperty.passes(grade)) {
+                items.push(item);
+            }
+        }
+        return items;
+    }
+
+    /**
+     * @param {QuizItem[]} items
+     * @param {string} property
+     * @returns {HTMLElement[]}
+     */
+    referenceItemsNodes(items, property) {
+        return items.map(item => this.referenceItemNode(item, property));
+    }
+
+    /**
+     * @param {QuizItem} item
+     * @param {string} property
+     * @returns {HTMLElement}
+     */
+    referenceItemNode(item, property) {
+        const container = DOMHelper.getTemplate("symbolContainer");
+        container.classList.add("symbol-reference");
+        const symbolNode = container.querySelector('.symbol');
+        symbolNode.replaceChildren(item.display);
+        symbolNode.classList.add("symbol-" + this.dataset.displayData.type);
+
+        container.querySelector('.symbol-label').textContent = item.properties[property].displayString;
+        return container;
+    }
+
     clearInputs() {
         for (const input of Object.values(this.inputs)) {
             input.value = "";
@@ -212,14 +281,27 @@ export class Game {
     show(which) {
         DOMHelper.toggleShown(
             which === "inputs",
-            Object.values(this.inputs),
-            Object.values(this.evals)
-        )
+            [
+                ...Object.values(this.inputs),
+                document.getElementById("item-submit-button")
+            ],
+            [
+                ...Object.values(this.evals),
+                document.getElementById("item-next-button")
+            ]
+        );
+
         DOMHelper.toggleShown(
             which === "inputs",
-            document.getElementById("item-submit-button"),
-            document.getElementById("item-next-button")
+            null, document.querySelector('#symbol-current .symbol-label'),
+            "visibility"
         );
+
+        if (which === "inputs") {
+            document.querySelectorAll("#game-symbols .symbol-reference").forEach(el => {
+                el.remove();
+            });
+        }
     }
 
     updateProgressBar(value = null) {
@@ -234,7 +316,7 @@ export class Game {
         }
 
         this.dealer.nextItem();
-        this.displaySymbol(this.currentSymbol());
+        this.displayItem(this.currentItem());
 
         this.clearInputs();
         this.show("inputs");
@@ -246,13 +328,14 @@ export class Game {
     }
 
     /**
-     * @param {QuizItem} symbol
+     * @param {QuizItem} item
      */
-    displaySymbol(symbol) {
-        document.querySelector("#symbol-current .symbol").replaceChildren(symbol.display);
+    displayItem(item) {
+        document.querySelector("#symbol-current .symbol").replaceChildren(item.display.cloneNode());
+        document.querySelector('#symbol-current .symbol-label').replaceChildren(item.properties[this.properties[0]].displayString);
     }
 
-    clearSymbol() {
+    clearItemDisplay() {
         document.querySelector("#symbol-current .symbol").replaceChildren();
     }
 }

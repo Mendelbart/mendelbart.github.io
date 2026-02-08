@@ -1,110 +1,6 @@
-// Source: https://github.com/gustf/js-levenshtein/tree/v1.1.6
-
-function _min(d0, d1, d2, bx, ay) {
-    return d0 < d1 || d2 < d1
-        ? d0 > d2
-            ? d2 + 1
-            : d0 + 1
-        : bx === ay
-            ? d1
-            : d1 + 1;
-}
-
-/**
- * @param {string} a
- * @param {string} b
- * @returns {number}
- */
-export function levDist(a, b) {
-    if (a === b) {
-        return 0;
-    }
-
-    if (a.length > b.length) {
-        const tmp = a;
-        a = b;
-        b = tmp;
-    }
-
-    let la = a.length;
-    let lb = b.length;
-
-    while (la > 0 && (a.charCodeAt(la - 1) === b.charCodeAt(lb - 1))) {
-        la--;
-        lb--;
-    }
-
-    let offset = 0;
-
-    while (offset < la && (a.charCodeAt(offset) === b.charCodeAt(offset))) {
-        offset++;
-    }
-
-    la -= offset;
-    lb -= offset;
-
-    if (la === 0 || lb < 3) {
-        return lb;
-    }
-
-    let x = 0;
-    let y;
-    let d0;
-    let d1;
-    let d2;
-    let d3;
-    let dd;
-    let dy;
-    let ay;
-    let bx0;
-    let bx1;
-    let bx2;
-    let bx3;
-
-    const vector = [];
-
-    for (y = 0; y < la; y++) {
-        vector.push(y + 1);
-        vector.push(a.charCodeAt(offset + y));
-    }
-
-    const len = vector.length - 1;
-
-    for (; x < lb - 3;) {
-        bx0 = b.charCodeAt(offset + (d0 = x));
-        bx1 = b.charCodeAt(offset + (d1 = x + 1));
-        bx2 = b.charCodeAt(offset + (d2 = x + 2));
-        bx3 = b.charCodeAt(offset + (d3 = x + 3));
-        dd = (x += 4);
-        for (y = 0; y < len; y += 2) {
-            dy = vector[y];
-            ay = vector[y + 1];
-            d0 = _min(dy, d0, d1, bx0, ay);
-            d1 = _min(d0, d1, d2, bx1, ay);
-            d2 = _min(d1, d2, d3, bx2, ay);
-            dd = _min(d2, d3, dd, bx3, ay);
-            vector[y] = dd;
-            d3 = d2;
-            d2 = d1;
-            d1 = d0;
-            d0 = dy;
-        }
-    }
-
-    for (; x < lb;) {
-        bx0 = b.charCodeAt(offset + (d0 = x));
-        dd = ++x;
-        for (y = 0; y < len; y += 2) {
-            dy = vector[y];
-            vector[y] = dd = _min(dy, d0, dd, bx0, vector[y + 1]);
-            d0 = dy;
-        }
-    }
-
-    return dd;
-}
-
 // https://en.wikipedia.org/wiki/Damerau%E2%80%93Levenshtein_distance#Optimal_string_alignment_distance
+
+export {default as levenshtein} from './js-levenshtein.js';
 /**
  *
  * @param {string} a
@@ -129,11 +25,62 @@ export function osaDistance(a, b) {
 
             d[i+1][j+1] = Math.min(d[i][j+1] + 1, d[i+1][j] + 1, d[i][j] + cost);
 
-            if (i > 0 && j > 0 && a.charCodeAt(i) === b.charCodeAt(j-1) && a.charCodeAt(i-1) === b.charCodeAt(j)) {
-                d[i+1][j+1] = Math.min(d[i+1][j+1], d[i-1][j-1] + cost);
+            if (
+                i > 0 && j > 0
+                && a.charCodeAt(i) === b.charCodeAt(j-1)
+                && a.charCodeAt(i-1) === b.charCodeAt(j)
+                && d[i+1][j+1] > d[i-1][j-1] + cost
+            ) {
+                d[i+1][j+1] = d[i-1][j-1] + cost;
             }
         }
     }
 
     return d[a.length][b.length];
 }
+
+
+/**
+ * @param {string} a
+ * @param {string} b
+ * @param {number} maxDist
+ * @param {number} [aLeft]
+ * @param {number} [bLeft]
+ */
+export function levenshteinRecurse(a, b, maxDist, aLeft = 0, bLeft = 0) {
+    if (aLeft === a.length) {
+        return b.length - bLeft;
+    }
+    if (bLeft === b.length) {
+        return a.length - aLeft;
+    }
+
+    if (maxDist === 0) {
+        return a.substring(aLeft) === b.substring(bLeft) ? 0 : 1;
+    }
+
+    const lenDiff = Math.abs((a.length - aLeft) - (b.length - bLeft));
+    if (maxDist < lenDiff) {
+        return maxDist + 1;
+    }
+
+    let index = -1;
+
+    for (let i = 0; i < Math.min(a.length - aLeft, b.length - bLeft); i++) {
+        if (a.charCodeAt(aLeft + i) !== b.charCodeAt(bLeft + i)) {
+            index = i;
+            break;
+        }
+    }
+
+    if (index === -1) {
+        return lenDiff;
+    }
+
+    return 1 + Math.min(
+        levenshteinRecurse(a, b, maxDist - 1, aLeft + index + 1, bLeft + index),
+        levenshteinRecurse(a, b, maxDist - 1, aLeft + index, bLeft + index + 1),
+        levenshteinRecurse(a, b, maxDist - 1, aLeft + index + 1, bLeft + index + 1),
+    );
+}
+
