@@ -1,7 +1,6 @@
 $borderRadiusSmall: .5rem;
 $transitionHide: 75ms;
 $transitionButton: 10ms;
-$bodyPaddingInline: .75rem;
 
 
 /******************** RESET ***********************/
@@ -143,9 +142,11 @@ $bodyPaddingInline: .75rem;
 }
 
 
-:root {
+:root, .light-mode {
   @include light-mode;
+}
 
+:root {
   @media (prefers-color-scheme: dark) {
     @include dark-mode;
   }
@@ -154,10 +155,6 @@ $bodyPaddingInline: .75rem;
   --font-shift: 0;
   --font-base-size: 1em;
   --letter-spacing: 0ch;
-}
-
-.light-mode {
-  @include light-mode;
 }
 
 .dark-mode {
@@ -178,7 +175,7 @@ body {
 
   max-width: 26rem;
   margin: auto;
-  padding: 0.75rem $bodyPaddingInline;
+  padding: 0.75rem;
 }
 
 .font-transform {

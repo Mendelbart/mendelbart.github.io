@@ -237,9 +237,13 @@ export class Dataset {
         }
 
         if (Array.isArray(display)) {
-            return Object.fromEntries(
-                display.map((value, index) => [this.formsData.keys[index], this.getDisplayNode(value)])
-            );
+            const forms = {};
+            for (const [index, value] of display.entries()) {
+                if (value) {
+                    forms[this.formsData.keys[index]] = this.getDisplayNode(value);
+                }
+            }
+            return forms;
         }
 
         if (typeof display !== "object") {
@@ -251,7 +255,13 @@ export class Dataset {
             throw new Error(`Invalid display Form key "${invalidKeys[0]}".`);
         }
 
-        return ObjectHelper.map(display, value => this.getDisplayNode(value));
+        const forms = {};
+        for (const [key, value] of Object.entries(display)) {
+            if (value) {
+                forms[key] = this.getDisplayNode(value);
+            }
+        }
+        return forms;
     }
 
     /**

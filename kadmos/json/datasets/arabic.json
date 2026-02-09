@@ -9,21 +9,20 @@
   "displayData": {
     "type": "string",
     "fonts": {
-      "sans": {"family": "Noto Sans Arabic", "label": "Sans"},
-      "kufi": {"family": "Noto Kufi Arabic", "label": "Kufi"},
       "naskh": {"family": "Noto Naskh Arabic", "label": "Naskh"},
-      "nastaliq": {"family": "Noto Nastaliq Urdu", "label": "Nastaliq", "scale": 0.8}
+      "sans": {"family": "Noto Sans Arabic", "label": "Sans"},
+      "kufi": {"family": "Noto Kufi Arabic", "label": "Kufi"}
     },
-    "defaultFont": "sans"
+    "defaultFont": "naskh"
   },
   "propsData": {
-    "name": {"type": "list", "label": "Name", "maxDist": 0, "identifier": true, "active": true},
+    "name": {"type": "list", "label": "Name", "maxDist": 0, "identifier": true, "active": true, "substitutions": {"[ʻʼ]*": ""}},
     "roman": {"type": "list", "label": "Romanization", "maxDist": 0, "identifier": true}
   },
   "selectorData": {
-    "font": {"family": "Noto Sans Arabic"},
+    "font": {"family": "Noto Naskh Arabic"},
     "label": {"property": "name"},
-    "style": {"buttonWidth": "4.5ch", "symbolSize": 1.35}
+    "style": {"buttonWidth": "4.8ch", "symbolSize": 1.6}
   },
   "formsData": {
     "label": "Form",
@@ -40,34 +39,35 @@
     "format": "rows",
     "template": ["display", "p:name", "p:roman"],
     "rows": [
-      [["\ufe8d", "\ufe8d", "\u0640\ufe8e", "\u0640\ufe8e"], "alef", "'"],
-      [["\ufe8f", "\ufe91\u0640", "\u0640\ufe92\u0640", "\u0640\ufe90"], "beh", "b"],
-      [["\ufe95", "\ufe97\u0640", "\u0640\ufe98\u0640", "\u0640\ufe96"], "ta", "t"],
-      [["\ufe99", "\ufe9b\u0640", "\u0640\ufe9c\u0640", "\u0640\ufe9a"], "tha", "th"],
-      [["\ufe9d", "\ufe9f\u0640", "\u0640\ufea0\u0640", "\u0640\ufe9e"], "jim", "j"],
-      [["\ufea1", "\ufea3\u0640", "\u0640\ufea4\u0640", "\u0640\ufea2"], "Ha", "H"],
-      [["\ufea5", "\ufea7\u0640", "\u0640\ufea8\u0640", "\u0640\ufea6"], "kha", "kh"],
-      [["\ufea9", "\ufea9", "\u0640\ufeaa", "\u0640\ufeaa"], "dal", "d"],
-      [["\ufeab", "\ufeab", "\u0640\ufeac", "\u0640\ufeac"], "dhal", "dh"],
-      [["\ufead", "\ufead", "\u0640\ufeae", "\u0640\ufeae"], "ra", "r"],
-      [["\ufeaf", "\ufeaf", "\u0640\ufeb0", "\u0640\ufeb0"], "zayn", "z"],
-      [["\ufeb1", "\ufeb3\u0640", "\u0640\ufeb4\u0640", "\u0640\ufeb2"], "sin", "s"],
-      [["\ufeb5", "\ufeb7\u0640", "\u0640\ufeb8\u0640", "\u0640\ufeb6"], "shin", "sh"],
-      [["\ufeb9", "\ufebb\u0640", "\u0640\ufebc\u0640", "\u0640\ufeba"], "Sad", "S"],
-      [["\ufebd", "\ufebf\u0640", "\u0640\ufec0\u0640", "\u0640\ufebe"], "Dad", "D"],
-      [["\ufec1", "\ufec3\u0640", "\u0640\ufec4\u0640", "\u0640\ufec2"], "Ta", "T"],
-      [["\ufec5", "\ufec7\u0640", "\u0640\ufec8\u0640", "\u0640\ufec6"], "Za", "Z"],
-      [["\ufec9", "\ufecb\u0640", "\u0640\ufecc\u0640", "\u0640\ufeca"], "ayn", "3"],
+      [["\ufe8d", "\ufe8d", "\u0640\ufe8e", "\u0640\ufe8e"], "ʼalif", "'"],
+      [["\ufe8f", "\ufe91\u0640", "\u0640\ufe92\u0640", "\u0640\ufe90"], "bāʼ", "b"],
+      [["\ufe95", "\ufe97\u0640", "\u0640\ufe98\u0640", "\u0640\ufe96"], "tāʼ", "t"],
+      [["\ufe99", "\ufe9b\u0640", "\u0640\ufe9c\u0640", "\u0640\ufe9a"], "thāʼ", "th"],
+      [["\ufe9d", "\ufe9f\u0640", "\u0640\ufea0\u0640", "\u0640\ufe9e"], "jīm", "j"],
+      [["\ufea1", "\ufea3\u0640", "\u0640\ufea4\u0640", "\u0640\ufea2"], "ḥāʼ", "ḥ"],
+      [["\ufea5", "\ufea7\u0640", "\u0640\ufea8\u0640", "\u0640\ufea6"], "khāʼ", "kh"],
+      [["\ufea9", "\ufea9", "\u0640\ufeaa", "\u0640\ufeaa"], "dāl", "d"],
+      [["\ufeab", "\ufeab", "\u0640\ufeac", "\u0640\ufeac"], "dhāl", "dh"],
+      [["\ufead", "\ufead", "\u0640\ufeae", "\u0640\ufeae"], "rāʼ", "r"],
+      [["\ufeaf", "\ufeaf", "\u0640\ufeb0", "\u0640\ufeb0"], "zāy", "z"],
+      [["\ufeb1", "\ufeb3\u0640", "\u0640\ufeb4\u0640", "\u0640\ufeb2"], "sīn", "s"],
+      [["\ufeb5", "\ufeb7\u0640", "\u0640\ufeb8\u0640", "\u0640\ufeb6"], "shīn", "sh"],
+      [["\ufeb9", "\ufebb\u0640", "\u0640\ufebc\u0640", "\u0640\ufeba"], "ṣād", "ṣ"],
+      [["\ufebd", "\ufebf\u0640", "\u0640\ufec0\u0640", "\u0640\ufebe"], "ḍād", "ḍ"],
+      [["\ufec1", "\ufec3\u0640", "\u0640\ufec4\u0640", "\u0640\ufec2"], "ṭāʼ", "ṭ"],
+      [["\ufec5", "\ufec7\u0640", "\u0640\ufec8\u0640", "\u0640\ufec6"], "ẓāʼ", "ẓ"],
+      [["\ufec9", "\ufecb\u0640", "\u0640\ufecc\u0640", "\u0640\ufeca"], "ʻayn", "' (ayn)"],
       [["\ufecd", "\ufecf\u0640", "\u0640\ufed0\u0640", "\u0640\ufece"], "ghayn", "gh"],
-      [["\ufed1", "\ufed3\u0640", "\u0640\ufed4\u0640", "\u0640\ufed2"], "fa", "f"],
-      [["\ufed5", "\ufed7\u0640", "\u0640\ufed8\u0640", "\u0640\ufed6"], "qaf", "q"],
-      [["\ufed9", "\ufedb\u0640", "\u0640\ufedc\u0640", "\u0640\ufeda"], "kaf", "k"],
-      [["\ufedd", "\ufedf\u0640", "\u0640\ufee0\u0640", "\u0640\ufede"], "lam", "l"],
-      [["\ufee1", "\ufee3\u0640", "\u0640\ufee4\u0640", "\u0640\ufee2"], "mim", "m"],
-      [["\ufee5", "\ufee7\u0640", "\u0640\ufee8\u0640", "\u0640\ufee6"], "nun", "n"],
-      [["\ufee9", "\ufeeb\u0640", "\u0640\ufeec\u0640", "\u0640\ufeea"], "ha", "h"],
-      [["\ufeed", "\ufeed", "\u0640\ufeee", "\u0640\ufeee"], "waw", "w"],
-      [["\ufef1", "\ufef3\u0640", "\u0640\ufef4\u0640", "\u0640\ufef2"], "ya", "y"]
+      [["\ufed1", "\ufed3\u0640", "\u0640\ufed4\u0640", "\u0640\ufed2"], "fāʼ", "f"],
+      [["\ufed5", "\ufed7\u0640", "\u0640\ufed8\u0640", "\u0640\ufed6"], "qāf", "q"],
+      [["\ufed9", "\ufedb\u0640", "\u0640\ufedc\u0640", "\u0640\ufeda"], "kāf", "k"],
+      [["\ufedd", "\ufedf\u0640", "\u0640\ufee0\u0640", "\u0640\ufede"], "lām", "l"],
+      [["\ufee1", "\ufee3\u0640", "\u0640\ufee4\u0640", "\u0640\ufee2"], "mīm", "m"],
+      [["\ufee5", "\ufee7\u0640", "\u0640\ufee8\u0640", "\u0640\ufee6"], "nūn", "n"],
+      [["\ufee9", "\ufeeb\u0640", "\u0640\ufeec\u0640", "\u0640\ufeea"], "hāʼ", "h"],
+      [["\ufeed", "\ufeed", "\u0640\ufeee", "\u0640\ufeee"], "wāw", "w"],
+      [["\ufef1", "\ufef3\u0640", "\u0640\ufef4\u0640", "\u0640\ufef2"], "yāʼ", "y"],
+      [["\ufe80"], "hamzah", "?"]
     ]
   }
 }

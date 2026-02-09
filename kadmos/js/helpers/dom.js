@@ -345,19 +345,6 @@ export function toggleShown(showFirst, first, second = null, property = "display
 }
 
 /**
- * Checks if the element is visible, observing element style properties only.
- * @param {HTMLElement} element
- */
-export function isVisible(element) {
-    for (const [property, value] of Object.entries(hideValues)) {
-        if (element.style.getPropertyValue(property) === value) {
-            return false;
-        }
-    }
-    return true;
-}
-
-/**
  * @param {string | string[]} classes
  * @returns {string[]}
  */

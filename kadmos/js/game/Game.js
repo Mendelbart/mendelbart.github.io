@@ -137,7 +137,7 @@ export class Game {
             key = Object.keys(fonts)[0];
         }
 
-        FontHelper.setFont(element, fonts[key]);
+        FontHelper.setFont(element, ObjectHelper.withoutKeys(fonts[key], ["label"]));
         FontHelper.getFontData(fonts[key].family).then(data => {
             const weightRange = this.fontSettings.settings.weight.valueElement;
             const [min, max] =
@@ -193,9 +193,15 @@ export class Game {
 
             if (!ItemProperty.passes(grade)) {
                 const referenceItems = this.getReferenceItems(item.form, propertyKey, input.value);
-                const referenceNodes = this.referenceItemsNodes(referenceItems, propertyKey);
-                document.getElementById("game-symbols").append(...referenceNodes);
-                this.fontSettings.settings.family.valueElement.runUpdateListeners();
+                if (referenceItems.length > 0) {
+                    const referenceNodes = this.referenceItemsNodes(referenceItems, propertyKey);
+                    document.getElementById("game-symbols").append(...referenceNodes);
+                    this.fontSettings.settings.family.valueElement.runUpdateListeners();
+
+                    for (const item of referenceItems) {
+                        this.dealer.punish(this.dealer.getItemIndex(item), 1 / referenceItems.length);
+                    }
+                }
             }
 
             evalElement.querySelector(".submitted").replaceChildren(...guessNodes);

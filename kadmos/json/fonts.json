@@ -78,12 +78,6 @@
     }
   },
   {
-    "family": "Noto Nastaliq Urdu",
-    "variationSettings": {
-      "wght": "400 700"
-    }
-  },
-  {
     "family": "Junicode",
     "fallback": "serif",
     "variationSettings": {

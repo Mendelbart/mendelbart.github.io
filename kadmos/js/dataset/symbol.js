@@ -35,7 +35,7 @@ export class ItemProperty {
         if (type === "number") {
             return new NumberProperty(data, maxDist, propData.distanceMode ?? "linear");
         } else if (type === "string") {
-            return new StringProperty(data, maxDist, propData.caseSensitive ?? false);
+            return new StringProperty(data, maxDist, propData.caseSensitive ?? false, propData.substitutions ?? {});
         } else if (type === "list") {
             let string;
             let alternatives = {};
@@ -151,10 +151,12 @@ export class StringProperty extends ItemProperty {
      * @param {string} value
      * @param {number} maxDist
      * @param {boolean} caseSensitive
+     * @param {Record<string,string>} substitutions
      */
-    constructor(value, maxDist, caseSensitive = false) {
+    constructor(value, maxDist, caseSensitive = false, substitutions = {}) {
         super(value, maxDist);
         this.caseSensitive = caseSensitive;
+        this.substitutions = substitutions;
     }
 
     /**
@@ -163,11 +165,25 @@ export class StringProperty extends ItemProperty {
      * @returns {number}
      */
     distance(a, b) {
-        if (!this.caseSensitive) {
-            a = a.toLowerCase();
-            b = b.toLowerCase();
+        return levenshtein(this.standardizeString(a), this.standardizeString(b));
+    }
+
+    /**
+     * @param {string} str
+     * @returns {string}
+     */
+    standardizeString(str) {
+        str = str.trim();
+        for (const [pattern, replacement] of Object.entries(this.substitutions)) {
+            str = str.replaceAll(new RegExp(pattern, 'g'), replacement);
         }
-        return levenshtein(a.trim(), b.trim());
+
+        str = str.normalize("NFKD").replaceAll(/\p{M}/gu, "");
+
+        if (!this.caseSensitive) {
+            str = str.toLowerCase();
+        }
+        return str;
     }
 }
 
@@ -181,6 +197,7 @@ export class ListProperty extends StringProperty {
      * @param {boolean} caseSensitive
      * @param {string} splitter - regex string of splitters
      * @param {string[]} excludeFromList
+     * @param {Record<string,string>} substitutions
      */
     constructor(
         displayString,
@@ -189,11 +206,12 @@ export class ListProperty extends StringProperty {
             listMode = "best",
             caseSensitive = false,
             splitter = "[,;/]",
-            excludeFromList = ["\\(.*?\\)"]}) {
+            excludeFromList = ["\\(.*?\\)"],
+            substitutions = {}}) {
 
         displayString = displayString.trim();
 
-        super(displayString, maxDist, caseSensitive);
+        super(displayString, maxDist, caseSensitive, substitutions);
 
         this.splitter = splitter;
         /**

@@ -47,7 +47,7 @@ export default class ItemSelector {
         this.setupBlocks();
         this.setActive(this.processItemsActive(itemsActive));
 
-        this.updateButtons();
+        this.updateButtons(false);
     }
 
     setupButtons() {
@@ -539,7 +539,7 @@ export default class ItemSelector {
         return result;
     }
 
-    updateButtons() {
+    updateButtons(scale = true) {
         const forms = this.activeForms();
         for (const [index, item] of this.items.entries()) {
             if (item.countQuizItems(forms) === 0) {
@@ -550,7 +550,9 @@ export default class ItemSelector {
                 this.inputs[index].removeAttribute('disabled');
             }
         }
-        this.scaleButtons();
+        if (scale) {
+            this.scaleButtons();
+        }
     }
 
     /**
@@ -771,7 +773,10 @@ export default class ItemSelector {
             },
         ));
 
-        this.formsSetting.valueElement.updateListeners.push(this.updateButtons.bind(this), () => this.updateListeners.call(this));
+        this.formsSetting.valueElement.updateListeners.push(
+            this.updateButtons.bind(this),
+            () => this.updateListeners.call(this)
+        );
 
         this.node.prepend(this.formsSetting.node);
     }

@@ -1,9 +1,9 @@
-import {RandomHelper, ArrayHelper} from "../helpers/helpers.js";
+import {RandomNumberGenerator, ArrayHelper} from "../helpers/helpers.js";
 
 export class ItemDealer {
-    punishFactor = 2
-    manualPunish = 1
-    previousDampFactor = 0.5
+    _punishFactor = 2
+    _manualPunish = 1
+    _previousDampFactor = 0.5
 
     /**
      *
@@ -11,19 +11,23 @@ export class ItemDealer {
      */
     constructor(items) {
         this.items = items;
-        this.rand = Math.random;
+        this.rng = new RandomNumberGenerator();
 
         const n = this.itemCount = items.length;
         this.hitCount = 0;
 
+        /** @type {number[]} */
         this.scores = new Array(n).fill(0);
+        /** @type {number[]} */
         this.tries = new Array(n).fill(0);
+        /** @type {number[]} */
         this.triesLeft = new Array(n).fill(1);
 
         this.totalTriesLeft = n;
         this.maxTriesLeft = n;
 
-        this.currentIndex = RandomHelper.randInt(0, n, this.rand);
+        this.currentIndex = this.rng.randInt(0, n);
+        /** @type {?number} */
         this.previousIndex = null;
     }
 
@@ -31,7 +35,7 @@ export class ItemDealer {
      * @param {string} seed
      */
     seed(seed) {
-        this.rand = RandomHelper.seededPRNG(seed);
+        this.rng.seed(seed);
     }
 
     currentItem() {
@@ -40,14 +44,17 @@ export class ItemDealer {
 
     nextItem() {
         this.previousIndex = this.currentIndex;
-        this.currentIndex = RandomHelper.randIndexFromWeights(this.getWeights(), this.rand);
+        this.currentIndex = this.rng.randIndexFromWeights(this.getWeights());
         return this.currentItem();
     }
 
+    /**
+     * @returns {number[]}
+     */
     getWeights() {
         const weights = this.triesLeft.slice();
         if (this.previousIndex !== null) {
-            weights[this.previousIndex] *= this.previousDampFactor;
+            weights[this.previousIndex] *= this._previousDampFactor;
         }
         return weights;
     }
@@ -60,6 +67,9 @@ export class ItemDealer {
         this.totalTriesLeft = val;
     }
 
+    /**
+     * @returns {number}
+     */
     progress() {
         return 1 - this.totalTriesLeft / this.maxTriesLeft;
     }
@@ -80,7 +90,7 @@ export class ItemDealer {
             score * this.scoreAtTryFactor(tryIndex)
         );
 
-        this.triesLeft[this.currentIndex] += this.triesBoost(score) - 1;
+        this.triesLeft[this.currentIndex] += this._triesBoost(score) - 1;
         if (this.triesLeft[this.currentIndex] <= 0) {
             this.triesLeft[this.currentIndex] = 0;
             this.itemCount--;
@@ -89,26 +99,57 @@ export class ItemDealer {
         this.updateTotalTriesLeft();
     }
 
+    /**
+     * @returns {boolean}
+     */
     isEmpty() {
         return this.itemCount === 0;
     }
 
-    triesBoost(score) {
-        return this.punishFactor * (1 - score);
+    /**
+     * @private
+     * @param {number} score
+     * @returns {number}
+     */
+    _triesBoost(score) {
+        return this._punishFactor * (1 - score);
     }
 
+    /**
+     * @param tryIndex
+     * @returns {number}
+     */
     scoreAtTryFactor(tryIndex) {
         return 1 / tryIndex;
     }
 
-    punish(item) {
-        this.triesLeft[this.items.indexOf(item)] += this.manualPunish;
+    /**
+     * @param item
+     * @returns {number}
+     */
+    getItemIndex(item) {
+        return this.items.indexOf(item);
     }
 
+    /**
+     * @param {number} index
+     * @param {number} [factor=1]
+     */
+    punish(index, factor = 1) {
+        this.triesLeft[index] += this._manualPunish * factor;
+    }
+
+    /**
+     * @returns {number}
+     */
     absoluteScore() {
         return ArrayHelper.sum(this.scores);
     }
 
+    /**
+     * @param {"ratio"|"percent"|"both"} mode
+     * @returns {string}
+     */
     scoreString(mode = "ratio") {
         const score = this.absoluteScore();
         const ratioString = `${floor(score, 1, 2)}/${this.hitCount}`;
@@ -125,10 +166,21 @@ export class ItemDealer {
     }
 }
 
+/**
+ * @param {number} x
+ * @param {number} digits
+ * @returns {string}
+ */
 function formatPercent(x, digits = 0) {
     return String(floor(x * 100, digits)) + "%"
 }
 
+/**
+ * @param {number} x
+ * @param {number} digits
+ * @param {number} factor
+ * @returns {number}
+ */
 function floor(x, digits = 0, factor = 1) {
     const digits_multiplier = Math.pow(10, digits) * factor;
     return Math.floor(x * digits_multiplier) / digits_multiplier;

@@ -56,44 +56,63 @@ function sfc32(a, b, c, d) {
  * @param {string} seed
  * @returns {function(): number}
  */
-export function seededPRNG(seed) {
+function seededPRNG(seed) {
     return sfc32(...cyrb128(seed));
 }
 
-/**
- * @param {Array} array - Array to be shuffled
- * @param {function(): number} rand - RNG returning values in [0,1).
- */
 
-export function shuffle(array, rand = Math.random) {
-    for (let length = array.length; length > 0; length--) {
-        const randomIndex = Math.floor(rand() * length);
-        if (randomIndex !== length - 1) {
-            [array[length - 1], array[randomIndex]] = [
-                array[randomIndex], array[length - 1]
-            ];
+export default class {
+    constructor(rand = Math.random) {
+        this._rand = rand;
+    }
+
+    /**
+     * rand()
+     * @param {?number} [a]
+     * @param {?number} [b]
+     * @returns {number}
+     * @example
+     * rand()           // random number in [0,1)
+     * rand(b)          // random number in [0,b)
+     * rand(a, b)       // random number in [a,b)
+     */
+    rand(a = null, b = null) {
+         if (b === null) {
+             return this._rand() * (a ?? 1);
+         }
+         a ??= 0;
+         return this._rand() * (b - a) + a;
+    }
+
+    /**
+     * @param {string} seed
+     * @returns {RandomNumberGenerator}
+     */
+    seed(seed) {
+        this._rand = seededPRNG(seed);
+    }
+
+    randInt(min, max) {
+        return Math.floor(this.rand(min, max));
+    }
+
+    /**
+     * Shuffle the array in-place.
+     * @param {*[]} array
+     */
+    shuffle(array) {
+        for (let length = array.length; length > 0; length--) {
+            const randomIndex = this.randInt(length);
+            if (randomIndex !== length - 1) {
+                [array[length - 1], array[randomIndex]] = [
+                    array[randomIndex], array[length - 1]
+                ];
+            }
         }
     }
-}
 
-/**
- * Return a random integer n with `min <= n < max`.
- * @param {number} min
- * @param {number} max
- * @param {function(): number} rand - RNG returning values in [0,1)
- * @returns
- */
-export function randInt(min, max, rand = Math.random) {
-    return Math.floor(rand() * (max - min) + min);
-}
-
-/**
- * Returns a random index with probabilities proportional to the `weights`.
- * @param {number[]} weights
- * @param {function(): number} rand - RNG returning values in [0,1)
- * @returns {number}
- */
-export function randIndexFromWeights(weights, rand = Math.random) {
-    const sums = cumSums(weights);
-    return bisectLeft(rand() * sums[sums.length - 1], sums);
+    randIndexFromWeights(weights) {
+        const sums = cumSums(weights);
+        return bisectLeft(this.rand(sums[sums.length - 1]), sums);
+    }
 }
