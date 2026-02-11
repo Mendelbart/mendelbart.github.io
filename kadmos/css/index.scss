@@ -801,6 +801,10 @@ $selectorBorderRadius: .2rem;
 
       border-radius: $selectorBorderRadius;
 
+      & > * {
+        pointer-events: none;
+      }
+
       &[aria-checked="true"] {
         @include button-events("--clr-selector-button-checked");
 
