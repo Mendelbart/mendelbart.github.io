@@ -64,22 +64,26 @@ export class Dataset {
     /**
      *
      * @param {string} key
-     * @returns {Dataset}
+     * @returns {?Promise<Dataset>}
      */
-    static async fromKey(key) {
+    static fromKey(key) {
         if (!(key in DATASETS_METADATA)) {
             console.error(`Invalid dataset key "${key}".`);
             return null;
         }
 
         if (key in this._cache) {
-            return this._cache[key];
+            return new Promise((resolve) => resolve(this._cache[key]));
         }
 
-        const data = await fetch(DATASETS_METADATA[key].file).then(response => response.json()).catch(DOMHelper.printError);
-        const dataset = new this(data);
-        this._cache[key] = dataset;
-        return dataset;
+        return fetch(DATASETS_METADATA[key].file)
+            .then(response => response.json())
+            .then(data => {
+                const dataset = new this(data);
+                this._cache[key] = dataset;
+                return dataset;
+            })
+            .catch(DOMHelper.printError);
     }
 
     /**
@@ -228,19 +232,19 @@ export class Dataset {
     }
 
     /**
-     * @param {Array|Record<string,*>|any} display
-     * @returns {Record<string,Node>}
+     * @param {string|string[]|Record<string,string>} display
+     * @returns {Record<string,string>}
      */
     processDisplayForms(display) {
         if (this.formsData.singleForm) {
-            return Object.fromEntries([[this.formsData.defaultForm, this.getDisplayNode(display)]]);
+            return Object.fromEntries([[this.formsData.defaultForm, display]]);
         }
 
         if (Array.isArray(display)) {
             const forms = {};
             for (const [index, value] of display.entries()) {
                 if (value) {
-                    forms[this.formsData.keys[index]] = this.getDisplayNode(value);
+                    forms[this.formsData.keys[index]] = value;
                 }
             }
             return forms;
@@ -255,24 +259,7 @@ export class Dataset {
             throw new Error(`Invalid display Form key "${invalidKeys[0]}".`);
         }
 
-        const forms = {};
-        for (const [key, value] of Object.entries(display)) {
-            if (value) {
-                forms[key] = this.getDisplayNode(value);
-            }
-        }
-        return forms;
-    }
-
-    /**
-     * @param data
-     * @returns {Node}
-     */
-    getDisplayNode(data) {
-        if (this.displayData.type === "string") {
-            return document.createTextNode(data);
-        }
-        throw new Error("Invalid displayData type.")
+        return display;
     }
 
     /**
@@ -286,9 +273,9 @@ export class Dataset {
         const items = [];
 
         for (const key of itemIndices) {
-            const displayNodes = this.items[key].getDisplayNodes(forms);
+            const displayStrings = this.items[key].getDisplayString(forms);
             const itemProperties = this.items[key].getItemProperties(properties, this.propsData, language);
-            items.push(...Object.entries(displayNodes).map(([form, node]) => new QuizItem(node, itemProperties, form)));
+            items.push(...Object.entries(displayStrings).map(([form, string]) => new QuizItem(string, itemProperties, form)));
         }
 
         return items;
@@ -326,13 +313,13 @@ export class Dataset {
             const result = {};
             for (const form of this.formsData.keys) {
                 result[form] = this.items.map((item, index) => new QuizItem(
-                    item.getFormsDisplayNode([form]), itemsProperties[index], form
+                    item.getFormsDisplayString([form]), itemsProperties[index], form
                 ));
             }
             return result;
         } else {
             items = this.items.map(item => new QuizItem(
-                item.getFormsDisplayNode(this.formsData.keys),
+                item.getFormsDisplayString(this.formsData.keys),
                 item.getItemProperties(properties, propsData, language),
                 "all"
             ));
@@ -384,7 +371,7 @@ export class Dataset {
 
 class DatasetItem {
     /**
-     * @param {Record<string,Node>} displayForms
+     * @param {Record<string,string>} displayForms
      * @param {Record<string,*>} properties
      */
     constructor(displayForms, properties) {
@@ -394,9 +381,9 @@ class DatasetItem {
 
     /**
      * @param forms
-     * @returns {Record<string,Node>}
+     * @returns {Record<string,string>}
      */
-    getDisplayNodes(forms) {
+    getDisplayString(forms) {
         return ObjectHelper.onlyKeys(this.displayForms, forms);
     }
 
@@ -431,10 +418,10 @@ class DatasetItem {
 
     /**
      * @param {string[]} forms
-     * @returns {HTMLElement}
+     * @returns {string}
      */
-    getFormsDisplayNode(forms) {
-        return DOMHelper.groupNodes(Object.values(this.getDisplayNodes(forms)));
+    getFormsDisplayString(forms) {
+        return Object.values(this.getDisplayString(forms)).join("");
     }
 
     /**

@@ -239,12 +239,6 @@ h2 {
   margin-block: .75rem .25rem;
 }
 
-.track-width {
-  --offset-width: 1;
-  --client-width: 1;
-  --scroll-width: 1;
-}
-
 #game-heading {
   display: flex;
   flex-direction: row;
@@ -668,7 +662,7 @@ input[type="range"] {
 }
 
 #font-settings {
-  .font-family-setting > label {
+  .font-family-setting > legend {
     display: none;
   }
 }
@@ -987,6 +981,8 @@ body:not(.playing) #game-container, .playing #new-game-settings {
   flex-direction: column;
   align-items: stretch;
 
+  max-width: calc(var(--symbol-size) * 1.8rem);
+
   font-weight: var(--symbol-weight, 400);
 
   background: var(--clr-symbol-bg);
@@ -1005,11 +1001,16 @@ body:not(.playing) #game-container, .playing #new-game-settings {
   }
 
   .symbol {
-    display: block;
+    display: flex;
+    justify-content: center;
     box-sizing: content-box;
     padding: .25em .1em;
-    text-align: center;
     min-width: .5em;
+    transform-origin: center;
+  }
+
+  .symbol, .symbol-label {
+    text-wrap: nowrap;
   }
 
   .symbol-label-container {

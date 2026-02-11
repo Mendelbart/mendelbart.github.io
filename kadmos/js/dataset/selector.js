@@ -30,9 +30,9 @@ export default class ItemSelector {
         this.updateListeners = new FunctionStack();
 
         // Bind event listener functions
-        this.onBlockClickLabel = this.onBlockClickLabel.bind(this);
+        this.onBlockLabelClick = this.onBlockLabelClick.bind(this);
         this.onBlockClickButton = this.onBlockClickButton.bind(this);
-        this.onBlockDblClickButton = this.onBlockDblClickButton.bind(this);
+        this.onBlockButtonDblclick = this.onBlockButtonDblclick.bind(this);
         this.onBlockLabelPointerEnterLeave = this.onBlockLabelPointerEnterLeave.bind(this);
         this.onBlockLabelPointerDown = this.onBlockLabelPointerDown.bind(this);
         this.onBlockRangePointerDown = this.onBlockRangePointerDown.bind(this);
@@ -287,17 +287,31 @@ export default class ItemSelector {
     }
 
     setupBlockListeners(block) {
-        block.node.addEventListener("dblclick", this.onBlockDblClickButton);
+        block.node.addEventListener("dblclick", this.onBlockButtonDblclick);
 
         this.resetRangeSelection(block);
         block.node.addEventListener("pointerdown", this.onBlockRangePointerDown);
         block.node.addEventListener("pointermove", this.onBlockRangePointerMove);
 
         if (block.mode === "grid") {
-            block.node.addEventListener("click", this.onBlockClickLabel);
+            block.node.addEventListener("click", this.onBlockLabelClick);
             block.node.addEventListener("pointerenter", this.onBlockLabelPointerEnterLeave);
             block.node.addEventListener("pointerleave", this.onBlockLabelPointerEnterLeave);
             block.node.addEventListener("pointerdown", this.onBlockLabelPointerDown);
+        }
+    }
+
+    removeBlockListeners(block) {
+        block.node.removeEventListener("dblclick", this.onBlockButtonDblclick);
+
+        block.node.removeEventListener("pointerdown", this.onBlockRangePointerDown);
+        block.node.removeEventListener("pointermove", this.onBlockRangePointerMove);
+
+        if (block.mode === "grid") {
+            block.node.removeEventListener("click", this.onBlockLabelClick);
+            block.node.removeEventListener("pointerenter", this.onBlockLabelPointerEnterLeave);
+            block.node.removeEventListener("pointerleave", this.onBlockLabelPointerEnterLeave);
+            block.node.removeEventListener("pointerdown", this.onBlockLabelPointerDown);
         }
     }
 
@@ -327,7 +341,7 @@ export default class ItemSelector {
     /**
      * @param {PointerEvent} event
      */
-    onBlockDblClickButton(event) {
+    onBlockButtonDblclick(event) {
         const button = event.target.closest(".selector-item-button");
         if (!button) return;
 
@@ -363,7 +377,7 @@ export default class ItemSelector {
     /**
      * @param {PointerEvent} event
      */
-    onBlockClickLabel(event) {
+    onBlockLabelClick(event) {
         const indices = this.getBlockIndicesFromEvent(event);
         if (!indices) return;
 
@@ -602,7 +616,7 @@ export default class ItemSelector {
      * @param {string[]} forms
      */
     updateButtonForms(index, forms) {
-        const formsString = this.items[index].getFormsDisplayNode(forms)
+        const formsString = this.items[index].getFormsDisplayString(forms)
         this.buttons[index].querySelector(".symbol").replaceChildren(formsString);
     }
 
@@ -805,6 +819,13 @@ export default class ItemSelector {
         );
 
         this.node.prepend(this.formsSetting.node);
+    }
+
+    destroy() {
+        for (const block of this.blocks) {
+            this.removeBlockListeners(block);
+        }
+        this.node.remove();
     }
 
     /**

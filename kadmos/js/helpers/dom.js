@@ -396,13 +396,13 @@ export function elementSize(element, box = "border-box", scrollSize = false) {
  * @param {"content-box" | "padding-box" | "border-box"} containerBox
  * @param {boolean} grow
  */
-export function scaleToFit(element, {
+export function computeScaleToFit(element, {
     container = null,
     dimension = "width",
     elementBox = "border-box",
     containerBox = "content-box",
     grow = false
-}) {
+} = {}) {
     container ??= element.parentElement;
 
     let [elementWidth, elementHeight] = elementSize(element, elementBox, true);
@@ -418,9 +418,14 @@ export function scaleToFit(element, {
     return dimension === "width" ? scaleWidth : dimension === "height" ? scaleHeight : Math.min(scaleWidth, scaleHeight);
 }
 
+export function scaleToFit(element, options) {
+    const scale = computeScaleToFit(element, options);
+    element.style.scale = scale;
+}
+
 
 /**
- * @param {Element[]} elements
+ * @param {HTMLElement[]} elements
  * @param options
  */
 export function scaleAllToFit(elements, options) {
@@ -437,7 +442,7 @@ export function scaleAllToFit(elements, options) {
     }
 
     const scales = elements.map(
-        (element, index) => scaleToFit(
+        (element, index) => computeScaleToFit(
             element,
             Object.assign(options, {container: containers[index]})
         )
@@ -544,19 +549,22 @@ export function showPage(page, container = null) {
 }
 
 /**
- *
- * @param {Node[]} nodes
- * @param {string} [containerType] default 'span'
- * @param {boolean} [clone] whether to clone the nodes into the group, default true.
+ * @param {Record<string, string|number|boolean>} params
  */
-export function groupNodes(nodes, containerType = "span", clone = true) {
-    if (clone) {
-        nodes = nodes.map(node => node.cloneNode());
+export function setSearchParams(params) {
+    const url = new URL(location);
+    let hasChanged = false;
+
+    for (const [key, value] of Object.entries(params)) {
+        const encodedValue = encodeURIComponent(value);
+
+        if (url.searchParams.get(key) !== encodedValue) {
+            url.searchParams.set(key, encodedValue);
+            hasChanged = true;
+        }
     }
 
-    const container = document.createElement(containerType);
-    addClass(container, "node-group");
-    container.append(...nodes);
-    container.normalize();
-    return container;
+    if (hasChanged) {
+        history.pushState({}, "", url);
+    }
 }

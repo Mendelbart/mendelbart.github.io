@@ -4,12 +4,12 @@ import {ArrayHelper, ObjectHelper} from "../helpers/helpers.js";
 export class QuizItem {
     /**
      *
-     * @param {Node} display
+     * @param {string} displayString
      * @param {Record<string,ItemProperty>} properties
      * @param {string} form
      */
-    constructor(display, properties, form) {
-        this.display = display;
+    constructor(displayString, properties, form) {
+        this.displayString = displayString;
         this.properties = properties;
         this.form = form;
     }

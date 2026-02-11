@@ -269,7 +269,7 @@ export class Game {
         const container = DOMHelper.getTemplate("symbolContainer");
         container.classList.add("symbol-reference");
         const symbolNode = container.querySelector('.symbol');
-        symbolNode.replaceChildren(item.display);
+        symbolNode.textContent = item.displayString;
         symbolNode.classList.add("symbol-" + this.dataset.displayData.type);
 
         container.querySelector('.symbol-label').textContent = item.properties[property].displayString;
@@ -345,11 +345,15 @@ export class Game {
      * @param {QuizItem} item
      */
     displayItem(item) {
-        document.querySelector("#symbol-current .symbol").replaceChildren(item.display.cloneNode());
-        document.querySelector('#symbol-current .symbol-label').replaceChildren(item.properties[this.properties[0]].displayString);
+        document.querySelector("#symbol-current .symbol").textContent = item.displayString;
+        document.querySelector('#symbol-current .symbol-label').textContent = item.properties[this.properties[0]].displayString;
+
+        DOMHelper.scaleToFit(document.querySelector("#symbol-current .symbol"));
+        DOMHelper.scaleToFit(document.querySelector("#symbol-current .symbol-label"));
     }
 
     clearItemDisplay() {
-        document.querySelector("#symbol-current .symbol").replaceChildren();
+        document.querySelector("#symbol-current .symbol").textContent = "";
+        document.querySelector('#symbol-current .symbol-label').textContent = "";
     }
 }

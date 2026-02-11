@@ -1,7 +1,7 @@
 import {Setting, SettingsCollection, SettingsHelper as SH} from "./settings/settings.js";
 import {Game} from "./game/Game.js";
 import {Dataset} from "./dataset/Dataset.js";
-import {DOMHelper} from "./helpers/helpers.js";
+import {DOMHelper, Base64Helper} from "./helpers/helpers.js";
 
 
 export class GameContext {
@@ -25,6 +25,9 @@ export class GameContext {
          * @type {?ItemSelector}
          */
         this.itemSelector = null;
+
+        this.checkPagesNextButton = this.checkPagesNextButton.bind(this);
+        this.saveSettings = this.saveSettings.bind(this);
     }
 
     static generateGenericSettings() {
@@ -33,37 +36,40 @@ export class GameContext {
         });
     }
 
-    async selectDataset(key) {
-        this.dataset = await Dataset.fromKey(key);
-        this.datasetKey = key;
-        window.localStorage.setItem("dataset", key);
+    /**
+     * @returns {{}|any}
+     */
+    getCachedSettings() {
+        const settingsJSON = window.localStorage.getItem(this.localStorageSettingsKey());
+        if (!settingsJSON) return {};
 
-        let cachedSettings = window.localStorage.getItem(this.localStorageSettingsKey());
-        cachedSettings = cachedSettings ? JSON.parse(cachedSettings) : {};
-
-        this.itemSelector = this.dataset.getItemSelector();
-        this.itemSelector.setup(cachedSettings.items, cachedSettings.forms, this.datasetKey);
-        const checkPagesNextButton = () => {
-            DOMHelper.setAttrs(
-                document.querySelector('.pages-next-button'),
-                {disabled: this.itemSelector.activeQuizItemCount() === 0}
-            );
-        }
-        this.itemSelector.updateListeners.push(checkPagesNextButton);
-        checkPagesNextButton();
-
-        this.sc = this.dataset.getSettings(cachedSettings.properties, cachedSettings.language);
-        this.sc.extend(this.genericSettings);
-
-        for (const key of ["language"]) {
-            const singleButton = this.sc.getValueElement(key).buttonCount() === 1;
-            if (singleButton) {
-                DOMHelper.hide(this.sc.getNode(key));
+        try {
+            const settings = JSON.parse(settingsJSON);
+            if (typeof settings.items === "string") {
+                settings.items = Base64Helper.decodeBase64BoolArray(settings.items);
             }
-            DOMHelper.classIfElse(singleButton, this.sc.getNode(key), "hidden");
-        }
 
-        this.sc.settings.properties.valueElement.disableIfSingleButton(true);
+            return settings;
+        } catch (e) {
+            console.error(e);
+            return {};
+        }
+    }
+
+    /**
+     * @param key
+     * @param {Dataset} dataset
+     */
+    selectDataset(key, dataset) {
+        this.dataset = dataset;
+        this.datasetKey = key;
+        DOMHelper.setSearchParams({dataset: key});
+
+        const cachedSettings = this.getCachedSettings();
+
+        this.setupSelector(cachedSettings);
+        this.setupSettingsCollection(cachedSettings);
+
         const gameHeading = this.dataset.metadata.gameHeading;
         const fonts = "font" in gameHeading && "family" in gameHeading.font ? [gameHeading.font.family] : [];
         DOMHelper.batchUpdate([
@@ -87,6 +93,41 @@ export class GameContext {
         ], fonts);
 
         DOMHelper.showPage(document.getElementById('game-filters'));
+    }
+
+    setupSelector(settings) {
+        if (this.itemSelector) {
+            this.itemSelector.destroy();
+        }
+        this.itemSelector = this.dataset.getItemSelector();
+        this.itemSelector.setup(settings.items, settings.forms, this.datasetKey);
+        this.itemSelector.updateListeners.push(
+            this.checkPagesNextButton,
+            this.saveSettings
+        );
+        this.checkPagesNextButton();
+    }
+
+    checkPagesNextButton() {
+        DOMHelper.setAttrs(
+            document.querySelector('.pages-next-button'),
+            {disabled: this.itemSelector.activeQuizItemCount() === 0}
+        );
+    }
+
+    setupSettingsCollection(settings) {
+        this.sc = this.dataset.getSettings(settings.properties, settings.language);
+        this.sc.extend(this.genericSettings);
+
+        for (const key of ["language"]) {
+            const singleButton = this.sc.getValueElement(key).buttonCount() === 1;
+            if (singleButton) {
+                DOMHelper.hide(this.sc.getNode(key));
+            }
+            DOMHelper.classIfElse(singleButton, this.sc.getNode(key), "hidden");
+        }
+
+        this.sc.settings.properties.valueElement.disableIfSingleButton(true);
 
         for (const setting of Object.values(this.sc.settings)) {
             setting.valueElement.addUpdateListener(() => {
@@ -95,15 +136,15 @@ export class GameContext {
         }
     }
 
-    localStorageSettingsKey() {
-        return "settings_" + this.datasetKey;
+    localStorageSettingsKey(datasetKey = this.datasetKey) {
+        return "settings_" + datasetKey;
     }
 
     saveSettings() {
-        window.localStorage.setItem("dataset", this.datasetKey);
+        DOMHelper.setSearchParams({dataset: this.datasetKey});
 
-        window.localStorage.setItem(this.localStorageSettingsKey(this.datasetKey), JSON.stringify({
-            items: this.itemSelector.itemsActive.map(bool => Number(bool)),
+        window.localStorage.setItem(this.localStorageSettingsKey(), JSON.stringify({
+            items: Base64Helper.encodeBase64BoolArray(this.itemSelector.itemsActive),
             forms: this.itemSelector.activeForms(),
             properties: this.sc.getValue("properties"),
             language: this.sc.getValue("language")
@@ -150,5 +191,6 @@ export class GameContext {
      */
     setPlaying(playing) {
         DOMHelper.classIfElse(playing, document.body, "playing");
+        DOMHelper.setSearchParams({play: playing});
     }
 }
