@@ -802,7 +802,7 @@ $selectorBorderRadius: .2rem;
       border-radius: $selectorBorderRadius;
 
       & > * {
-        pointer-events: none;
+        z-index: -1;
       }
 
       &[aria-checked="true"] {
