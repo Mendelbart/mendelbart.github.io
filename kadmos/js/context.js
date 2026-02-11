@@ -153,6 +153,6 @@ export class GameContext {
      * @param {boolean} playing
      */
     setPlaying(playing) {
-        DOMHelper.classIfElse(playing, document.getElementsByTagName("body"), "playing");
+        DOMHelper.classIfElse(playing, document.body, "playing");
     }
 }

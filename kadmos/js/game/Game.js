@@ -28,6 +28,9 @@ export class Game {
         this.onFinish = new FunctionStack();
 
         this.updateProgressBar();
+
+        this.onInputKeydown = this.onInputKeydown.bind(this);
+        this._show = this._show.bind(this);
     }
 
     setup() {
@@ -68,41 +71,39 @@ export class Game {
             return input;
         });
 
-        document.getElementById("game-inputs").replaceChildren(...Object.values(this.inputs));
+        const gameInputs = document.getElementById("game-inputs");
+        gameInputs.replaceChildren(...Object.values(this.inputs));
+        gameInputs.addEventListener("keydown", this.onInputKeydown);
+    }
 
-        for (const [i, key] of this.properties.entries()) {
-            const input = this.inputs[key];
-            // Listeners to navigate between inputs with enter and backspace on an empty input
-            if (i > 0) {
-                const previousInput = this.inputs[this.properties[i-1]];
-                previousInput.addEventListener("keydown", event => {
-                    if (event.key === "Enter") {
-                        input.focus();
-                    }
-                });
-                input.addEventListener("keydown", event => {
-                    if (event.key === "Backspace" && event.target.getValue === "") {
-                        previousInput.focus();
-                        event.preventDefault();
-                    }
-                });
+    /**
+     * @param {KeyboardEvent} event
+     */
+    onInputKeydown(event) {
+        /** @type HTMLInputElement */
+        const input = event.target.closest("INPUT");
+        if (!input) return;
+
+        if (event.key === "Enter") {
+            if (input.nextElementSibling) {
+                input.nextElementSibling.focus();
+            } else {
+                document.getElementById("item-submit-button").focus();
             }
-
-            this.inputs[this.properties[this.properties.length - 1]].addEventListener("keydown", event => {
-                if (event.key === "Enter") {
-                    document.getElementById("item-submit-button").focus();
-                }
-            });
+        } else if (event.key === "Backspace" && event.target.value === "" && input.previousElementSibling) {
+            input.previousElementSibling.focus();
+            event.preventDefault();
         }
     }
 
     setupEvals() {
         this.evals = {};
-        for (const [key, input] of Object.entries(this.inputs)) {
+        const evalsContainer = document.getElementById("game-evals");
+
+        for (const property of this.properties) {
             const evalElement = DOMHelper.getTemplate("eval");
-            DOMHelper.hide(evalElement);
-            input.insertAdjacentElement("afterend", evalElement);
-            this.evals[key] = evalElement;
+            this.evals[property] = evalElement;
+            evalsContainer.append(evalElement);
         }
     }
 
@@ -161,11 +162,12 @@ export class Game {
     }
 
     cleanup() {
-        for (const input of Object.values(this.inputs)) {
-            input.remove();
-        }
         this.clearItemDisplay();
         this.updateProgressBar(0);
+
+        document.getElementById("game-inputs").removeEventListener("keydown", this.onInputKeydown);
+        document.getElementById("game-inputs").replaceChildren();
+        document.getElementById("game-evals").replaceChildren();
     }
 
     finish() {
@@ -217,11 +219,10 @@ export class Game {
         this.dealer.enterScore(score);
 
         this.updateProgressBar();
-        this.show("evals");
         if (this.dealer.isEmpty()) {
             document.getElementById("item-next-button").textContent = "Finish";
         }
-        document.getElementById("item-next-button").focus();
+        this.show("evals");
 
         if (window.scrollY > 0) {
             window.scrollTo({top: 0, behavior: "smooth"});
@@ -285,28 +286,36 @@ export class Game {
      * @param {"inputs"|"evals"} which
      */
     show(which) {
+        this.shown = which;
+        requestAnimationFrame(this._show);
+    }
+
+    _show() {
         DOMHelper.toggleShown(
-            which === "inputs",
+            this.shown === "inputs",
             [
-                ...Object.values(this.inputs),
+                document.getElementById("game-inputs"),
                 document.getElementById("item-submit-button")
             ],
             [
-                ...Object.values(this.evals),
+                document.getElementById("game-evals"),
                 document.getElementById("item-next-button")
             ]
         );
 
         DOMHelper.toggleShown(
-            which === "inputs",
+            this.shown === "inputs",
             null, document.querySelector('#symbol-current .symbol-label'),
             "visibility"
         );
 
-        if (which === "inputs") {
+        if (this.shown === "inputs") {
             document.querySelectorAll("#game-symbols .symbol-reference").forEach(el => {
                 el.remove();
             });
+            this.focus();
+        } else {
+            document.getElementById("item-next-button").focus();
         }
     }
 
@@ -326,7 +335,6 @@ export class Game {
 
         this.clearInputs();
         this.show("inputs");
-        this.focus();
     }
 
     focus() {

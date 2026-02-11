@@ -28,6 +28,14 @@ export default class ItemSelector {
         this.formsData = dataset.formsData;
         this.selectorData = dataset.selectorData;
         this.updateListeners = new FunctionStack();
+
+        // Bind event listener functions
+        this.onBlockClickLabel = this.onBlockClickLabel.bind(this);
+        this.onBlockClickButton = this.onBlockClickButton.bind(this);
+        this.onBlockLabelPointerEnterLeave = this.onBlockLabelPointerEnterLeave.bind(this);
+        this.onBlockLabelPointerDown = this.onBlockLabelPointerDown.bind(this);
+        this.onBlockRangePointerDown = this.onBlockRangePointerDown.bind(this);
+        this.onBlockRangePointerMove = this.onBlockRangePointerMove.bind(this);
     }
 
     /**
@@ -54,16 +62,7 @@ export default class ItemSelector {
         /** @type {boolean[]} */
         this.itemsActive = new Array(this.items.length).fill(false);
         /** @type {HTMLElement[]} */
-        this.buttons = new Array(this.items.length);
-        /** @type {HTMLInputElement[]} */
-        this.inputs = new Array(this.items.length);
-
-        for (const [index, item] of this.items.entries()) {
-            const [button, input] = this.getItemButton(item, index.toString());
-            this.buttons[index] = button;
-            this.inputs[index] = input;
-            input.addEventListener("change", this.inputEventListener.bind(this));
-        }
+        this.buttons = this.items.map((item, index) => this.getItemButton(item, index.toString()));
     }
 
     setupBlocks() {
@@ -117,7 +116,7 @@ export default class ItemSelector {
             block.node.setAttribute("data-block-index", blockIndex.toString());
             this.applyBlockStyle(block, this.selectorData.style, block.style);
             this.processListenerIndices(block);
-            this.setupRangeSelection(block);
+            this.setupBlockListeners(block);
 
             this.node.append(block.node);
 
@@ -128,8 +127,6 @@ export default class ItemSelector {
                 console.error(e);
             }
         }
-
-        this.addDblClickListeners(this.buttons);
     }
 
     addBlockLabels(block) {
@@ -148,7 +145,6 @@ export default class ItemSelector {
 
             for (const [index, labelString] of block.rowLabels.entries()) {
                 let labelElement = this._labelElement("row", labelString, index);
-                this.applyBlockLabelListeners(labelElement, "row", block);
                 if (block.rowLabelStart) {
                     block.elements[index * m].insertAdjacentElement("beforebegin", labelElement);
                 }
@@ -156,7 +152,6 @@ export default class ItemSelector {
                 if (block.rowLabelEnd) {
                     if (block.rowLabelStart) {
                         labelElement = labelElement.cloneNode(true);
-                        this.applyBlockLabelListeners(labelElement, "row", block);
                     }
 
                     if (index === m - 1) {
@@ -178,7 +173,7 @@ export default class ItemSelector {
             let labelElements = block.columnLabels.map(
                 (labelString, index) => this._labelElement("column", labelString, index)
             );
-            this.applyBlockLabelListeners(labelElements, "column", block);
+
             if ("rowLabels" in block) {
                 if (block.rowLabelStart) {
                     labelElements.splice(0, 0, this._gridGapElement());
@@ -193,7 +188,6 @@ export default class ItemSelector {
             if (block.columnLabelEnd) {
                 if (block.columnLabelStart) {
                     labelElements = labelElements.map(node => node.cloneNode(true));
-                    this.applyBlockLabelListeners(labelElements, "column", block);
                 }
                 block.node.append(...labelElements);
             }
@@ -239,44 +233,8 @@ export default class ItemSelector {
     }
 
     buttonsClassIfElse(boolean, indices, trueClasses, falseClasses = null) {
-        const elements = indices.filter(index => index !== null).map(index => this.buttons[index]);
-        DOMHelper.classIfElse(boolean, elements, trueClasses, falseClasses);
-    }
-
-    applyBlockLabelListeners(element, type, block) {
-        if (Array.isArray(element)) {
-            for (const el of element) {
-                this.applyBlockLabelListeners(el, type, block);
-            }
-            return;
-        }
-
-        const indicesKey = type === "row" ? "indicesByRow" : "indicesByColumn";
-        const index = element.dataset.index;
-        const indices = block[indicesKey][index];
-
-        DOMHelper.addClickTapListener(element, () => {
-            this.toggleItems(indices);
-        });
-
-        const listeners = [
-            ["pointerover", "hover", true],
-            ["pointerleave", "hover", false],
-        ];
-
-        for (const [event, cls, bool] of listeners) {
-            element.addEventListener(event, () => {
-                this.buttonsClassIfElse(bool, indices, cls);
-            });
-        }
-
-        element.addEventListener("pointerdown", () => {
-            this.buttonsClassIfElse(true, indices, "active");
-
-            document.addEventListener("pointerup", () => {
-                this.buttonsClassIfElse(false, indices, "active");
-            }, {once: true});
-        });
+        const buttons = indices.filter(index => index !== null).map(index => this.buttons[index]);
+        DOMHelper.classIfElse(boolean, buttons, trueClasses, falseClasses);
     }
 
     /**
@@ -322,96 +280,161 @@ export default class ItemSelector {
 
         for (const [groupIndex, indices] of block.dblclickGroups.entries()) {
             for (const index of indices) {
-                this.inputs[index].dataset.dblclickGroup = groupIndex.toString();
+                this.buttons[index].dataset.dblclickGroup = groupIndex;
             }
         }
     }
 
-    addDblClickListeners(button, index = null) {
-        if (Array.isArray(button)) {
-            for (const [index, btn] of button.entries()) {
-                this.addDblClickListeners(btn, index);
-            }
+    setupBlockListeners(block) {
+        block.node.addEventListener("click", this.onBlockClickButton);
+
+        this.resetRangeSelection(block);
+        block.node.addEventListener("pointerdown", this.onBlockRangePointerDown);
+        block.node.addEventListener("pointermove", this.onBlockRangePointerMove);
+
+        if (block.mode === "grid") {
+            block.node.addEventListener("click", this.onBlockClickLabel);
+            block.node.addEventListener("pointerenter", this.onBlockLabelPointerEnterLeave);
+            block.node.addEventListener("pointerleave", this.onBlockLabelPointerEnterLeave);
+            block.node.addEventListener("pointerdown", this.onBlockLabelPointerDown);
+        }
+    }
+
+    /**
+     * @param {PointerEvent} event
+     */
+    onBlockClickButton(event) {
+        const button = event.target.closest(".selector-item-button");
+        if (!button) {
             return;
         }
 
-        const input = this.inputs[index];
-        const blockIndex = button.parentElement.dataset.blockIndex;
-        const block = this.blocks[blockIndex];
-        const groupIndex = input.dataset.dblclickGroup;
-        const indices = block.dblclickGroups[groupIndex];
+        const index = button.dataset.index;
+        const block = this.getBlockFromEvent(event);
 
-        button.addEventListener("click", (event) => {
-            if (event.target.closest("input")) {
-                return;
-            }
+        this.updateItem(index, !this.itemsActive[index]);
 
-            if (event.detail % 2 === 0) {
-                if (block.lastClicked === index) {
-                    this.toggleItems(indices);
-                }
-            } else {
-                block.lastClicked = index;
-            }
-        });
+        // double-click
+        if (event.detail % 2 === 0 && block.lastClicked === index) {
+            const groupIndex = button.dataset.dblclickGroup;
+            const indices = block.dblclickGroups[groupIndex];
+
+            this.toggleItems(indices);
+        }
+
+        block.lastClicked = index;
     }
 
-    setupRangeSelection(block) {
+    /**
+     * @param {PointerEvent} event
+     */
+    getBlockFromEvent(event) {
+        const blockNode = event.target.closest(".selector-block");
+        return blockNode ? this.blocks[blockNode.dataset.blockIndex] : null;
+    }
+
+    /**
+     * @param {PointerEvent} event
+     * @returns {*|null}
+     */
+    getBlockIndicesFromEvent(event) {
+        const element = event.target.closest(".block-label");
+        if (!element) return;
+
+        const indicesKey = element.classList.contains("block-row-label") ? "indicesByRow" : "indicesByColumn";
+        const index = element.dataset.index;
+        const block = this.getBlockFromEvent(event);
+        return block[indicesKey][index];
+    }
+
+    /**
+     * @param {PointerEvent} event
+     */
+    onBlockClickLabel(event) {
+        const indices = this.getBlockIndicesFromEvent(event);
+        if (!indices) return;
+
+        this.toggleItems(indices);
+    }
+
+    /**
+     * @param {PointerEvent} event
+     */
+    onBlockLabelPointerEnterLeave(event) {
+        const indices = this.getBlockIndicesFromEvent(event);
+        if (!indices) return;
+
+        this.buttonsClassIfElse(event.type === "pointerenter", indices, "hover");
+    }
+
+    /**
+     * @param {PointerEvent} event
+     */
+    onBlockLabelPointerDown(event) {
+        const indices = this.getBlockIndicesFromEvent(event);
+        if (!indices) return;
+
+        this.buttonsClassIfElse(true, indices, "active");
+
+        document.addEventListener("pointerup", () => {
+            this.buttonsClassIfElse(false, indices, "active");
+        }, {once: true});
+    }
+
+    resetRangeSelection(block) {
         block.rangeSelecting = false;
+
+        block.rangeSelectionActiveIndices = null;
         block.rangeSelectStartIndex = null;
         block.rangeSelectStopIndex = null;
         block.rangeSelectionActiveIndices = null;
+    }
 
-        block.node.addEventListener("pointermove", (event) => {
-            const element = document.elementFromPoint(event.clientX, event.clientY);
-            if (!element) {
-                return;
+    /**
+     * @param {PointerEvent} event
+     */
+    onBlockRangePointerMove(event) {
+        const block = this.getBlockFromEvent(event);
+        if (!block.rangeSelecting) return;
+
+        const element = document.elementFromPoint(event.clientX, event.clientY);
+        if (!element) return;
+
+        const button = element.closest(".selector-item-button");
+        if (!button || button.parentElement !== block.node) return;
+
+
+        const indexWithinBlock = button.dataset.indexWithinBlock;
+        if (block.rangeSelectStopIndex === indexWithinBlock) return;
+
+        if (block.rangeSelectStartIndex === null) {
+            block.rangeSelectStartIndex = indexWithinBlock;
+        }
+        block.rangeSelectStopIndex = indexWithinBlock;
+        this.updateRangeSelection(block);
+    }
+
+    /**
+     * @param {PointerEvent} event
+     */
+    onBlockRangePointerDown(event) {
+        const block = this.getBlockFromEvent(event);
+        block.rangeSelecting = true;
+        const button = event.target.closest(".selector-item-button")
+        if (button) {
+            block.rangeSelectStartIndex = button.dataset.indexWithinBlock;
+        }
+
+        document.addEventListener("pointerup", () => {
+            if (!block.rangeSelecting) return;
+
+            if (block.rangeSelectionActiveIndices) {
+                this.toggleItems(block.rangeSelectionActiveIndices);
+                this.buttonsClassIfElse(false, block.rangeSelectionActiveIndices, "active");
             }
 
-            const button = element.closest(".selector-item-button");
-            if (!button || button.parentElement !== block.node) {
-                return;
-            }
-
-            const indexWithinBlock = button.dataset.indexWithinBlock;
-            if (block.rangeSelectStopIndex === indexWithinBlock) {
-                return;
-            }
-
-            if (block.rangeSelecting) {
-                if (block.rangeSelectStartIndex === null) {
-                    block.rangeSelectStartIndex = indexWithinBlock;
-                }
-                block.rangeSelectStopIndex = indexWithinBlock;
-                this.updateRangeSelection(block);
-            }
-        });
-
-        block.node.addEventListener("pointerdown", (event) => {
-            block.rangeSelecting = true;
-            const button = event.target.closest(".selector-item-button")
-            if (button) {
-                block.rangeSelectStartIndex = button.dataset.indexWithinBlock;
-            }
-
-            document.addEventListener("pointerup", () => {
-                if (!block.rangeSelecting) {
-                    return;
-                }
-
-                if (block.rangeSelectionActiveIndices) {
-                    this.toggleItems(block.rangeSelectionActiveIndices);
-                    this.buttonsClassIfElse(false, block.rangeSelectionActiveIndices, "active");
-                }
-
-                block.rangeSelectionActiveIndices = null;
-                block.rangeSelectStartIndex = null;
-                block.rangeSelectStopIndex = null;
-                block.rangeSelectionActiveIndices = null;
-
-                block.rangeSelecting = false;
-            }, {once: true});
-        });
+            this.resetRangeSelection(block);
+        }, {once: true});
     }
 
     updateRangeSelection(block) {
@@ -544,10 +567,10 @@ export default class ItemSelector {
         for (const [index, item] of this.items.entries()) {
             if (item.countQuizItems(forms) === 0) {
                 this.updateButtonForms(index, this.formsData.keys);
-                this.inputs[index].setAttribute('disabled', 'disabled');
+                this.buttons[index].setAttribute('disabled', 'disabled');
             } else {
                 this.updateButtonForms(index, forms);
-                this.inputs[index].removeAttribute('disabled');
+                this.buttons[index].removeAttribute('disabled');
             }
         }
         if (scale) {
@@ -566,15 +589,13 @@ export default class ItemSelector {
 
     /**
      * @param {(number | null)[]} indices
-     * @param {boolean} [updateInputs]
      * @param {boolean} [updateIfDisabled]
      */
-    toggleItems(indices, {updateInputs = true, updateIfDisabled = false} = {}) {
+    toggleItems(indices, {updateIfDisabled = false} = {}) {
         indices = indices.filter(index => index !== null);
         const checked = indices.map(index => this.itemsActive[index]).includes(false);
         for (const index of indices) {
             this.updateItem(index, checked, {
-                updateInputs: updateInputs,
                 updateIfDisabled: updateIfDisabled,
                 callUpdateListeners: false
             });
@@ -584,16 +605,16 @@ export default class ItemSelector {
     }
 
     /**
-     * @param {number} index
+     * @param {number|string} index
      * @param {boolean} checked
      * @param {boolean} [updateInput]
      * @param {boolean} [updateIfDisabled]
      * @param {boolean} [callUpdateListeners]
      */
-    updateItem(index, checked, {updateInput = true, updateIfDisabled = false, callUpdateListeners = true} = {}) {
+    updateItem(index, checked, {updateIfDisabled = false, callUpdateListeners = true} = {}) {
         this.itemsActive[index] = checked;
-        if (updateInput && (!this.inputs[index].hasAttribute('disabled') || updateIfDisabled)) {
-            this.inputs[index].checked = checked;
+        if (!this.buttons[index].hasAttribute('disabled') || updateIfDisabled) {
+            this.buttons[index].setAttribute('aria-checked', checked.toString());
         }
 
         if (callUpdateListeners) {
@@ -616,19 +637,12 @@ export default class ItemSelector {
         return count;
     }
 
-    /**
-     * @param {Event} event
-     */
-    inputEventListener(event) {
-        this.updateItem(parseInt(event.target.value), event.target.checked, {updateInput: false});
-    }
-
     scaleButtons() {
         for (const block of this.blocks) {
             const buttons = block.indices
                 .filter(index => index !== null)
-                .filter(index => !this.inputs[index].hasAttribute('disabled'))
-                .map(index => this.buttons[index]);
+                .map(index => this.buttons[index])
+                .filter(button => !button.hasAttribute('disabled'));
 
             DOMHelper.scaleAllToFit(
                 buttons.map(button => button.querySelector(".symbol")),
@@ -637,7 +651,7 @@ export default class ItemSelector {
 
             if (this.selectorData.label) {
                 DOMHelper.scaleAllToFit(
-                    buttons.map(button => button.querySelector("label")),
+                    buttons.map(button => button.querySelector(".selector-item-label")),
                     {containers: buttons, uniform: 0.75}
                 );
             }
@@ -673,7 +687,7 @@ export default class ItemSelector {
             return;
         }
         for (const [index, active] of itemsActive.entries()) {
-            this.inputs[index].checked = active;
+            this.updateItem(index, active, {callUpdateListeners: false});
         }
         this.itemsActive = itemsActive;
     }
@@ -708,19 +722,18 @@ export default class ItemSelector {
 
     /**
      * @param {DatasetItem} item
-     * @param {string} index
-     * @returns {[HTMLElement, HTMLInputElement]}
+     * @param {number} index
+     * @returns {HTMLElement}
      */
     getItemButton(item, index) {
         const button = DOMHelper.createElement("div.selector-item-button");
-        const input = document.createElement("input");
-
         const id = DOMHelper.uniqueIdPrefix("selectorButton") + index.toString();
-        DOMHelper.setAttrs(input, {
-            type: "checkbox",
-            value: index,
-            name: id,
-            id: id
+        DOMHelper.setAttrs(button, {
+            id: id,
+            role: "checkbox",
+            tabindex: "0",
+            "aria-checked": "false",
+            "aria-labelledby": id          // setting aria-labelledby to its own content
         });
 
         const symbolElement = DOMHelper.createElement("span.symbol.symbol-string");
@@ -733,16 +746,10 @@ export default class ItemSelector {
             dir: this.dataset.metadata.dir
         });
 
-        button.append(input, symbolElement);
-
-        DOMHelper.addClickTapListener(button, () => {
-            input.checked = !input.checked;
-            input.dispatchEvent(new Event('change'));
-        });
+        button.append(symbolElement);
 
         if (this.selectorData.label) {
-            const label = DOMHelper.createElement("label.selector-item-label");
-            label.setAttribute("for", id);
+            const label = DOMHelper.createElement("span.selector-item-label");
             const labelData = this.selectorData.label;
             let labelContent = item.properties[labelData.property];
             if (labelData.splitFirst ?? true) {
@@ -754,9 +761,9 @@ export default class ItemSelector {
             button.append(label);
         }
 
-        button.dataset.index = index;
+        button.dataset.index = index.toString();
 
-        return [button, input];
+        return button;
     }
 
     setupFormsSetting(checked = null) {

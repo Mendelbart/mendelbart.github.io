@@ -1,4 +1,5 @@
 import {DOMHelper as DH, ObjectHelper as OH} from "../helpers/helpers.js";
+import {ButtonGroup} from "./valueelement.js";
 
 export class SettingsCollection {
     constructor() {
@@ -159,12 +160,19 @@ export class Setting {
     /**
      * @param {string} labelString
      * @param {ValueElement} valueElement
-     * @param {boolean} [labelRight]
      * @param {?string} [id]
      * @param {string} [idPrefix]
      * @returns {Setting}
      */
-    static create(labelString, valueElement, {labelRight = false, id = null, idPrefix = ""} = {}) {
+    static create(labelString, valueElement, {id = null, idPrefix = ""} = {}) {
+        if (valueElement instanceof ButtonGroup) {
+            const legendElement = document.createElement("LEGEND");
+            legendElement.textContent = labelString;
+            valueElement.node.prepend(legendElement);
+            DH.addClass(valueElement.node, "setting");
+            return new this(valueElement.node, valueElement, legendElement);
+        }
+
         const node = DH.getTemplate("setting");
         const labelElement = document.createElement("LABEL");
 
@@ -172,14 +180,13 @@ export class Setting {
 
         id ??= this.generateID(idPrefix);
         labelElement.setAttribute("for", id);
-        valueElement.labelForElement().setAttribute("id", id);
+        DH.setAttrs(valueElement.labelForElement(), {
+            id: id,
+            "aria-labelledby": id
+        });
 
-        if (labelRight) {
-            node.append(valueElement.node, labelElement);
-            DH.addClass(node, "setting-label-right");
-        } else {
-            node.append(labelElement, valueElement.node);
-        }
+        node.append(labelElement, valueElement.node);
+
         return new this(node, valueElement, labelElement);
     }
 

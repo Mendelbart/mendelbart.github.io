@@ -60,7 +60,7 @@ export class ItemDealer {
     }
 
     updateTotalTriesLeft() {
-        const val = ArrayHelper.sum(Object.values(this.triesLeft))
+        const val = ArrayHelper.sum(this.triesLeft)
         if (val > this.totalTriesLeft) {
             this.maxTriesLeft += val - this.totalTriesLeft;
         }
@@ -137,6 +137,7 @@ export class ItemDealer {
      */
     punish(index, factor = 1) {
         this.triesLeft[index] += this._manualPunish * factor;
+        this.updateTotalTriesLeft();
     }
 
     /**

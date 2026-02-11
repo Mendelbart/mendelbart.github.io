@@ -12,7 +12,7 @@ export function createInput(attrs) {
 }
 
 
-DOMHelper.registerTemplate("buttonGroupContainer", `<div class="button-group" role="group"></div>`)
+DOMHelper.registerTemplate("buttonGroupContainer", `<fieldset class="button-group"></fieldset>`)
 /**
  *
  * @param {Record<string,string> | string[]} data
@@ -29,7 +29,6 @@ export function createButtonGroup(data, {
     name= null,
     checked = null,
     disabled = null,
-    container = null,
     decheckable = false
 } = {}) {
     if (Array.isArray(data)) {
@@ -38,9 +37,13 @@ export function createButtonGroup(data, {
 
     const values = Object.keys(data);
     const type = exclusive ? "radio" : "checkbox";
-    name ??= ValueElement.generateName("buttongroup_")
+    name ??= ValueElement.generateName("buttongroup_");
+
+    const container = DOMHelper.getTemplate("buttonGroupContainer");
 
     if (exclusive) {
+        container.setAttribute("role", "radiogroup");
+
         if (typeof checked === "string") {
             checked = [checked];
         }
@@ -53,12 +56,6 @@ export function createButtonGroup(data, {
     checked = ObjectHelper.subsetToBoolRecord(checked ?? "none", values);
     disabled = ObjectHelper.subsetToBoolRecord(disabled ?? "none", values);
 
-    if (!container) {
-        container = DOMHelper.getTemplate("buttonGroupContainer");
-    } else {
-        container.replaceChildren();
-    }
-
     for (const [value, displayName] of Object.entries(data)) {
         const [input, label] = DOMHelper.button(type, value, displayName);
         const valueName = exclusive ? name : `${name}_${value}`;
@@ -69,15 +66,15 @@ export function createButtonGroup(data, {
             checked: checked[value]
         });
 
-        if (exclusive && decheckable) {
-            input.addEventListener("click", (e) => {
-                if (e.target.checked) {
-                    e.target.checked = false;
-                }
-            });
-        }
-
         container.append(input, label);
+    }
+
+    if (exclusive && decheckable) {
+        container.addEventListener("click", (e) => {
+            if (e.target.tagName === "INPUT" && e.target.checked) {
+                e.target.checked = false;
+            }
+        });
     }
 
     return new ButtonGroup(container, exclusive, decheckable);
@@ -87,7 +84,7 @@ export function createButtonGroup(data, {
 DOMHelper.registerTemplate("slider", `<div class="slider-container">
     <span class="range-min"></span><span class="range-value"></span><span class="range-max"></span>
     <input type="range" class="form-range">
-</div>`)
+</div>`);
 
 /**
  * @param {number} min
