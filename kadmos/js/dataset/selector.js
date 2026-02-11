@@ -286,7 +286,7 @@ export default class ItemSelector {
     }
 
     setupBlockListeners(block) {
-        block.node.addEventListener("click", this.onBlockClickButton);
+        // block.node.addEventListener("click", this.onBlockClickButton);
 
         this.resetRangeSelection(block);
         block.node.addEventListener("pointerdown", this.onBlockRangePointerDown);
@@ -305,9 +305,7 @@ export default class ItemSelector {
      */
     onBlockClickButton(event) {
         const button = event.target.closest(".selector-item-button");
-        if (!button) {
-            return;
-        }
+        if (!button) return;
 
         const index = button.dataset.index;
         const block = this.getBlockFromEvent(event);
@@ -424,6 +422,8 @@ export default class ItemSelector {
         if (button) {
             block.rangeSelectStartIndex = button.dataset.indexWithinBlock;
         }
+        block.rangeSelectStopIndex = block.rangeSelectStartIndex;
+        this.updateRangeSelection(block);
 
         document.addEventListener("pointerup", () => {
             if (!block.rangeSelecting) return;

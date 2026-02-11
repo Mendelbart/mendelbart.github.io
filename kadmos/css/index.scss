@@ -801,10 +801,6 @@ $selectorBorderRadius: .2rem;
 
       border-radius: $selectorBorderRadius;
 
-      & > * {
-        z-index: -1;
-      }
-
       &[aria-checked="true"] {
         @include button-events("--clr-selector-button-checked");
 

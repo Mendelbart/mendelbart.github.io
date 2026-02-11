@@ -33,10 +33,6 @@ export class GameContext {
         });
     }
 
-    log(...stuff) {
-        document.getElementById("console").innerHTML += stuff.join(", ") + "<br>";
-    }
-
     async selectDataset(key) {
         this.dataset = await Dataset.fromKey(key);
         this.datasetKey = key;
