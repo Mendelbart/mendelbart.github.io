@@ -407,7 +407,7 @@ class DatasetItem {
         if (language !== "default") {
             for (const key of propertyKeys) {
                 const langKey = key + "_" + language;
-                if (langKey in this.properties) {
+                if (this.properties[langKey]) {
                     result[key] = this.properties[langKey];
                 }
             }

@@ -600,10 +600,10 @@ export default class ItemSelector {
         for (const [index, item] of this.items.entries()) {
             if (item.countQuizItems(forms) === 0) {
                 this.updateButtonForms(index, this.formsData.keys);
-                this.buttons[index].setAttribute('disabled', 'disabled');
+                this.buttons[index].classList.add('disabled');
             } else {
                 this.updateButtonForms(index, forms);
-                this.buttons[index].removeAttribute('disabled');
+                this.buttons[index].classList.remove('disabled');
             }
         }
         if (scale) {
@@ -646,7 +646,7 @@ export default class ItemSelector {
      */
     updateItem(index, checked, {updateIfDisabled = false, callUpdateListeners = true} = {}) {
         this.itemsActive[index] = checked;
-        if (!this.buttons[index].hasAttribute('disabled') || updateIfDisabled) {
+        if (!this.buttons[index].classList.contains('disabled') || updateIfDisabled) {
             this.buttons[index].setAttribute('aria-checked', checked.toString());
         }
 
@@ -675,7 +675,7 @@ export default class ItemSelector {
             const buttons = block.indices
                 .filter(index => index !== null)
                 .map(index => this.buttons[index])
-                .filter(button => !button.hasAttribute('disabled'));
+                .filter(button => !button.classList.contains('disabled'));
 
             DOMHelper.scaleAllToFit(
                 buttons.map(button => button.querySelector(".symbol")),

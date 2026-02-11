@@ -751,9 +751,9 @@ $selectorBorderRadius: .2rem;
         background: var(--clr-selector-button-active);
       }
 
-      &:has(> input:disabled) {
+      .selector-item-button.disabled {
         pointer-events: none;
-        visibility: hidden;
+        display: none;
       }
     }
 
@@ -770,7 +770,7 @@ $selectorBorderRadius: .2rem;
         min-width: var(--button-min-width);
         max-width: var(--button-max-width);
 
-        &:has(> input:disabled) {
+        &.disabled {
           pointer-events: none;
           display: none;
         }

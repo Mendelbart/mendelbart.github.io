@@ -39,7 +39,7 @@
     "format": "rows",
     "template": ["display", "p:name", "p:num"],
     "rows": [
-      [["א"], "Aleph/Alef", 1],
+      [["א"], "Aleph", 1],
       [["ב"], "Bet", 2],
       [["ג"], "Gimel", 3],
       [["ד"], "Dalet", 4],
