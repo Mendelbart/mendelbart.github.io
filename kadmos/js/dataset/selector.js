@@ -32,6 +32,7 @@ export default class ItemSelector {
         // Bind event listener functions
         this.onBlockClickLabel = this.onBlockClickLabel.bind(this);
         this.onBlockClickButton = this.onBlockClickButton.bind(this);
+        this.onBlockDblClickButton = this.onBlockDblClickButton.bind(this);
         this.onBlockLabelPointerEnterLeave = this.onBlockLabelPointerEnterLeave.bind(this);
         this.onBlockLabelPointerDown = this.onBlockLabelPointerDown.bind(this);
         this.onBlockRangePointerDown = this.onBlockRangePointerDown.bind(this);
@@ -286,7 +287,7 @@ export default class ItemSelector {
     }
 
     setupBlockListeners(block) {
-        // block.node.addEventListener("click", this.onBlockClickButton);
+        block.node.addEventListener("dblclick", this.onBlockDblClickButton);
 
         this.resetRangeSelection(block);
         block.node.addEventListener("pointerdown", this.onBlockRangePointerDown);
@@ -321,6 +322,20 @@ export default class ItemSelector {
         }
 
         block.lastClicked = index;
+    }
+
+    /**
+     * @param {PointerEvent} event
+     */
+    onBlockDblClickButton(event) {
+        const button = event.target.closest(".selector-item-button");
+        if (!button) return;
+
+        const block = this.getBlockFromEvent(event);
+        const groupIndex = button.dataset.dblclickGroup;
+        const indices = block.dblclickGroups[groupIndex];
+
+        this.toggleItems(indices);
     }
 
     /**
@@ -448,6 +463,10 @@ export default class ItemSelector {
     getIndicesInRangeSelection(block, startIndex = null, stopIndex = null) {
         startIndex ??= block.rangeSelectStartIndex;
         stopIndex ??= block.rangeSelectStopIndex;
+
+        if (startIndex === null || stopIndex === null) {
+            return [];
+        }
 
         [startIndex, stopIndex] = minmax(startIndex, stopIndex);
 
