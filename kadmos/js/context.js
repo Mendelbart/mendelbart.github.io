@@ -1,4 +1,4 @@
-import {Setting, SettingsCollection, SettingsHelper as SH} from "./settings/settings.js";
+import {SettingsCollection, ValueElement} from "./settings/settings.js";
 import {Game} from "./game/Game.js";
 import {Dataset} from "./dataset/Dataset.js";
 import {DOMHelper, Base64Helper} from "./helpers/helpers.js";
@@ -32,12 +32,12 @@ export class GameContext {
 
     static generateGenericSettings() {
         return SettingsCollection.createFrom({
-            seed: Setting.create("Seed (optional)", SH.createInput({type: "text"}), {id: "game-seed"})
+            seed: ValueElement.createInput("text", "Seed (optional)", {id: "game-seed"})
         });
     }
 
     /**
-     * @returns {{}|any}
+     * @returns {Record<string,any>}
      */
     getCachedSettings() {
         const settingsJSON = window.localStorage.getItem(this.localStorageSettingsKey());
@@ -48,7 +48,6 @@ export class GameContext {
             if (typeof settings.items === "string") {
                 settings.items = Base64Helper.decodeBase64BoolArray(settings.items);
             }
-
             return settings;
         } catch (e) {
             console.error(e);
@@ -120,20 +119,18 @@ export class GameContext {
         this.sc.extend(this.genericSettings);
 
         for (const key of ["language"]) {
-            const singleButton = this.sc.getValueElement(key).buttonCount() === 1;
+            const singleButton = this.sc.getSetting(key).buttonCount() === 1;
             if (singleButton) {
                 DOMHelper.hide(this.sc.getNode(key));
             }
             DOMHelper.classIfElse(singleButton, this.sc.getNode(key), "hidden");
         }
 
-        this.sc.settings.properties.valueElement.disableIfSingleButton(true);
+        this.sc.getSetting("properties").disableIfSingleButton(true);
 
-        for (const setting of Object.values(this.sc.settings)) {
-            setting.valueElement.addUpdateListener(() => {
-                this.saveSettings();
-            });
-        }
+        this.sc.addUpdateListener(() => {
+            this.saveSettings();
+        });
     }
 
     localStorageSettingsKey(datasetKey = this.datasetKey) {

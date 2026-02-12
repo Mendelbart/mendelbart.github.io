@@ -16,7 +16,7 @@ const datasetSelect = document.getElementById("datasetSelect");
         DOMHelper.setOptions(
             datasetSelect,
             ObjectHelper.map(DATASETS_METADATA, data => data.name),
-            new URLSearchParams(location.search).get("dataset") ?? DEFAULT_DATASET
+            {selected: new URLSearchParams(location.search).get("dataset") ?? DEFAULT_DATASET}
         );
 
         window.addEventListener("resize", () => {
@@ -94,11 +94,13 @@ function setupRibbon(container, closable = false) {
     const inputs = container.querySelectorAll(".ribbon-buttons input[type=checkbox]");
     container.dataset.closable = closable.toString();
 
-    let openId;
-    for (const input of inputs) {
-        if (input.checked) {
-            openId = input.dataset.contentId;
-            break;
+    let openId = container.dataset.openId;
+    if (!openId) {
+        for (const input of inputs) {
+            if (input.checked) {
+                openId = input.dataset.contentId;
+                break;
+            }
         }
     }
 
@@ -110,6 +112,7 @@ function setupRibbon(container, closable = false) {
 
     if (openId) {
         document.getElementById(openId).classList.remove("hidden");
+        contents.classList.remove("hidden");
         container.dataset.openId = openId;
     }
 

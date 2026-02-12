@@ -1,7 +1,8 @@
 import {arraysEqual} from "./array.js";
 
 /**
- * @template V,W
+ * @template {any} V
+ * @template {any} W
  * @param {Object<string,V>} obj
  * @param {function(V,string,number): W} fn
  * @returns {Object<string,W>}

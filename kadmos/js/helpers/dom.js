@@ -2,6 +2,8 @@
  * @typedef {HTMLElement | NodeListOf<HTMLElement> | HTMLElement[] | HTMLCollection} HTMLElements
  */
 
+import * as ObjectHelper from './object.js';
+
 let IdPrefixCounter = 0;
 window.hasTouch = 'ontouchstart' in window;
 
@@ -22,7 +24,7 @@ export function registerTemplates(htmls) {
 /**
  * Register a template, which can be retrieved as a Node using `getTemplate(key)`.
  * @param {string} key
- * @param {string} html
+ * @param {string|Node} html
  */
 export function registerTemplate(key, html) {
     if (key in TEMPLATES) {
@@ -30,7 +32,12 @@ export function registerTemplate(key, html) {
     }
 
     const template = document.createElement("TEMPLATE");
-    template.insertAdjacentHTML("beforeend",  html);
+    if (typeof html === "string") {
+        template.insertAdjacentHTML("beforeend",  html);
+    } else {
+        template.append(html);
+    }
+
     TEMPLATES[key] = template;
 }
 
@@ -56,7 +63,7 @@ registerTemplates({
  * @param {string} value
  * @param {string | Node | null} labelContent
  * @param {string | null} id
- * @returns {[HTMLElement, HTMLElement]} [inputNode, labelNode]
+ * @returns {[HTMLInputElement, HTMLLabelElement]} [inputNode, labelNode]
  */
 export function button(type, value, labelContent = null, id = null) {
     const input = getTemplate("buttonInput");
@@ -122,16 +129,9 @@ export function htmlToElement(html) {
  */
 export function createElement(str) {
     const [tagId, ...classes] = str.split(".");
-
-    let tag, id;
-    if (tagId.includes("#")) {
-        [tag, id] = tagId.split("#");
-    } else {
-        tag = tagId;
-        id = null;
-    }
-
+    const [tag, id] = tagId.split("#");
     const element = document.createElement(tag);
+
     if (id) {
         element.id = id;
     }
@@ -143,29 +143,53 @@ export function createElement(str) {
 /**
  *
  * @param {HTMLSelectElement} select
- * @param {Object<string,string>} data
- * @param {?string} selected
- * @param {?(string[])} disabled
+ * @param {Record<string,string>} data
+ * @param {?string} [selected] default: first key of `data`
+ * @param {string[]} [disabled]
+ * @param {{label, keys}[]} [groups]
  */
-export function setOptions(select, data, selected = null, disabled = null) {
-    if (!selected) {
-        selected = Object.keys(data)[0];
+export function setOptions(select, data, {
+    selected = null,
+    disabled = [],
+    groups = []
+} = {}) {
+    selected ??= Object.keys(data)[0];
+
+    const grouped = ObjectHelper.map(data, () => false);
+    let before = null;
+
+    for (const {label, keys} of groups) {
+        /** @type {HTMLOptGroupElement} **/
+        const optgroup = document.createElement("OPTGROUP");
+        optgroup.label = label;
+        for (const key of keys) {
+            optgroup.append(createOption(key, data[key], selected, disabled));
+            grouped[key] = true;
+        }
+        select.add(optgroup);
+        if (!before) {
+            before = optgroup;
+        }
     }
-    if (!disabled) {
-        disabled = [];
-    }
+
     for (const [key, value] of Object.entries(data)) {
-        const option = document.createElement("OPTION");
-        option.value = key;
-        option.innerHTML = value;
-        if (selected === key) {
-            option.selected = "selected";
+        if (!grouped[key]) {
+            select.add(createOption(key, value, selected, disabled), before);
         }
-        if (disabled.includes(key)) {
-            option.disabled = "disabled";
-        }
-        select.add(option);
     }
+}
+
+function createOption(key, value, selected, disabled) {
+    const option = document.createElement("OPTION");
+    option.value = key;
+    option.textContent = value;
+    if (selected === key) {
+        option.selected = "selected";
+    }
+    if (disabled.includes(key)) {
+        option.disabled = "disabled";
+    }
+    return option;
 }
 
 /**

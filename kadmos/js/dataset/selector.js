@@ -1,6 +1,6 @@
 import {DOMHelper, ObjectHelper, FontHelper, ArrayHelper, FunctionStack} from "../helpers/helpers.js";
 const range = ArrayHelper.range;
-import {Setting, SettingsHelper} from "../settings/settings.js";
+import {ButtonGroup} from "../settings/settings.js";
 
 const STYLE_PROPERTIES = {
     buttonMinWidth: "--button-min-width",
@@ -805,15 +805,16 @@ export default class ItemSelector {
         }
 
         const label = this.formsData.label ?? (this.formsData.exclusive ? "Form" : "Forms");
-        this.formsSetting = Setting.create(label, SettingsHelper.createButtonGroup(
+        this.formsSetting = ButtonGroup.from(
             ObjectHelper.map(this.formsData.setting, (p) => p.label),
             {
+                label: label,
                 exclusive: !!this.formsData.exclusive,
                 checked: checked ?? ObjectHelper.map(this.formsData.setting, (p) => p.active),
             },
-        ));
+        );
 
-        this.formsSetting.valueElement.updateListeners.push(
+        this.formsSetting.updateListeners.push(
             this.updateButtons.bind(this),
             () => this.updateListeners.call(this)
         );
@@ -838,8 +839,8 @@ export default class ItemSelector {
 
         const result = [];
 
-        let keys = this.formsSetting.getValue();
-        if (this.formsSetting.valueElement.exclusive) {
+        let keys = this.formsSetting.value;
+        if (this.formsSetting.exclusive) {
             keys = [keys];
         }
 

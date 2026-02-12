@@ -1,7 +1,10 @@
 import {ItemProperty, QuizItem} from "./symbol.js";
 import {DOMHelper, ObjectHelper, FontHelper} from '../helpers/helpers.js';
 import ItemSelector from "./selector.js";
-import {Setting, SettingsCollection, SettingsHelper as SH} from "../settings/settings.js";
+import {
+    SettingsCollection,
+    ButtonGroup, ValueElement
+} from "../settings/settings.js";
 
 DOMHelper.registerTemplate(
     "headingElement",
@@ -51,9 +54,9 @@ export class Dataset {
         this.metadata = Object.assign({}, DEFAULT_METADATA, data.metadata);
         this.displayData = data.displayData;
         this.formsData = data.formsData ?? DEFAULT_FORMSDATA;
-        this.filters = this.standardizeFilters(data.filters ?? {});
         this.propsData = data.propsData;
         this.selectorData = data.selectorData ?? {};
+        this.variantsData = this.processVariants(data.variantsData)
 
         this.languageData = data.languageData ?? DEFAULT_LANGUAGEDATA;
         this.languageData.default ??= this.languageData.languages[0];
@@ -86,23 +89,38 @@ export class Dataset {
             .catch(DOMHelper.printError);
     }
 
-    /**
-     * @param {Record<string,Record<string,*>>} filters
-     * @returns {Record<string,Record<string,*>>}
-     */
-    standardizeFilters(filters) {
-        for (const filter of Object.values(filters)) {
-            this.standardizeFilter(filter);
+    processVariants(variantsData) {
+        if (!variantsData) {
+            return null;
         }
-        return filters;
+
+        for (const [key, data] of Object.entries(variantsData.variants)) {
+            if (typeof data === "string") {
+                variantsData.variants[key] = {label: data};
+            }
+        }
+
+        return variantsData;
     }
 
-    /**
-     * @param {Record<string,*>} filter
-     */
-    standardizeFilter(filter) {
-        if (Array.isArray(filter.values)) {
-            filter.values = Object.fromEntries(filter.values.map(x => [x, {label: x}]));
+    getGameSettings(checked) {
+        const settings = {};
+        if (this.hasPropsSetting()) {
+            settings.properties = this.propertySetting(checked.properties);
+        }
+        if (this.hasLanguageSetting()) {
+            settings.language = this.languageSetting(checked.language);
+        }
+        return SettingsCollection.createFrom(settings);
+    }
+
+    getFilterSettings(checked) {
+        const settings = {};
+        if (this.hasFormsSetting()) {
+            settings.forms = this.formsSetting(checked.forms);
+        }
+        if (this.hasVariantSetting()) {
+            settings.variant = this.variantSetting(checked.variant);
         }
     }
 
@@ -114,20 +132,68 @@ export class Dataset {
     }
 
     propertySetting(checked = null) {
-        return Setting.create("Properties", SH.createButtonGroup(
+        return ButtonGroup.from(
             ObjectHelper.map(this.propsData, p => p.label),
-            {checked: checked ?? ObjectHelper.map(this.propsData, p => !!p.active)}
-        ));
+            {
+                label: "Properties",
+                checked: checked ?? ObjectHelper.map(this.propsData, p => !!p.active)
+            }
+        );
     }
 
     languageSetting(checked = null) {
-        return Setting.create("Language", SH.createButtonGroup(
+        return ButtonGroup.from(
             ObjectHelper.onlyKeys(LANGUAGES, this.languageData.languages),
             {
+                label: "Language",
                 checked: checked ?? this.languageData.default,
                 exclusive: true
             }
-        ));
+        );
+    }
+
+    formsSetting(checked = null) {
+        const label = this.formsData.label ?? (this.formsData.exclusive ? "Form" : "Forms");
+        return ButtonGroup.from(
+            ObjectHelper.map(this.formsData.setting, (p) => p.label),
+            {
+                label: label,
+                exclusive: !!this.formsData.exclusive,
+                checked: checked ?? ObjectHelper.map(this.formsData.setting, (p) => p.active),
+            },
+        );
+    }
+
+    variantSetting(selected = null) {
+        const variants = this.variantsData.variants;
+        return ValueElement.createSelect(
+            ObjectHelper.map(variants, (variant) => variant.label),
+            {
+                label: "Variants",
+                selected: selected ?? this.variantsData.default ?? Object.keys(variants)[0],
+                groups: variants.groups ?? []
+            }
+        )
+    }
+
+    hasPropsSetting() {
+        return this.propsData.keys.length > 1;
+    }
+
+    hasLanguageSetting() {
+        return this.languageData.languages.length > 1;
+    }
+
+    hasVariantSetting() {
+        return !!this.variantsData;
+    }
+
+    hasFormsSetting() {
+        return Object.keys(this.formsData.setting).length > 1;
+    }
+
+    hasFontSetting() {
+        return Object.keys(this.displayData.fonts).length > 1;
     }
 
     getItemSelector() {
@@ -136,17 +202,17 @@ export class Dataset {
 
     /**
      * @param checked
-     * @returns {Setting}
+     * @returns {ButtonGroup}
      */
     fontSetting(checked = null) {
-        const setting = Setting.create("Font", SH.createButtonGroup(
+        const setting = ButtonGroup.from(
             ObjectHelper.map(this.displayData.fonts, font => font.label ?? font.family),
             {
+                label: "Font",
                 exclusive: true,
                 checked: checked ?? this.displayData.defaultFont ?? Object.keys(this.displayData.fonts)[0]
             }
-        ));
-        setting.valueElement.disableIfSingleButton(true);
+        );
         setting.node.classList.add("font-family-setting");
         return setting;
     }

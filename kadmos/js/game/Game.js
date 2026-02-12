@@ -1,6 +1,6 @@
 import {DOMHelper, ObjectHelper, FontHelper, FunctionStack} from "../helpers/helpers.js";
 import {ItemDealer} from "./dealer.js";
-import {Setting, SettingsCollection, SettingsHelper} from "../settings/settings.js";
+import {Slider, SettingsCollection} from "../settings/settings.js";
 import {ItemProperty, ListProperty} from "../dataset/symbol.js";
 
 
@@ -31,6 +31,7 @@ export class Game {
 
         this.onInputKeydown = this.onInputKeydown.bind(this);
         this._show = this._show.bind(this);
+        this.updateSymbolFontFamily = this.updateSymbolFontFamily.bind(this);
     }
 
     setup() {
@@ -107,28 +108,31 @@ export class Game {
         }
     }
 
+    updateSymbolWeight(value) {
+        document.querySelector("#game-symbols").style.setProperty("--symbol-weight", value.toString());
+    }
+
+    updateSymbolFontFamily(key) {
+        document.querySelectorAll("#game-symbols .symbol-string").forEach(element => {
+            this.setSymbolFont(element, key);
+        });
+    }
+
     setupFontSettings() {
+        const weight = this.dataset.displayData.defaultWeight ?? 500
+        const weightSlider = Slider.create(100, 900, weight);
+        weightSlider.label("Weight");
         this.fontSettings = SettingsCollection.createFrom({
             family: this.dataset.fontSetting(),
-            weight: Setting.create(
-                "Weight",
-                SettingsHelper.createSlider(100, 900, this.dataset.displayData.defaultWeight ?? 500)
-            )
+            weight: weightSlider
         });
-
-        this.fontSettings.settings.weight.valueElement.addUpdateListener(value => {
-            document.querySelector("#game-symbols").style.setProperty("--symbol-weight", value.toString());
-        });
-        this.fontSettings.settings.weight.valueElement.runUpdateListeners();
 
         document.querySelector("#font-settings").replaceChildren(...this.fontSettings.nodeList());
 
-        this.fontSettings.settings.family.valueElement.addUpdateListener(key => {
-            document.querySelectorAll("#game-symbols .symbol-string").forEach(element => {
-                this.setSymbolFont(element, key);
-            });
-        });
-        this.fontSettings.settings.family.valueElement.runUpdateListeners();
+        this.fontSettings.addUpdateListener("weight", this.updateSymbolWeight);
+        this.fontSettings.addUpdateListener("family", this.updateSymbolFontFamily);
+        this.updateSymbolFontFamily(this.fontSettings.getValue("family"));
+        this.updateSymbolWeight(weight);
     }
 
     setSymbolFont(element, key) {
@@ -140,7 +144,8 @@ export class Game {
 
         FontHelper.setFont(element, ObjectHelper.withoutKeys(fonts[key], ["label"]));
         FontHelper.getFontData(fonts[key].family).then(data => {
-            const weightRange = this.fontSettings.settings.weight.valueElement;
+            /** @type Slider */
+            const weightRange = this.fontSettings.settings.weight;
             const [min, max] =
                 "variationSettings" in data
                     ? data.variationSettings.wght.split(" ").map(x => parseInt(x, 10))
@@ -198,7 +203,7 @@ export class Game {
                 if (referenceItems.length > 0) {
                     const referenceNodes = this.referenceItemsNodes(referenceItems, propertyKey);
                     document.getElementById("game-symbols").append(...referenceNodes);
-                    this.fontSettings.settings.family.valueElement.runUpdateListeners();
+                    this.updateSymbolFontFamily(this.fontSettings.getValue("family"));
 
                     for (const item of referenceItems) {
                         this.dealer.punish(this.dealer.getItemIndex(item), 1 / referenceItems.length);
