@@ -250,14 +250,20 @@ export class Game {
         }
 
         const items = [];
+        const grades = [];
+
         for (const item of this.referenceItems[form]) {
             const grade = item.properties[property].grade(guess)[0];
-            if (grade === 1) {
-                return [item];
-            } else if (ItemProperty.passes(grade)) {
+            if (ItemProperty.passes(grade)) {
                 items.push(item);
+                grades.push(grades);
             }
         }
+
+        if (Math.max(...grades) === 1) {
+            return items.filter((_, index) => grades[index] === 1);
+        }
+
         return items;
     }
 

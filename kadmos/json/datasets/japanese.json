@@ -14,7 +14,7 @@
     "defaultFont": "sans"
   },
   "propsData": {
-    "roman": {"type": "list", "label": "Romanization", "maxDist": 0, "identifier": true}
+    "roman": {"type": "list", "label": "Hepburn Romanization", "maxDist": 0, "identifier": true}
   },
   "selectorData": {
     "font": {"family": "Noto Sans Japanese"},
@@ -103,9 +103,9 @@
       ["れレ", "re"],
       ["ろロ", "ro"],
       ["わワ", "wa"],
-      ["ゐヰ", "wi/i"],
-      ["ゑヱ", "we/e"],
-      ["をヲ", "wo/o"],
+      ["ゐヰ", "i"],
+      ["ゑヱ", "e"],
+      ["をヲ", "o"],
       ["がガ", "ga"],
       ["ぎギ", "gi"],
       ["ぐグ", "gu"],

@@ -446,8 +446,18 @@ export class ButtonGroup {
         return Object.keys(this.inputs).length;
     }
 
-    disableIfSingleButton() {
-        this.setDisabled(this.buttonCount() === 1);
+    /**
+     * @param {boolean | null} checked
+     */
+    disableIfSingleButton(checked = null) {
+        if (this.buttonCount() === 1) {
+            this.setDisabled(true);
+            if (checked !== null) {
+                this.value = checked ? Object.keys(this.inputs) : [];
+            }
+        } else {
+            this.setDisabled(false);
+        }
     }
 
     get value() {
