@@ -36,7 +36,7 @@ export default class ItemSelector {
         this.onBlockLabelPointerDown = this.onBlockLabelPointerDown.bind(this);
         this.onBlockLabelPointerUpCancel = this.onBlockLabelPointerUpCancel.bind(this);
         this.onBlockRangePointerDown = this.onBlockRangePointerDown.bind(this);
-        this.onBlockRangePointerOver = this.onBlockRangePointerOver.bind(this);
+        this.onBlockRangePointerMove = this.onBlockRangePointerMove.bind(this);
         this.onBlockRangePointerUpCancel = this.onBlockRangePointerUpCancel.bind(this);
     }
 
@@ -287,16 +287,18 @@ export default class ItemSelector {
         }
 
         block.dblClickGroups ??= [range(block.indices.length)];
-        block.dblClickGroups = this.processIndexSubsets(block.dblClickGroups, block.indices.length)
-            .map(indices => indices.map(index => {
-                return block.indices[index];
-            }).filter(index => index !== null));
+        block.dblClickGroups = this.processIndexSubsets(block.dblClickGroups, block.indices.length);
 
         for (const [groupIndex, indices] of block.dblClickGroups.entries()) {
             for (const index of indices) {
-                this.buttons[index].dataset.dblClickGroup = groupIndex;
+                block.elements[index].dataset.dblClickGroup = groupIndex;
             }
         }
+
+        // Switch from within-block indices (including gaps) to button indices
+        block.dblClickGroups = block.dblClickGroups.map(
+            indices => indices.map(index => block.indices[index]).filter(index => index !== null)
+        );
     }
 
     setupBlockListeners(block) {
@@ -317,7 +319,7 @@ export default class ItemSelector {
         block.node.removeEventListener("click", this.onBlockButtonClick);
 
         block.node.removeEventListener("pointerdown", this.onBlockRangePointerDown);
-        block.node.removeEventListener("pointerover", this.onBlockRangePointerOver);
+        block.node.removeEventListener("pointermove", this.onBlockRangePointerMove);
 
         if (block.mode === "grid") {
             block.node.removeEventListener("click", this.onBlockLabelClick);
@@ -331,10 +333,10 @@ export default class ItemSelector {
      * @param {PointerEvent} event
      */
     onBlockButtonClick(event) {
-        const button = event.target.closest(".selector-item-button");
+        const button = event.target.closest(".selector-item-button, .selector-grid-gap");
         if (!button) return;
 
-        if (event.detail % 2 === 0 && this.lastButtonClicked === button.index) {
+        if (event.detail % 2 === 0 && this.lastButtonClicked === button.dataset.index) {
             const block = this.getBlockFromEvent(event);
             const groupIndex = button.dataset.dblClickGroup;
             const indices = block.dblClickGroups[groupIndex];
@@ -342,7 +344,7 @@ export default class ItemSelector {
             this.toggleItems(indices);
         }
 
-        this.lastButtonClicked = button.index;
+        this.lastButtonClicked = button.dataset.index;
     }
 
     /**
@@ -434,11 +436,14 @@ export default class ItemSelector {
     /**
      * @param {PointerEvent} event
      */
-    onBlockRangePointerOver(event) {
+    onBlockRangePointerMove(event) {
         if (this.rangeSelectingBlockIndex === null) return;
-        const button = event.target.closest(".selector-item-button, .selector-grid-gap");
-        const block = this.getBlockFromEvent(event);
-        if (!button || block.node.dataset.blockIndex !== this.rangeSelectingBlockIndex) return;
+        const element = document.elementFromPoint(event.clientX, event.clientY);
+        const button = element.closest(".selector-item-button, .selector-grid-gap");
+        if (!button) return;
+
+        const block = button.closest(".selector-block");
+        if (block.dataset.blockIndex !== this.rangeSelectingBlockIndex) return;
 
         const indexWithinBlock = button.dataset.indexWithinBlock;
         if (this.rangeSelectStopIndex === indexWithinBlock) return;
@@ -465,7 +470,7 @@ export default class ItemSelector {
 
         document.addEventListener("pointerup", this.onBlockRangePointerUpCancel, {once: true});
         document.addEventListener("pointercancel", this.onBlockRangePointerUpCancel, {once: true});
-        this.blocks[blockIndex].node.addEventListener("pointerover", this.onBlockRangePointerOver);
+        this.blocks[blockIndex].node.addEventListener("pointermove", this.onBlockRangePointerMove);
     }
 
     onBlockRangePointerUpCancel(event) {
@@ -479,7 +484,7 @@ export default class ItemSelector {
             this.toggleItems(this.rangeSelectionActiveIndices);
         }
 
-        this.blocks[this.rangeSelectingBlockIndex].node.removeEventListener("pointerover", this.onBlockRangePointerOver);
+        this.blocks[this.rangeSelectingBlockIndex].node.removeEventListener("pointermove", this.onBlockRangePointerMove);
         this.removeDocumentRangeListeners();
         this.resetRangeSelection();
     }
