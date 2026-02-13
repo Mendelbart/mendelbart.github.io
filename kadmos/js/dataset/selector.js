@@ -336,7 +336,9 @@ export default class ItemSelector {
         const button = event.target.closest(".selector-item-button, .selector-grid-gap");
         if (!button) return;
 
-        if (event.detail % 2 === 0 && this.lastButtonClicked === button.dataset.index) {
+        const blockIndex = this.getBlockIndexFromEvent(event);
+
+        if (event.detail % 2 === 0 && this.lastBlockClicked === blockIndex && this.lastButtonClicked === button.dataset.indexWithinBlock) {
             const block = this.getBlockFromEvent(event);
             const groupIndex = button.dataset.dblClickGroup;
             const indices = block.dblClickGroups[groupIndex];
@@ -344,7 +346,8 @@ export default class ItemSelector {
             this.toggleItems(indices);
         }
 
-        this.lastButtonClicked = button.dataset.index;
+        this.lastButtonClicked = button.dataset.indexWithinBlock;
+        this.lastBlockClicked = blockIndex;
     }
 
     /**

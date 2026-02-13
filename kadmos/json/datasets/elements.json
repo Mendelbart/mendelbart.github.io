@@ -19,7 +19,7 @@
         "nColumns": 9,
         "columnLabels": [1,2,null,13,14,15,16,17,18],
         "rowLabels": [1,2,3,4,5,6,7],
-        "dblClickGroups": ["0:9:54,8,10:9:55", "rest"]
+        "dblClickGroups": ["0:9:54,8,1:9:55", "rest"]
       },
       {
         "mode": "grid",
