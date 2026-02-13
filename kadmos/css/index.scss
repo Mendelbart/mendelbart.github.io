@@ -841,7 +841,7 @@ $selectorBorderRadius: .2rem;
     .selector-block[data-block-index="0"] {
       --gridTemplateColumns:
         repeat(2, minmax(var(--button-min-width), var(--button-max-width)))
-        .3rem
+        0rem
         repeat(6, minmax(var(--button-min-width), var(--button-max-width)));
     }
   }

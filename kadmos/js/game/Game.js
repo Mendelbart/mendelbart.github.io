@@ -19,11 +19,13 @@ export class Game {
      * @param {Dataset} dataset
      * @param {QuizItem[]} items
      * @param {string[]} properties
+     * @param {string} language
      */
 
-    constructor(dataset, items, properties) {
+    constructor(dataset, items, properties, language) {
         this.dataset = dataset;
         this.properties = properties;
+        this.language = language;
         this.dealer = new ItemDealer(items);
         this.onFinish = new FunctionStack();
 
@@ -69,6 +71,9 @@ export class Game {
                 inputmode: this.getInputMode(this.dataset.propsData[prop].type),
                 placeholder: this.dataset.propsData[prop].label
             });
+            if (this.language && this.language !== "default") {
+                input.setAttribute("lang", this.language);
+            }
             return input;
         });
 

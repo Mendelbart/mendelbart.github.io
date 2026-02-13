@@ -11,7 +11,7 @@ const STYLE_PROPERTIES = {
 }
 
 const BLOCK_KEYS = [
-    "mode", "indices", "transpose", "nColumns", "dblclickGroups",
+    "mode", "indices", "transpose", "nColumns", "dblClickGroups",
     "rowLabels", "columnLabels", "rowLabelPosition", "columnLabelPosition",
     "rangeSelectionMode"
 ];
@@ -31,12 +31,13 @@ export default class ItemSelector {
 
         // Bind event listener functions
         this.onBlockLabelClick = this.onBlockLabelClick.bind(this);
-        this.onBlockClickButton = this.onBlockClickButton.bind(this);
-        this.onBlockButtonDblclick = this.onBlockButtonDblclick.bind(this);
-        this.onBlockLabelPointerEnterLeave = this.onBlockLabelPointerEnterLeave.bind(this);
+        this.onBlockButtonClick = this.onBlockButtonClick.bind(this);
+        this.onBlockLabelPointerOverOut = this.onBlockLabelPointerOverOut.bind(this);
         this.onBlockLabelPointerDown = this.onBlockLabelPointerDown.bind(this);
+        this.onBlockLabelPointerUpCancel = this.onBlockLabelPointerUpCancel.bind(this);
         this.onBlockRangePointerDown = this.onBlockRangePointerDown.bind(this);
-        this.onBlockRangePointerMove = this.onBlockRangePointerMove.bind(this);
+        this.onBlockRangePointerOver = this.onBlockRangePointerOver.bind(this);
+        this.onBlockRangePointerUpCancel = this.onBlockRangePointerUpCancel.bind(this);
     }
 
     /**
@@ -89,15 +90,11 @@ export default class ItemSelector {
 
             block.elements = [];
 
-            for (const index of block.indices) {
-                if (index === null) {
-                    const gap = this._gridGapElement();
-                    block.elements.push(gap);
-                    block.node.append(gap);
-                } else {
-                    block.node.append(this.buttons[index]);
-                    block.elements.push(this.buttons[index]);
-                }
+            for (const [indexWithinBlock, index] of block.indices.entries()) {
+                const element = index === null ? this._gridGapElement() : this.buttons[index];
+                block.elements.push(element);
+                block.node.append(element);
+                element.dataset.indexWithinBlock = indexWithinBlock;
             }
 
             if (block.mode === "grid") {
@@ -135,7 +132,11 @@ export default class ItemSelector {
         const m = block.nColumns;
         const n = Math.round(block.indices.length / m);
 
-        if ("rowLabels" in block) {
+        if (block.rowLabels) {
+            if (typeof block.rowLabels === "string") {
+                block.rowLabels = block.rowLabels.split("");
+            }
+
             if (!Array.isArray(block.rowLabels) || block.rowLabels.length !== n) {
                 throw new Error("Row labels no array or don't match number of rows.");
             }
@@ -164,7 +165,11 @@ export default class ItemSelector {
             }
         }
 
-        if ("columnLabels" in block) {
+        if (block.columnLabels) {
+            if (typeof block.columnLabels === "string") {
+                block.columnLabels = block.columnLabels.split("");
+            }
+
             if (!Array.isArray(block.columnLabels) || block.columnLabels.length !== m) {
                 throw new Error("Column labels no array or don't match number of columns.");
             }
@@ -233,14 +238,28 @@ export default class ItemSelector {
         return element;
     }
 
+    getButtonsFromIndices(indices) {
+        if (!indices) {
+            return [];
+        }
+        return indices.filter(index => index !== null).map(index => this.buttons[index]);
+    }
+
     buttonsClassIfElse(boolean, indices, trueClasses, falseClasses = null) {
-        const buttons = indices.filter(index => index !== null).map(index => this.buttons[index]);
-        DOMHelper.classIfElse(boolean, buttons, trueClasses, falseClasses);
+        DOMHelper.classIfElse(boolean, this.getButtonsFromIndices(indices), trueClasses, falseClasses);
+    }
+
+    buttonsRemoveClass(indices, className) {
+        DOMHelper.removeClass(this.getButtonsFromIndices(indices), className);
+    }
+
+    buttonsAddClass(indices, className) {
+        DOMHelper.addClass(this.getButtonsFromIndices(indices), className);
     }
 
     /**
      * @param {string} pos
-     * @returns {[boolean, boolean]} [start, end]
+     * @returns {[string, boolean, boolean]} [pos, start, end]
      * @private
      */
     _processLabelPosition(pos) {
@@ -267,50 +286,43 @@ export default class ItemSelector {
             );
         }
 
-        for (const [indexWithinBlock, index] of block.indices.entries()) {
-            if (index !== null) {
-                this.buttons[index].dataset.indexWithinBlock = indexWithinBlock;
-            }
-        }
-
-        block.dblclickGroups ??= [range(block.indices.length)];
-        block.dblclickGroups = this.processIndexSubsets(block.dblclickGroups, block.indices.length)
+        block.dblClickGroups ??= [range(block.indices.length)];
+        block.dblClickGroups = this.processIndexSubsets(block.dblClickGroups, block.indices.length)
             .map(indices => indices.map(index => {
                 return block.indices[index];
             }).filter(index => index !== null));
 
-        for (const [groupIndex, indices] of block.dblclickGroups.entries()) {
+        for (const [groupIndex, indices] of block.dblClickGroups.entries()) {
             for (const index of indices) {
-                this.buttons[index].dataset.dblclickGroup = groupIndex;
+                this.buttons[index].dataset.dblClickGroup = groupIndex;
             }
         }
     }
 
     setupBlockListeners(block) {
-        block.node.addEventListener("dblclick", this.onBlockButtonDblclick);
+        block.node.addEventListener("click", this.onBlockButtonClick);
 
-        this.resetRangeSelection(block);
+        this.resetRangeSelection();
         block.node.addEventListener("pointerdown", this.onBlockRangePointerDown);
-        block.node.addEventListener("pointermove", this.onBlockRangePointerMove);
 
         if (block.mode === "grid") {
             block.node.addEventListener("click", this.onBlockLabelClick);
-            block.node.addEventListener("pointerenter", this.onBlockLabelPointerEnterLeave);
-            block.node.addEventListener("pointerleave", this.onBlockLabelPointerEnterLeave);
+            block.node.addEventListener("pointerover", this.onBlockLabelPointerOverOut);
+            block.node.addEventListener("pointerout", this.onBlockLabelPointerOverOut);
             block.node.addEventListener("pointerdown", this.onBlockLabelPointerDown);
         }
     }
 
     removeBlockListeners(block) {
-        block.node.removeEventListener("dblclick", this.onBlockButtonDblclick);
+        block.node.removeEventListener("click", this.onBlockButtonClick);
 
         block.node.removeEventListener("pointerdown", this.onBlockRangePointerDown);
-        block.node.removeEventListener("pointermove", this.onBlockRangePointerMove);
+        block.node.removeEventListener("pointerover", this.onBlockRangePointerOver);
 
         if (block.mode === "grid") {
             block.node.removeEventListener("click", this.onBlockLabelClick);
-            block.node.removeEventListener("pointerenter", this.onBlockLabelPointerEnterLeave);
-            block.node.removeEventListener("pointerleave", this.onBlockLabelPointerEnterLeave);
+            block.node.removeEventListener("pointerover", this.onBlockLabelPointerOverOut);
+            block.node.removeEventListener("pointerout", this.onBlockLabelPointerOverOut);
             block.node.removeEventListener("pointerdown", this.onBlockLabelPointerDown);
         }
     }
@@ -318,53 +330,44 @@ export default class ItemSelector {
     /**
      * @param {PointerEvent} event
      */
-    onBlockClickButton(event) {
+    onBlockButtonClick(event) {
         const button = event.target.closest(".selector-item-button");
         if (!button) return;
 
-        const index = button.dataset.index;
-        const block = this.getBlockFromEvent(event);
-
-        this.updateItem(index, !this.itemsActive[index]);
-
-        // double-click
-        if (event.detail % 2 === 0 && block.lastClicked === index) {
-            const groupIndex = button.dataset.dblclickGroup;
-            const indices = block.dblclickGroups[groupIndex];
+        if (event.detail % 2 === 0 && this.lastButtonClicked === button.index) {
+            const block = this.getBlockFromEvent(event);
+            const groupIndex = button.dataset.dblClickGroup;
+            const indices = block.dblClickGroups[groupIndex];
 
             this.toggleItems(indices);
         }
 
-        block.lastClicked = index;
+        this.lastButtonClicked = button.index;
     }
 
     /**
-     * @param {PointerEvent} event
+     * @param event
+     * @returns {?string}
      */
-    onBlockButtonDblclick(event) {
-        const button = event.target.closest(".selector-item-button");
-        if (!button) return;
-
-        const block = this.getBlockFromEvent(event);
-        const groupIndex = button.dataset.dblclickGroup;
-        const indices = block.dblclickGroups[groupIndex];
-
-        this.toggleItems(indices);
+    getBlockIndexFromEvent(event) {
+        const blockNode = event.target.closest(".selector-block");
+        return blockNode ? blockNode.dataset.blockIndex : null;
     }
 
     /**
      * @param {PointerEvent} event
+     * @returns {?Object}
      */
     getBlockFromEvent(event) {
-        const blockNode = event.target.closest(".selector-block");
-        return blockNode ? this.blocks[blockNode.dataset.blockIndex] : null;
+        const index = this.getBlockIndexFromEvent(event);
+        return index !== null ? this.blocks[index] : null;
     }
 
     /**
      * @param {PointerEvent} event
      * @returns {*|null}
      */
-    getBlockIndicesFromEvent(event) {
+    getIndicesFromBlockLabelEvent(event) {
         const element = event.target.closest(".block-label");
         if (!element) return;
 
@@ -378,7 +381,7 @@ export default class ItemSelector {
      * @param {PointerEvent} event
      */
     onBlockLabelClick(event) {
-        const indices = this.getBlockIndicesFromEvent(event);
+        const indices = this.getIndicesFromBlockLabelEvent(event);
         if (!indices) return;
 
         this.toggleItems(indices);
@@ -387,102 +390,125 @@ export default class ItemSelector {
     /**
      * @param {PointerEvent} event
      */
-    onBlockLabelPointerEnterLeave(event) {
-        const indices = this.getBlockIndicesFromEvent(event);
+    onBlockLabelPointerOverOut(event) {
+        const indices = this.getIndicesFromBlockLabelEvent(event);
         if (!indices) return;
 
-        this.buttonsClassIfElse(event.type === "pointerenter", indices, "hover");
+        this.buttonsClassIfElse(event.type === "pointerover", indices, "hover");
     }
 
     /**
      * @param {PointerEvent} event
      */
     onBlockLabelPointerDown(event) {
-        const indices = this.getBlockIndicesFromEvent(event);
+        const indices = this.getIndicesFromBlockLabelEvent(event);
         if (!indices) return;
 
-        this.buttonsClassIfElse(true, indices, "active");
+        this.buttonsAddClass(indices, "active");
+        this.blockLabelActiveIndices = indices;
 
-        document.addEventListener("pointerup", () => {
-            this.buttonsClassIfElse(false, indices, "active");
-        }, {once: true});
+        document.addEventListener("pointerup", this.onBlockLabelPointerUpCancel, {once: true});
+        document.addEventListener("pointercancel", this.onBlockLabelPointerUpCancel, {once: true});
     }
 
-    resetRangeSelection(block) {
-        block.rangeSelecting = false;
+    onBlockLabelPointerUpCancel() {
+        const indices = this.blockLabelActiveIndices;
+        if (indices) {
+            this.buttonsRemoveClass(indices, "active");
+        }
+        this.blockLabelActiveIndices = null;
+        this.removeDocumentLabelListeners();
+    }
 
-        block.rangeSelectionActiveIndices = null;
-        block.rangeSelectStartIndex = null;
-        block.rangeSelectStopIndex = null;
-        block.rangeSelectionActiveIndices = null;
+    resetRangeSelection() {
+        this.rangeSelectingBlockIndex = null;
+
+        this.buttonsRemoveClass(this.rangeSelectionActiveIndices, "active");
+
+        this.rangeSelectionActiveIndices = null;
+        this.rangeSelectStartIndex = null;
+        this.rangeSelectStopIndex = null;
+        this.rangeSelectionActiveIndices = null;
     }
 
     /**
      * @param {PointerEvent} event
      */
-    onBlockRangePointerMove(event) {
+    onBlockRangePointerOver(event) {
+        if (this.rangeSelectingBlockIndex === null) return;
+        const button = event.target.closest(".selector-item-button, .selector-grid-gap");
         const block = this.getBlockFromEvent(event);
-        if (!block.rangeSelecting) return;
-
-        const element = document.elementFromPoint(event.clientX, event.clientY);
-        if (!element) return;
-
-        const button = element.closest(".selector-item-button");
-        if (!button || button.parentElement !== block.node) return;
-
+        if (!button || block.node.dataset.blockIndex !== this.rangeSelectingBlockIndex) return;
 
         const indexWithinBlock = button.dataset.indexWithinBlock;
-        if (block.rangeSelectStopIndex === indexWithinBlock) return;
+        if (this.rangeSelectStopIndex === indexWithinBlock) return;
 
-        if (block.rangeSelectStartIndex === null) {
-            block.rangeSelectStartIndex = indexWithinBlock;
-        }
-        block.rangeSelectStopIndex = indexWithinBlock;
-        this.updateRangeSelection(block);
+        this.rangeSelectStartIndex ??= indexWithinBlock;
+        this.rangeSelectStopIndex = indexWithinBlock;
+        this.updateRangeSelection();
     }
 
     /**
      * @param {PointerEvent} event
      */
     onBlockRangePointerDown(event) {
-        const block = this.getBlockFromEvent(event);
-        block.rangeSelecting = true;
-        const button = event.target.closest(".selector-item-button")
+        const blockIndex = this.getBlockIndexFromEvent(event);
+        if (blockIndex === null) return;
+
+        this.rangeSelectingBlockIndex = blockIndex;
+        const button = event.target.closest(".selector-item-button, .selector-grid-gap")
         if (button) {
-            block.rangeSelectStartIndex = button.dataset.indexWithinBlock;
+            this.rangeSelectStartIndex = button.dataset.indexWithinBlock;
+            this.rangeSelectStopIndex = this.rangeSelectStartIndex;
+            this.updateRangeSelection();
         }
-        block.rangeSelectStopIndex = block.rangeSelectStartIndex;
-        this.updateRangeSelection(block);
 
-        document.addEventListener("pointerup", () => {
-            if (!block.rangeSelecting) return;
-
-            if (block.rangeSelectionActiveIndices) {
-                this.toggleItems(block.rangeSelectionActiveIndices);
-                this.buttonsClassIfElse(false, block.rangeSelectionActiveIndices, "active");
-            }
-
-            this.resetRangeSelection(block);
-        }, {once: true});
+        document.addEventListener("pointerup", this.onBlockRangePointerUpCancel, {once: true});
+        document.addEventListener("pointercancel", this.onBlockRangePointerUpCancel, {once: true});
+        this.blocks[blockIndex].node.addEventListener("pointerover", this.onBlockRangePointerOver);
     }
 
-    updateRangeSelection(block) {
-        if (block.rangeSelectionActiveIndices) {
-            this.buttonsClassIfElse(false, block.rangeSelectionActiveIndices, "active");
+    onBlockRangePointerUpCancel(event) {
+        if (this.rangeSelectingBlockIndex === null) return;
+
+        if (
+            event.type === "pointerup" &&
+            this.getBlockIndexFromEvent(event) === this.rangeSelectingBlockIndex &&
+            this.rangeSelectionActiveIndices
+        ) {
+            this.toggleItems(this.rangeSelectionActiveIndices);
         }
-        block.rangeSelectionActiveIndices = this.getIndicesInRangeSelection(block);
-        this.buttonsClassIfElse(true, block.rangeSelectionActiveIndices, "active");
+
+        this.blocks[this.rangeSelectingBlockIndex].node.removeEventListener("pointerover", this.onBlockRangePointerOver);
+        this.removeDocumentRangeListeners();
+        this.resetRangeSelection();
     }
 
-    getIndicesInRangeSelection(block, startIndex = null, stopIndex = null) {
-        startIndex ??= block.rangeSelectStartIndex;
-        stopIndex ??= block.rangeSelectStopIndex;
+    removeDocumentLabelListeners() {
+        document.removeEventListener("pointerup", this.onBlockLabelPointerUpCancel);
+        document.removeEventListener("pointercancel", this.onBlockLabelPointerUpCancel);
+    }
 
-        if (startIndex === null || stopIndex === null) {
+    removeDocumentRangeListeners() {
+        document.removeEventListener("pointerup", this.onBlockRangePointerUpCancel);
+        document.removeEventListener("pointercancel", this.onBlockRangePointerUpCancel);
+    }
+
+    updateRangeSelection() {
+        if (this.rangeSelectionActiveIndices) {
+            this.buttonsRemoveClass(this.rangeSelectionActiveIndices, "active");
+        }
+        this.rangeSelectionActiveIndices = this.getIndicesInRangeSelection();
+        this.buttonsAddClass(this.rangeSelectionActiveIndices, "active");
+    }
+
+    getIndicesInRangeSelection() {
+        if (this.rangeSelectStartIndex === null || this.rangeSelectStopIndex === null) {
             return [];
         }
 
-        [startIndex, stopIndex] = minmax(startIndex, stopIndex);
+        const [startIndex, stopIndex] = minmax(this.rangeSelectStartIndex, this.rangeSelectStopIndex);
+        const block = this.blocks[this.rangeSelectingBlockIndex];
 
         if (block.mode === "grid") {
             block.rangeSelectionMode ??= "grid";
@@ -826,6 +852,8 @@ export default class ItemSelector {
         for (const block of this.blocks) {
             this.removeBlockListeners(block);
         }
+        this.removeDocumentRangeListeners();
+        this.removeDocumentLabelListeners();
         this.node.remove();
     }
 

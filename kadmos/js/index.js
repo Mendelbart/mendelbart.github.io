@@ -1,76 +1,20 @@
-import {DATASETS_METADATA, DEFAULT_DATASET, Dataset} from "./dataset/Dataset.js";
-import {DOMHelper, ObjectHelper} from "./helpers/helpers.js";
+import {DOMHelper} from "./helpers/helpers.js";
 import {GameContext} from "./context.js";
-
-// --------------- CONSTANTS -----------------
-const datasetSelect = document.getElementById("datasetSelect");
-
 
 // --------------- GAME SETUP -----------------
 (function () {
     readDarkLightMode();
 
-    try {
-        const ctx = new GameContext();
+    const ctx = new GameContext();
+    ctx.setup();
 
-        DOMHelper.setOptions(
-            datasetSelect,
-            ObjectHelper.map(DATASETS_METADATA, data => data.name),
-            {selected: new URLSearchParams(location.search).get("dataset") ?? DEFAULT_DATASET}
-        );
+    document.querySelectorAll(".ribbon").forEach((element) => {
+        setupRibbon(element, element.classList.contains("ribbon-closable"));
+    });
 
-        window.addEventListener("resize", () => {
-            if (ctx.itemSelector) {
-                ctx.itemSelector.scaleButtons();
-            }
-        });
-
-        datasetSelect.addEventListener("change", (e) => {
-            const key = e.target.value;
-            Dataset.fromKey(key).then(dataset => {
-                ctx.selectDataset(key, dataset);
-            }).catch(console.error);
-        });
-
-        document.getElementById("start-game-button").addEventListener("click", () => {
-            ctx.startGame();
-        });
-
-        document.getElementById("stop-game-button").addEventListener("click", () => {
-            ctx.game.finish();
-        });
-
-        document.getElementById("item-submit-button").addEventListener("click", () => {
-            ctx.game.submitRound();
-        });
-
-        document.getElementById("item-next-button").addEventListener("click", () => {
-            ctx.game.newRound();
-        });
-
-        document.querySelectorAll(".ribbon").forEach((element) => {
-            setupRibbon(element, element.classList.contains("ribbon-closable"));
-        });
-
-        document.querySelectorAll(".pages-container").forEach((element) => {
-            DOMHelper.setupPages(element);
-        });
-
-
-        const key = datasetSelect.value;
-        Dataset.fromKey(key).then(dataset => {
-            ctx.selectDataset(key, dataset);
-
-            const searchParams = new URLSearchParams(location.search);
-            if (["1", "true"].includes(searchParams.get("play"))) {
-                ctx.startGame();
-            } else {
-                ctx.setPlaying(false);
-            }
-        }).catch(DOMHelper.printError);
-    } catch (e) {
-        DOMHelper.printError(e);
-    }
+    document.querySelectorAll(".pages-container").forEach((element) => {
+        DOMHelper.setupPages(element);
+    });
 })();
 
 

@@ -1,10 +1,7 @@
 import {ItemProperty, QuizItem} from "./symbol.js";
 import {DOMHelper, ObjectHelper, FontHelper} from '../helpers/helpers.js';
 import ItemSelector from "./selector.js";
-import {
-    SettingsCollection,
-    ButtonGroup, ValueElement
-} from "../settings/settings.js";
+import {SettingsCollection, ButtonGroup, ValueElement} from "../settings/settings.js";
 
 DOMHelper.registerTemplate(
     "headingElement",
@@ -304,6 +301,10 @@ export class Dataset {
     processDisplayForms(display) {
         if (this.formsData.singleForm) {
             return Object.fromEntries([[this.formsData.defaultForm, display]]);
+        }
+
+        if (typeof display === "string") {
+            display = display.split("");
         }
 
         if (Array.isArray(display)) {

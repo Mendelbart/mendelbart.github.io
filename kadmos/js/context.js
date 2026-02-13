@@ -1,7 +1,7 @@
 import {SettingsCollection, ValueElement} from "./settings/settings.js";
 import {Game} from "./game/Game.js";
-import {Dataset} from "./dataset/Dataset.js";
-import {DOMHelper, Base64Helper} from "./helpers/helpers.js";
+import {Dataset, DEFAULT_DATASET, DATASETS_METADATA} from "./dataset/Dataset.js";
+import {DOMHelper, Base64Helper, ObjectHelper} from "./helpers/helpers.js";
 
 
 export class GameContext {
@@ -28,6 +28,8 @@ export class GameContext {
 
         this.checkPagesNextButton = this.checkPagesNextButton.bind(this);
         this.saveSettings = this.saveSettings.bind(this);
+        this.readFromSearchParams = this.readFromSearchParams.bind(this);
+        this.startGame = this.startGame.bind(this);
     }
 
     static generateGenericSettings() {
@@ -53,6 +55,46 @@ export class GameContext {
             console.error(e);
             return {};
         }
+    }
+
+    setup() {
+        this.setupDatasetSelect();
+        this.readFromSearchParams();
+        this.setupButtonListeners();
+
+        window.addEventListener("popstate", this.readFromSearchParams);
+        window.addEventListener("resize", () => {
+            if (this.itemSelector) {
+                this.itemSelector.scaleButtons();
+            }
+        });
+    }
+
+    setupButtonListeners() {
+        document.getElementById("start-game-button").addEventListener("click", this.startGame);
+        document.getElementById("stop-game-button").addEventListener("click", () => {
+            this.game.finish();
+        });
+        document.getElementById("item-submit-button").addEventListener("click", () => {
+            this.game.submitRound();
+        });
+        document.getElementById("item-next-button").addEventListener("click", () => {
+            this.game.newRound();
+        });
+    }
+
+    setupDatasetSelect() {
+        const select = document.getElementById("datasetSelect");
+        DOMHelper.setOptions(
+            select, ObjectHelper.map(DATASETS_METADATA, data => data.name)
+        );
+
+        select.addEventListener("change", (e) => {
+            const key = e.target.value;
+            Dataset.fromKey(key).then(dataset => {
+                this.selectDataset(key, dataset);
+            }).catch(console.error);
+        });
     }
 
     /**
@@ -165,7 +207,7 @@ export class GameContext {
         );
         const referenceItems = this.dataset.getReferenceItems(properties, language);
 
-        this.game = new Game(this.dataset, items, properties);
+        this.game = new Game(this.dataset, items, properties, language);
 
         const seed = this.sc.getValue("seed");
         if (seed) {
@@ -178,7 +220,6 @@ export class GameContext {
         this.setPlaying(true);
         this.game.focus();
         this.game.onFinish.push(() => {
-            DOMHelper.showPage(document.getElementById('game-filters'));
             this.setPlaying(false);
         });
     }
@@ -187,7 +228,26 @@ export class GameContext {
      * @param {boolean} playing
      */
     setPlaying(playing) {
+        if (!playing) {
+            DOMHelper.showPage(document.getElementById('game-filters'));
+        }
         DOMHelper.classIfElse(playing, document.body, "playing");
         DOMHelper.setSearchParams({play: playing});
+    }
+
+    readFromSearchParams() {
+        const searchParams = new URLSearchParams(location.search);
+        const datasetKey = searchParams.get("dataset") ?? DEFAULT_DATASET;
+        document.getElementById("datasetSelect").value = datasetKey;
+
+        Dataset.fromKey(datasetKey).then(dataset => {
+            this.selectDataset(datasetKey, dataset);
+
+            if (["1", "true"].includes(searchParams.get("play"))) {
+                this.startGame();
+            } else {
+                this.setPlaying(false);
+            }
+        });
     }
 }
