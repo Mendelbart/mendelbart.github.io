@@ -15,7 +15,8 @@ export const DATASETS_METADATA = {
     elder_futhark: {name: "Elder Futhark", file: "./json/datasets/elder_futhark.json"},
     greek: {name: "Greek", file: "./json/datasets/greek.json"},
     hebrew: {name: "Hebrew", file: "./json/datasets/hebrew.json"},
-    japanese: {name: "Japanese Kana", file: "./json/datasets/japanese.json"}
+    japanese: {name: "Japanese Kana", file: "./json/datasets/japanese.json"},
+    phoenician: {name: "Phoenician", file: "./json/datasets/phoenician.json"}
 }
 export const DEFAULT_DATASET = "elder_futhark";
 
@@ -214,7 +215,14 @@ export class Dataset {
         return setting;
     }
 
-
+    getFont(key) {
+        const fonts = this.displayData.fonts;
+        if (!fonts[key]) {
+            console.warn(`Unknown symbol font key "${key}".`);
+            key = Object.keys(fonts)[0];
+        }
+        return fonts[key];
+    }
 
     /**
      * @param symbolsData

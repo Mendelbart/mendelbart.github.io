@@ -84,6 +84,14 @@
 }
 
 @font-face {
+  font-family: "Noto Sans Phoenician";
+  src: url("/kadmos/assets/fonts/subset/NotoSansPhoenician.woff2");
+  font-display: swap;
+  font-weight: 400;
+  font-style: normal;
+}
+
+@font-face {
   font-family: "Junicode";
   src: url("/kadmos/assets/fonts/subset/Junicode.woff2");
   font-display: swap;

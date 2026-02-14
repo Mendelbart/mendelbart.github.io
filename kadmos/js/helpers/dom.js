@@ -380,7 +380,7 @@ export function classesToList(classes) {
 }
 
 /**
- * @param {Element} element element
+ * @param {HTMLElement} element element
  * @param {"content-box" | "padding-box" | "border-box"} [box] default `"border-box"`
  * @param {boolean} [scrollSize] default `false`
  * @returns {[number,number]} [width, height]
@@ -413,12 +413,12 @@ export function elementSize(element, box = "border-box", scrollSize = false) {
 
 
 /**
- * @param {Element} element
- * @param {?Element} container - default `element.parentElement`
- * @param {"width" | "height" | "both"} dimension
- * @param {"content-box" | "padding-box" | "border-box"} elementBox
- * @param {"content-box" | "padding-box" | "border-box"} containerBox
- * @param {boolean} grow
+ * @param {HTMLElement} element
+ * @param {?HTMLElement} [container] - default `element.parentElement`
+ * @param {"width" | "height" | "both"} [dimension="width"]
+ * @param {"content-box" | "padding-box" | "border-box"} [elementBox="border-box"]
+ * @param {"content-box" | "padding-box" | "border-box"} [containerBox="content-box"]
+ * @param {boolean} [grow=false]
  */
 export function computeScaleToFit(element, {
     container = null,
@@ -442,17 +442,31 @@ export function computeScaleToFit(element, {
     return dimension === "width" ? scaleWidth : dimension === "height" ? scaleHeight : Math.min(scaleWidth, scaleHeight);
 }
 
-export function scaleToFit(element, options) {
-    const scale = computeScaleToFit(element, options);
-    element.style.scale = scale;
+/**
+ * @param {HTMLElement} element
+ * @param options
+ * @param {?HTMLElement} [options.container] - default `element.parentElement`
+ * @param {"width" | "height" | "both"} [options.dimension="width"]
+ * @param {"content-box" | "padding-box" | "border-box"} [options.elementBox="border-box"]
+ * @param {"content-box" | "padding-box" | "border-box"} [options.containerBox="content-box"]
+ * @param {boolean} [options.grow=false]
+ */
+export function scaleToFit(element, options = {}) {
+    element.style.scale = computeScaleToFit(element, options);
 }
 
 
 /**
  * @param {HTMLElement[]} elements
  * @param options
+ * @param {?HTMLElement[]} [options.containers] - default parentElements of the elements.
+ * @param {"width" | "height" | "both"} [options.dimension="width"]
+ * @param {"content-box" | "padding-box" | "border-box"} [options.elementBox="border-box"]
+ * @param {"content-box" | "padding-box" | "border-box"} [options.containerBox="content-box"]
+ * @param {boolean} [options.grow=false]
+ * @param {number} [options.uniform=0]
  */
-export function scaleAllToFit(elements, options) {
+export function scaleAllToFit(elements, options = {}) {
     const uniformFactor = options.uniform ?? 0;
     const containers = options.containers ?? elements.map(element => element.parentElement);
     if ("container" in options) {

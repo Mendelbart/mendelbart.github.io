@@ -12,7 +12,7 @@
   {
     "family": "Noto Sans Hebrew",
     "scale": 1.25,
-    "shift": -0.05,
+    "shift": -0.15,
     "variationSettings": {
       "wght": "100 900",
       "wdth": "100"
@@ -76,6 +76,9 @@
     "variationSettings": {
       "wght": "400 700"
     }
+  },
+  {
+    "family": "Noto Sans Phoenician"
   },
   {
     "family": "Junicode",

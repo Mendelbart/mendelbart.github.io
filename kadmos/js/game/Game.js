@@ -121,6 +121,24 @@ export class Game {
         document.querySelectorAll("#game-symbols .symbol-string").forEach(element => {
             this.setSymbolFont(element, key);
         });
+        this.updateSymbolWeightRange(key);
+    }
+
+    updateSymbolWeightRange(key) {
+        const font = this.dataset.getFont(key);
+        FontHelper.getFontData(font.family).then(data => {
+            /** @type Slider */
+            const weightRange = this.fontSettings.settings.weight;
+
+            if (data.variationSettings && data.variationSettings.wght) {
+                const [min, max] = data.variationSettings.wght.split(" ").map(x => parseInt(x, 10));
+                weightRange.setMin(min);
+                weightRange.setMax(max);
+                DOMHelper.show(weightRange.node);
+            } else {
+                DOMHelper.hide(weightRange.node);
+            }
+        }).catch(DOMHelper.printError);
     }
 
     setupFontSettings() {
@@ -141,23 +159,7 @@ export class Game {
     }
 
     setSymbolFont(element, key) {
-        const fonts = this.dataset.displayData.fonts;
-        if (!(key in fonts)) {
-            console.warn(`Unknown symbol font key "${key}".`);
-            key = Object.keys(fonts)[0];
-        }
-
-        FontHelper.setFont(element, ObjectHelper.withoutKeys(fonts[key], ["label"]));
-        FontHelper.getFontData(fonts[key].family).then(data => {
-            /** @type Slider */
-            const weightRange = this.fontSettings.settings.weight;
-            const [min, max] =
-                "variationSettings" in data
-                    ? data.variationSettings.wght.split(" ").map(x => parseInt(x, 10))
-                    : [100, 900];
-            weightRange.setMin(min);
-            weightRange.setMax(max);
-        }).catch(DOMHelper.printError);
+        FontHelper.setFont(element, ObjectHelper.withoutKeys(this.dataset.getFont(key), ["label"]));
     }
 
     /**
@@ -209,6 +211,10 @@ export class Game {
                     const referenceNodes = this.referenceItemsNodes(referenceItems, propertyKey);
                     document.getElementById("game-symbols").append(...referenceNodes);
                     this.updateSymbolFontFamily(this.fontSettings.getValue("family"));
+
+                    for (const node of referenceNodes) {
+                        this.scaleItemNodeContents(node);
+                    }
 
                     for (const item of referenceItems) {
                         this.dealer.punish(this.dealer.getItemIndex(item), 1 / referenceItems.length);
@@ -284,12 +290,33 @@ export class Game {
     referenceItemNode(item, property) {
         const container = DOMHelper.getTemplate("symbolContainer");
         container.classList.add("symbol-reference");
-        const symbolNode = container.querySelector('.symbol');
-        symbolNode.textContent = item.displayString;
-        symbolNode.classList.add("symbol-" + this.dataset.displayData.type);
+        container.querySelector('.symbol').classList.add("symbol-" + this.dataset.displayData.type);
 
-        container.querySelector('.symbol-label').textContent = item.properties[property].displayString;
+        this.updateItemNode(container, item, property, false);
         return container;
+    }
+
+    /**
+     * @param {HTMLElement} node
+     * @param {QuizItem} item
+     * @param {?string} property
+     * @param {boolean} scale
+     */
+    updateItemNode(node, item, property = null, scale = true) {
+        property ??= this.properties[0];
+        node.querySelector('.symbol').textContent = item.displayString;
+        node.querySelector('.symbol-label').textContent = item.properties[property].displayString;
+        if (scale) {
+            this.scaleItemNodeContents(node);
+        }
+    }
+
+    /**
+     * @param {HTMLElement} node
+     */
+    scaleItemNodeContents(node) {
+        DOMHelper.scaleToFit(node.querySelector('.symbol'));
+        DOMHelper.scaleToFit(node.querySelector('.symbol-label'));
     }
 
     clearInputs() {
@@ -361,11 +388,7 @@ export class Game {
      * @param {QuizItem} item
      */
     displayItem(item) {
-        document.querySelector("#symbol-current .symbol").textContent = item.displayString;
-        document.querySelector('#symbol-current .symbol-label').textContent = item.properties[this.properties[0]].displayString;
-
-        DOMHelper.scaleToFit(document.querySelector("#symbol-current .symbol"));
-        DOMHelper.scaleToFit(document.querySelector("#symbol-current .symbol-label"));
+        this.updateItemNode(document.getElementById('symbol-current'), item);
     }
 
     clearItemDisplay() {

@@ -1005,7 +1005,7 @@ body:not(.playing) #game-container, .playing #new-game-settings {
     justify-content: center;
     box-sizing: content-box;
     padding: .25em .1em;
-    min-width: .5em;
+    min-width: .625px;
     transform-origin: center;
   }
 
@@ -1053,7 +1053,7 @@ body:not(.playing) #game-container, .playing #new-game-settings {
   }
 
   .submitted:not(:empty) {
-    margin-inline-end: .625rem;
+    margin-inline-end: .75rem;
   }
 
   [data-correct="true"] {

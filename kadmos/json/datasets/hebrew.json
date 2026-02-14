@@ -1,7 +1,7 @@
 {
   "name": "Hebrew",
   "metadata": {
-    "gameHeading": {"string": "קדמוס", "font": {"family": "Noto Sans Hebrew"}},
+    "gameHeading": {"string": "קדמוס", "font": {"family": "Noto Sans Hebrew", "shift": 0.1}},
     "terms": {"symbol": "letter", "symbols": "letters"},
     "dir": "rtl",
     "lang": "he"
@@ -22,10 +22,8 @@
     "label": "Form",
     "keys": ["normal", "sofit"],
     "setting": {
-      "normal": {
-        "label": "Normal", "active": true},
-      "sofit": {
-        "label": "Sofit", "active": true}
+      "normal": {"label": "Normal", "active": true},
+      "sofit": {"label": "Sofit", "active": true}
     },
     "defaultForm": "normal"
   },
