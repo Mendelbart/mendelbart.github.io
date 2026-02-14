@@ -232,7 +232,6 @@ export class GameContext {
             DOMHelper.showPage(document.getElementById('game-filters'));
         }
         DOMHelper.classIfElse(playing, document.body, "playing");
-        DOMHelper.setSearchParams({play: playing});
     }
 
     readFromSearchParams() {

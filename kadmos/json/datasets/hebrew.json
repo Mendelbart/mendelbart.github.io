@@ -1,18 +1,15 @@
 {
   "name": "Hebrew",
   "metadata": {
-    "gameHeading": {"string": "קדמוס", "font": {"family": "Noto Sans Hebrew", "shift": 0.1}},
+    "gameHeading": {"string": "קדמוס", "font": {"key": "sans", "shift": 0.1}},
     "terms": {"symbol": "letter", "symbols": "letters"},
     "dir": "rtl",
     "lang": "he"
   },
-  "displayData": {
-    "type": "string",
-    "fonts": {
-      "serif": {"family" : "Noto Serif Hebrew", "label": "Serif", "lineHeight": 1.25},
-      "sans": {"family" : "Noto Sans Hebrew", "label": "Sans", "lineHeight": 1.25},
-      "rashi": {"family" : "Noto Rashi Hebrew", "label": "Rashi", "lineHeight": 1.25}
-    }
+  "fonts": {
+    "serif": {"family" : "Noto Serif Hebrew", "label": "Serif", "lineHeight": 1.25},
+    "sans": {"family" : "Noto Sans Hebrew", "label": "Sans", "lineHeight": 1.25},
+    "rashi": {"family" : "Noto Rashi Hebrew", "label": "Rashi", "lineHeight": 1.25}
   },
   "propsData": {
     "name": {"type": "list", "maxDist": 1, "label": "Name", "identifier": true, "active": true},
@@ -31,7 +28,7 @@
     "font": {"family" : "Noto Serif Hebrew", "lineHeight": 1.35, "shift": -0.18, "scale": 1.1},
     "block": {"mode": "flex"},
     "label": {"property": "name", "splitFirst": true},
-    "style": {"buttonWidth": "4.5ch"}
+    "style": {"buttonWidth": "5ch"}
   },
   "symbolsData": {
     "format": "rows",

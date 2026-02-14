@@ -805,9 +805,8 @@ export default class ItemSelector {
 
         const symbolElement = DOMHelper.createElement("span.symbol.symbol-string");
 
-        if (this.selectorData.font) {
-            FontHelper.setFont(symbolElement, this.selectorData.font);
-        }
+        FontHelper.setFont(symbolElement, this.dataset.getFont(this.selectorData.font));
+
         DOMHelper.setAttrs(symbolElement, {
             lang: this.dataset.metadata.lang,
             dir: this.dataset.metadata.dir

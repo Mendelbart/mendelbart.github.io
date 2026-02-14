@@ -21,7 +21,7 @@ export const DATASETS_METADATA = {
 export const DEFAULT_DATASET = "elder_futhark";
 
 const DEFAULT_METADATA = {
-    gameHeading: {string: "Alphabet Game"},
+    gameHeading: "Kadmos",
     terms: {symbol: "symbol", symbols: "symbols"},
     lang: "en",
     dir: "ltr"
@@ -50,7 +50,10 @@ export class Dataset {
     constructor(data) {
         this.name = data.name;
         this.metadata = Object.assign({}, DEFAULT_METADATA, data.metadata);
-        this.displayData = data.displayData;
+        this.fonts = data.fonts;
+        this.setupFonts();
+        this.displayData = data.displayData ?? {};
+        this.displayData.type ??= "string";
         this.formsData = data.formsData ?? DEFAULT_FORMSDATA;
         this.propsData = data.propsData;
         this.selectorData = data.selectorData ?? {};
@@ -191,11 +194,49 @@ export class Dataset {
     }
 
     hasFontSetting() {
-        return Object.keys(this.displayData.fonts).length > 1;
+        return Object.keys(this.fonts).length > 1;
     }
 
     getItemSelector() {
         return new ItemSelector(this.items, this);
+    }
+
+    _getFont(font) {
+        if (!font) {
+            return this.defaultFont();
+        }
+        if (typeof font === "string") {
+            if (font in this.fonts) {
+                return this.fonts[font];
+            } else {
+                console.warn(`Unknown font key "${font}".`);
+                return this.defaultFont();
+            }
+        }
+
+        if (font.key) {
+            return Object.assign({}, this.fonts[font.key], ObjectHelper.withoutKeys(font, ["key"]));
+        }
+
+        return font;
+    }
+
+    getFont(font) {
+        return ObjectHelper.withoutKeys(this._getFont(font), ["default", "label"]);
+    }
+
+    setupFonts() {
+        for (const [key, font] of Object.entries(this.fonts)) {
+            if (font.default) {
+                this._defaultFont = key;
+                return;
+            }
+        }
+        this._defaultFont = Object.keys(this.fonts)[0];
+    }
+
+    defaultFont() {
+        return this.fonts[this._defaultFont];
     }
 
     /**
@@ -204,24 +245,15 @@ export class Dataset {
      */
     fontSetting(checked = null) {
         const setting = ButtonGroup.from(
-            ObjectHelper.map(this.displayData.fonts, font => font.label ?? font.family),
+            ObjectHelper.map(this.fonts, font => font.label ?? font.family),
             {
                 label: "Font",
                 exclusive: true,
-                checked: checked ?? this.displayData.defaultFont ?? Object.keys(this.displayData.fonts)[0]
+                checked: checked ?? this._defaultFont
             }
         );
         setting.node.classList.add("font-family-setting");
         return setting;
-    }
-
-    getFont(key) {
-        const fonts = this.displayData.fonts;
-        if (!fonts[key]) {
-            console.warn(`Unknown symbol font key "${key}".`);
-            key = Object.keys(fonts)[0];
-        }
-        return fonts[key];
     }
 
     /**
@@ -410,7 +442,7 @@ export class Dataset {
             const gameHeading = this.metadata.gameHeading;
 
             if ("font" in gameHeading) {
-                FontHelper.setFont(element, gameHeading.font);
+                FontHelper.setFont(element, this.getFont(gameHeading.font));
             } else {
                 FontHelper.clearFont(element);
             }

@@ -1,16 +1,13 @@
 {
   "name": "Phoenician",
   "metadata": {
-    "gameHeading": {"string": "\uD802\uDD12\uD802\uDD03\uD802\uDD0C", "font": {"family": "Noto Sans Phoenician"}},
+    "gameHeading": {"string": "\uD802\uDD12\uD802\uDD03\uD802\uDD0C"},
     "terms": {"symbol": "letter", "symbols": "letters"},
     "lang": "phn",
     "dir": "rtl"
   },
-  "displayData": {
-    "type": "string",
-    "fonts": {
-      "sans": {"family": "Noto Sans Phoenician"}
-    }
+  "fonts": {
+    "sans": {"family": "Noto Sans Phoenician"}
   },
   "propsData": {
     "name": {"type": "string", "label": "Name", "maxDist": 1, "identifier": true, "active": true, "substitutions": {"[ʾʿ]*": ""}},
@@ -18,9 +15,8 @@
     "meaning": {"type": "list", "label": "Meaning", "maxDist": 0, "active": false}
   },
   "selectorData": {
-    "font": {"family": "Noto Sans Phoenician"},
     "label": {"property": "name"},
-    "style": {"buttonWidth": "5ch", "symbolSize": 1.35}
+    "style": {"buttonWidth": "5ch", "symbolSize": 1.5}
   },
   "symbolsData": {
     "format": "rows",

@@ -9,13 +9,9 @@
     "languages": ["en", "de"],
     "default": "en"
   },
-  "displayData": {
-    "type": "string",
-    "fonts": {
-      "serif": {"family": "Noto Serif", "label": "Serif"},
-      "sans": {"family": "Noto Sans", "label": "Sans"}
-    },
-    "defaultFont": "serif"
+  "fonts": {
+    "serif": {"family": "Noto Serif", "label": "Serif", "default": true},
+    "sans": {"family": "Noto Sans", "label": "Sans"}
   },
   "propsData": {
     "name": {"type": "list", "label": "Name", "maxDist": 1, "identifier": true, "active": true}

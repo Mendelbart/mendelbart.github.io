@@ -6,14 +6,10 @@
     "lang": "ar",
     "dir": "rtl"
   },
-  "displayData": {
-    "type": "string",
-    "fonts": {
-      "naskh": {"family": "Noto Naskh Arabic", "label": "Naskh"},
-      "sans": {"family": "Noto Sans Arabic", "label": "Sans"},
-      "kufi": {"family": "Noto Kufi Arabic", "label": "Kufi"}
-    },
-    "defaultFont": "naskh"
+  "fonts": {
+    "naskh": {"family": "Noto Naskh Arabic", "label": "Naskh", "default": true},
+    "sans": {"family": "Noto Sans Arabic", "label": "Sans"},
+    "kufi": {"family": "Noto Kufi Arabic", "label": "Kufi"}
   },
   "propsData": {
     "name": {"type": "list", "label": "Name", "maxDist": 0, "identifier": true, "active": true, "substitutions": {"[ʻʼ']*": ""}},

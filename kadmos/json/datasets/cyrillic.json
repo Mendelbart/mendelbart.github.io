@@ -2,16 +2,12 @@
   "name": "Cyrillic",
   "metadata": {
     "_source": "https://en.wikipedia.org/wiki/Cyrillic_alphabets#Common_letters",
-    "gameHeading": {"string": "Кадмос", "font": {"family": "Noto Sans"}},
+    "gameHeading": {"string": "Кадмос", "font": "sans"},
     "terms": {"symbol": "letter", "symbols": "letters"}
   },
-  "displayData": {
-    "type": "string",
-    "fonts": {
-      "serif": {"family": "Noto Serif", "label": "Serif"},
-      "sans": {"family": "Noto Sans", "label": "Sans"}
-    },
-    "defaultFont": "serif"
+  "fonts": {
+    "serif": {"family": "Noto Serif", "label": "Serif"},
+    "sans": {"family": "Noto Sans", "label": "Sans"}
   },
   "propsData": {
     "name": {"type": "list", "maxDist": 0, "label": "Name", "active": true, "identifier": true}
@@ -25,7 +21,7 @@
     }
   },
   "selectorData": {
-    "font": {"family": "Noto Serif"},
+    "font": "serif",
     "style": {"buttonWidth": "6.25ch"}
   },
   "variantsData": {

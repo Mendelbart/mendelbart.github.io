@@ -159,7 +159,7 @@ export class Game {
     }
 
     setSymbolFont(element, key) {
-        FontHelper.setFont(element, ObjectHelper.withoutKeys(this.dataset.getFont(key), ["label"]));
+        FontHelper.setFont(element, this.dataset.getFont(key));
     }
 
     /**

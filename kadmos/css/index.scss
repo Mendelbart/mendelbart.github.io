@@ -142,11 +142,8 @@ $transitionButton: 10ms;
 }
 
 
-:root, .light-mode {
-  @include light-mode;
-}
-
 :root {
+  @include light-mode;
   @media (prefers-color-scheme: dark) {
     @include dark-mode;
   }
@@ -155,6 +152,10 @@ $transitionButton: 10ms;
   --font-shift: 0;
   --font-base-size: 1em;
   --letter-spacing: 0ch;
+}
+
+.light-mode {
+  @include light-mode;
 }
 
 .dark-mode {

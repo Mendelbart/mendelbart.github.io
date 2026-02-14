@@ -1,20 +1,16 @@
 {
   "name": "Japanese Kana",
   "metadata": {
-    "gameHeading": {"string": "カドモス", "font": {"family": "Noto Sans Japanese"}},
+    "gameHeading": {"string": "カドモス"},
     "terms": {"symbol": "symbol", "symbols": "symbols"},
     "lang": "ja"
   },
-  "displayData": {
-    "type": "string",
-    "fonts": {
-      "sans": {"family": "Noto Sans Japanese", "label": "Sans"},
-      "serif": {"family": "Noto Serif Japanese", "label": "Serif"}
-    },
-    "defaultFont": "sans"
+  "fonts": {
+    "sans": {"family": "Noto Sans Japanese", "label": "Sans", "default": true},
+    "serif": {"family": "Noto Serif Japanese", "label": "Serif"}
   },
   "propsData": {
-    "roman": {"type": "list", "label": "Hepburn Romanization", "maxDist": 0, "identifier": true}
+    "roman": {"type": "list", "label": "Transliteration", "maxDist": 0, "identifier": true}
   },
   "selectorData": {
     "font": {"family": "Noto Sans Japanese"},
@@ -22,7 +18,7 @@
     "blocks": [
       {
         "mode": "grid",
-        "indices": "0:35,gap,36,gap,37:44,gap,45,46",
+        "indices": "0:35,gap,36,gap,37:43,gap3,44",
         "nColumns": 5,
         "columnLabels": "aiueo",
         "rowLabels": "∅kstnhmyrw",
@@ -30,7 +26,7 @@
       },
       {
         "mode": "grid",
-        "indices": "47:71",
+        "indices": "45:69",
         "nColumns": 5,
         "columnLabels": "aiueo",
         "rowLabels": "gzdbp",
@@ -103,9 +99,7 @@
       ["れレ", "re"],
       ["ろロ", "ro"],
       ["わワ", "wa"],
-      ["ゐヰ", "i"],
-      ["ゑヱ", "e"],
-      ["をヲ", "o"],
+      ["をヲ", "wo"],
       ["がガ", "ga"],
       ["ぎギ", "gi"],
       ["ぐグ", "gu"],
