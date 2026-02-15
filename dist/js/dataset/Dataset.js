@@ -214,8 +214,9 @@ export class Dataset {
             }
         }
 
-        if (font.key) {
-            return Object.assign({}, this.fonts[font.key], ObjectHelper.withoutKeys(font, ["key"]));
+        if (font.key || !font.family) {
+            const baseFont = font.key ? this.fonts[font.key] : this.defaultFont();
+            return Object.assign({}, baseFont, ObjectHelper.withoutKeys(font, ["key"]));
         }
 
         return font;

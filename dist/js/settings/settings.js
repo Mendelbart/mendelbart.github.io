@@ -120,7 +120,7 @@ export class SettingsCollection {
     }
 
     getValues() {
-        return OH.map(this.settings, setting => setting.value);
+        return ObjectHelper.map(this.settings, setting => setting.value);
     }
 
     setValues(values) {
