@@ -1,10 +1,8 @@
 import * as ObjectHelper from "./object.js";
-import {classIfElse, printError} from './dom.js';
+import {classIfElse} from './dom.js';
+import _font_data from '../../json/fonts.json';
 
-/**
- * @type {Record<string,Record<string,*>>}
- */
-const FONT_DATA = {};
+const FONT_DATA = Object.fromEntries(_font_data.map(font => [font.family, font]));
 
 const FONT_PROPERTY_KEYS = {
     family: "font-family",
@@ -19,38 +17,26 @@ const FONT_PROPERTY_KEYS = {
 const FONT_TRANSFORM_PROPERTIES = ["shift", "scale", "letterSpacing"];
 
 /**
- * @type {Record<string,*>}
- */
-const fontDataReady = fetch("/kadmos/json/fonts.json")
-    .then(response => response.json())
-    .then(json => {
-        for (const fontData of json) {
-            FONT_DATA[fontData.family] = fontData;
-        }
-    });
-
-/**
  * @param {HTMLElement} element
  * @param {{family, weight?, shift?, scale?, styleset?}} properties
  */
 export function setFont(element, properties) {
     clearFont(element);
-    if ("family" in properties) {
-        const family = properties.family;
-        setFontFamily(element, family).then(() => {
-            const newProps = Object.assign({}, properties);
-            const defaultData = FONT_DATA[family];
-            if ("shift" in defaultData) {
-                newProps.shift = defaultData.shift + (properties.shift ?? 0);
-            }
-            if ("scale" in defaultData) {
-                newProps.scale = defaultData.scale * (properties.scale ?? 1);
-            }
-            setFontProperties(element, newProps);
-        });
-    } else {
+    if (!properties.family) {
         throw new Error("Key 'family' in properties required. Otherwise use setFontProperties instead.");
     }
+
+    const family = properties.family;
+    setFontFamily(element, family);
+    const newProps = Object.assign({}, properties);
+    const defaultData = FONT_DATA[family];
+    if ("shift" in defaultData) {
+        newProps.shift = defaultData.shift + (properties.shift ?? 0);
+    }
+    if ("scale" in defaultData) {
+        newProps.scale = defaultData.scale * (properties.scale ?? 1);
+    }
+    setFontProperties(element, newProps);
 }
 
 /**
@@ -58,9 +44,7 @@ export function setFont(element, properties) {
  * @returns {Promise<Record<string,*>>}
  */
 export function getFontData(family) {
-    return fontDataReady.then(() => {
-        return FONT_DATA[family];
-    })
+    return FONT_DATA[family];
 }
 
 /**
@@ -99,11 +83,9 @@ export function setFontProperties(element, properties) {
 }
 
 export function setFontFamily(element, family) {
-    return fontDataReady.then(() => {
-        const font = FONT_DATA[family];
-        element.style.fontFamily = family + ", " + (font.fallback ?? "system-ui, sans-serif");
-        setFontProperties(element, ObjectHelper.onlyKeys(font, FONT_TRANSFORM_PROPERTIES));
-    });
+    const font = FONT_DATA[family];
+    element.style.fontFamily = family + ", " + (font.fallback ?? "system-ui, sans-serif");
+    setFontProperties(element, ObjectHelper.onlyKeys(font, FONT_TRANSFORM_PROPERTIES));
 }
 
 /**
@@ -128,10 +110,8 @@ function setStylesets(element, stylesets, family) {
     if (window.CSS.supports("font-variant-alternates", variantStr)) {
         element.style.setProperty("font-variant-alternates", variantStr);
     } else {
-        fontDataReady.then(() => {
-            const ssIDs = stylesets.map(name => FONT_DATA[family].styleset[name]);
-            const ssIDsStr = ssIDs.map(id => `"ss${id.toString().padStart(2, "0")}"`).join(', ');
-            element.style.setProperty("font-feature-settings", ssIDsStr);
-        }).catch(printError);
+        const ssIDs = stylesets.map(name => FONT_DATA[family].styleset[name]);
+        const ssIDsStr = ssIDs.map(id => `"ss${id.toString().padStart(2, "0")}"`).join(', ');
+        element.style.setProperty("font-feature-settings", ssIDsStr);
     }
 }

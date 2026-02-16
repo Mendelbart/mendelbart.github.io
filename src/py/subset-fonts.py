@@ -4,12 +4,12 @@ from subprocess import run
 from os import listdir
 from os.path import join
 
-datasets_dir = "../../json/datasets"
-source_fonts_dir = "./source"
-subset_fonts_dir = "./subset"
+datasets_dir = "dist/json/datasets"
+source_fonts_dir = "src/assets/fonts"
+subset_fonts_dir = "dist/assets/fonts"
 
 def main():
-    with open("../../json/fonts.json", 'r') as fontsJSON:
+    with open("src/json/fonts.json", 'r') as fontsJSON:
         fonts = json.load(fontsJSON)
 
     fonts = {font["family"]: font for font in fonts}
@@ -22,8 +22,7 @@ def main():
             return False
 
         if font_data["family"] not in charsets:
-            print(f'Unknown font family "{font_data["family"]}"')
-            return False
+            raise ValueError(f'Unknown font family "{font_data["family"]}"')
 
         return True
 
@@ -75,7 +74,7 @@ def main():
             dataset_chars.update(list(chars))
 
 
-        for font_data in dataset["displayData"]["fonts"].values():
+        for font_data in dataset["fonts"].values():
             if not validate_font_data(font_data):
                 continue
 
@@ -132,14 +131,14 @@ def main():
 
     tabwidth = 2
 
-    with open("../../css/fonts.css", "w") as file:
+    with open("src/css/fonts.scss", "w") as file:
         def write_property(prop_name, prop_value, ntabs = 1):
             file.write(" " * ntabs * tabwidth + f'{prop_name}: {prop_value};\n')
 
         for family, font in fonts.items():
             file.write("@font-face {\n")
             write_property("font-family", f'"{family}"')
-            write_property("src", f'url("/kadmos/assets/fonts/subset/{font["subsetFilename"]}")')
+            write_property("src", f'url("/kadmos/assets/fonts/{font["subsetFilename"]}")')
             write_property("font-display", "swap")
 
             if "weight" in font:

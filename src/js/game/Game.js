@@ -126,19 +126,20 @@ export class Game {
 
     updateSymbolWeightRange(key) {
         const font = this.dataset.getFont(key);
-        FontHelper.getFontData(font.family).then(data => {
-            /** @type Slider */
-            const weightRange = this.fontSettings.settings.weight;
+        const data = FontHelper.getFontData(font.family);
+        /**
+         * @type {Slider}
+         */
+        const weightRange = this.fontSettings.settings.weight;
 
-            if (data.variationSettings && data.variationSettings.wght) {
-                const [min, max] = data.variationSettings.wght.split(" ").map(x => parseInt(x, 10));
-                weightRange.setMin(min);
-                weightRange.setMax(max);
-                DOMHelper.show(weightRange.node);
-            } else {
-                DOMHelper.hide(weightRange.node);
-            }
-        }).catch(DOMHelper.printError);
+        if (data.variationSettings && data.variationSettings.wght) {
+            const [min, max] = data.variationSettings.wght.split(" ").map(x => parseInt(x, 10));
+            weightRange.setMin(min);
+            weightRange.setMax(max);
+            DOMHelper.show(weightRange.node);
+        } else {
+            DOMHelper.hide(weightRange.node);
+        }
     }
 
     setupFontSettings() {
