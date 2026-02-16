@@ -1,6 +1,7 @@
 import {SettingsCollection, ValueElement} from "./settings/settings.js";
 import {Game} from "./game/Game.js";
-import {Dataset, DEFAULT_DATASET, DATASETS_METADATA} from "./dataset/Dataset.js";
+import {Dataset, DEFAULT_DATASET, TERMS} from "./dataset/Dataset.js";
+import DATASETS_METADATA from '../json/datasets_meta.json';
 import {DOMHelper, Base64Helper, ObjectHelper} from "./helpers/helpers.js";
 
 
@@ -108,11 +109,12 @@ export class GameContext {
 
         const cachedSettings = this.getCachedSettings();
 
+        this.setupTerms();
         this.setupSelector(cachedSettings);
         this.setupSettingsCollection(cachedSettings);
 
         const gameHeading = this.dataset.metadata.gameHeading;
-        const fonts = "font" in gameHeading && "family" in gameHeading.font ? [gameHeading.font.family] : [];
+        const fonts = [this.dataset.getFontFamily(gameHeading.font), this.dataset.getSelectorDisplayFont()[0]];
         DOMHelper.batchUpdate([
             [
                 this.dataset.setupGameHeading.bind(this.dataset),
@@ -134,6 +136,15 @@ export class GameContext {
         ], fonts);
 
         DOMHelper.showPage(document.getElementById('game-filters'));
+    }
+
+    setupTerms() {
+        for (const term of TERMS) {
+            const string = this.dataset.metadata.terms[term];
+            document.querySelectorAll('.term-' + term).forEach(elem => {
+                elem.textContent = string;
+            });
+        }
     }
 
     setupSelector(settings) {
@@ -215,13 +226,15 @@ export class GameContext {
         }
 
         this.game.setReferenceItems(referenceItems);
-        this.game.setup();
-        this.game.newRound();
-        this.setPlaying(true);
-        this.game.focus();
         this.game.onFinish.push(() => {
             this.setPlaying(false);
         });
+
+        this.game.setup().then(() => {
+            this.game.newRound();
+            this.setPlaying(true);
+            this.game.focus();
+        }, err => console.error(err));
     }
 
     /**

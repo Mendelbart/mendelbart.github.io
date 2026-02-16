@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectTasksOptions">
     <TaskOptions isEnabled="true">
-      <option name="arguments" value="src/css/$FileName$:dist/css/$FileNameWithoutExtension$.css --style compressed" />
+      <option name="arguments" value="src/scss/$FileName$:dist/css/$FileNameWithoutExtension$.css --style compressed" />
       <option name="checkSyntaxErrors" value="false" />
       <option name="description" />
       <option name="exitCodeBehavior" value="ERROR" />
@@ -74,7 +74,7 @@
         <array />
       </option>
       <option name="outputFromStdout" value="false" />
-      <option name="program" value="$PROJECT_DIR$/src/py/subset-fonts.py" />
+      <option name="program" value="$PROJECT_DIR$/fonts/subset-fonts.py" />
       <option name="runOnExternalChanges" value="true" />
       <option name="scopeName" value="datasets" />
       <option name="trackOnlyRoot" value="false" />

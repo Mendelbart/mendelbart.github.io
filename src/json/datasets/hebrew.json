@@ -2,7 +2,6 @@
   "name": "Hebrew",
   "metadata": {
     "gameHeading": {"string": "קדמוס", "font": {"key": "sans", "shift": 0.1}},
-    "terms": {"symbol": "letter", "symbols": "letters"},
     "dir": "rtl",
     "lang": "he"
   },

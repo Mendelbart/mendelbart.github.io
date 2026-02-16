@@ -3,6 +3,14 @@ import {classIfElse} from './dom.js';
 import _font_data from '../../json/fonts.json';
 
 const FONT_DATA = Object.fromEntries(_font_data.map(font => [font.family, font]));
+const DEFAULT_FONTFACE_DATA = {
+    display: "swap",
+    weight: 400,
+    style: "normal",
+};
+
+/** @type {Record<string,FontFace>} */
+const FONTFACES = {};
 
 const FONT_PROPERTY_KEYS = {
     family: "font-family",
@@ -17,16 +25,76 @@ const FONT_PROPERTY_KEYS = {
 const FONT_TRANSFORM_PROPERTIES = ["shift", "scale", "letterSpacing"];
 
 /**
- * @param {HTMLElement} element
- * @param {{family, weight?, shift?, scale?, styleset?}} properties
+ * @param family
+ * @returns {Promise<FontFace>}
  */
-export function setFont(element, properties) {
-    clearFont(element);
-    if (!properties.family) {
-        throw new Error("Key 'family' in properties required. Otherwise use setFontProperties instead.");
+export function loadFont(family) {
+    if (!family) {
+        return Promise.reject("No family given.");
+    }
+    if (!(family in FONTFACES)) {
+        FONTFACES[family] = getFontFace(family);
+        document.fonts.add(FONTFACES[family]);
     }
 
-    const family = properties.family;
+    return FONTFACES[family].load();
+}
+
+function defaultFontURL(family) {
+    return `url(/kadmos/assets/fonts/${family.replaceAll(" ", "")}.woff2`;
+}
+
+function supportsStylesets() {
+    return CSS.supports("font-variant-alternates", "styleset(x)");
+}
+
+/**
+ * @param family
+ * @returns {FontFace}
+ */
+function getFontFace(family) {
+    const data = Object.assign({}, DEFAULT_FONTFACE_DATA, FONT_DATA[family]);
+
+    if ("styleset" in data && supportsStylesets()) {
+        document.styleSheets[0].insertRule(
+            `@font-feature-values "${family}" {@styleset {` +
+            Object.entries(data.styleset).map(([name, value]) => `${name}: ${value};`).join("") +
+            '}}'
+        );
+        delete data.styleset;
+    }
+
+    if ("variationSettings" in data) {
+        const newDescriptors = digestFontVariationSettings(data.variationSettings);
+        delete data.variationSettings;
+        Object.assign(data, newDescriptors);
+    }
+
+    return new FontFace(family, data.url ?? defaultFontURL(family), data);
+}
+
+function digestFontVariationSettings(variationSettings) {
+    const result = {};
+    if ("wght" in variationSettings) {
+        result.weight = variationSettings.wght;
+        variationSettings = ObjectHelper.withoutKeys(variationSettings, "wght");
+    }
+
+    if (Object.keys(variationSettings).length > 0) {
+        result.variationSettings = Object.entries(variationSettings).map(([key, value]) => `"${key}" ${value}`).join(",");
+    }
+    return result;
+}
+
+
+/**
+ * @param {HTMLElement} element
+ * @param {string} family
+ * @param {{weight?, shift?, scale?, styleset?}} [properties]
+ */
+export function setFont(element, family, properties = {}) {
+    clearFont(element);
+
     setFontFamily(element, family);
     const newProps = Object.assign({}, properties);
     const defaultData = FONT_DATA[family];
@@ -82,7 +150,7 @@ export function setFontProperties(element, properties) {
     classIfElse(transform, element, "font-transform");
 }
 
-export function setFontFamily(element, family) {
+function setFontFamily(element, family) {
     const font = FONT_DATA[family];
     element.style.fontFamily = family + ", " + (font.fallback ?? "system-ui, sans-serif");
     setFontProperties(element, ObjectHelper.onlyKeys(font, FONT_TRANSFORM_PROPERTIES));
@@ -107,7 +175,7 @@ function setStylesets(element, stylesets, family) {
 
     const variantStr = `styleset(${stylesets.join(", ")})`
 
-    if (window.CSS.supports("font-variant-alternates", variantStr)) {
+    if (supportsStylesets()) {
         element.style.setProperty("font-variant-alternates", variantStr);
     } else {
         const ssIDs = stylesets.map(name => FONT_DATA[family].styleset[name]);

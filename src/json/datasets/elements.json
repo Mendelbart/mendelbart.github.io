@@ -3,7 +3,7 @@
   "name": "Atomic Elements",
   "metadata": {
     "gameHeading": {"string": "KAtMoS", "font": {"family": "Noto Sans", "letterSpacing": "-.07ch"}},
-    "terms": {"symbol": "element", "symbols": "elements"}
+    "terms": {"letter": "element"}
   },
   "languageData": {
     "languages": ["en", "de"],

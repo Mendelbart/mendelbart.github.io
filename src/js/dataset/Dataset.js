@@ -2,30 +2,24 @@ import {ItemProperty, QuizItem} from "./symbol.js";
 import {DOMHelper, ObjectHelper, FontHelper} from '../helpers/helpers.js';
 import ItemSelector from "./selector.js";
 import {SettingsCollection, ButtonGroup, ValueElement} from "../settings/settings.js";
+import DATASETS_METADATA from '../../json/datasets_meta.json';
 
 DOMHelper.registerTemplate(
     "headingElement",
     `<div class="heading-element"><span class="heading-element-number"></span><span class="heading-element-symbol"></span></div>`
 );
 
-export const DATASETS_METADATA = {
-    arabic: {name: "Arabic", file: "./json/datasets/arabic.json"},
-    elements: {name: "Atomic Elements", file: "./json/datasets/elements.json"},
-    cyrillic: {name: "Cyrillic", file: "./json/datasets/cyrillic.json"},
-    elder_futhark: {name: "Elder Futhark", file: "./json/datasets/elder_futhark.json"},
-    greek: {name: "Greek", file: "./json/datasets/greek.json"},
-    hebrew: {name: "Hebrew", file: "./json/datasets/hebrew.json"},
-    japanese: {name: "Japanese Kana", file: "./json/datasets/japanese.json"},
-    phoenician: {name: "Phoenician", file: "./json/datasets/phoenician.json"}
-}
+const DATASETS_ROOT = "./json/datasets/";
 export const DEFAULT_DATASET = "elder_futhark";
 
 const DEFAULT_METADATA = {
     gameHeading: "Kadmos",
-    terms: {symbol: "symbol", symbols: "symbols"},
+    terms: {letter: "letter"},
     lang: "en",
     dir: "ltr"
 };
+
+export const TERMS = ["letter", "letters"];
 
 const DEFAULT_FORMSDATA = {
     keys: ["default"],
@@ -49,9 +43,8 @@ export class Dataset {
 
     constructor(data) {
         this.name = data.name;
-        this.metadata = Object.assign({}, DEFAULT_METADATA, data.metadata);
-        this.fonts = data.fonts;
-        this.setupFonts();
+        this.metadata = this.processMetadata(data.metadata);
+        this.processFonts(data.fonts);
         this.displayData = data.displayData ?? {};
         this.displayData.type ??= "string";
         this.formsData = data.formsData ?? DEFAULT_FORMSDATA;
@@ -77,10 +70,10 @@ export class Dataset {
         }
 
         if (key in this._cache) {
-            return new Promise((resolve) => resolve(this._cache[key]));
+            return Promise.resolve(this._cache[key]);
         }
 
-        return fetch(DATASETS_METADATA[key].file)
+        return fetch(DATASETS_ROOT + DATASETS_METADATA[key].file)
             .then(response => response.json())
             .then(data => {
                 const dataset = new this(data);
@@ -88,6 +81,13 @@ export class Dataset {
                 return dataset;
             })
             .catch(DOMHelper.printError);
+    }
+
+    processMetadata(metadata) {
+        metadata = Object.assign({}, DEFAULT_METADATA, metadata);
+        metadata.terms.letter ??= "letter";
+        metadata.terms.letters ??= metadata.terms.letter + "s";
+        return metadata;
     }
 
     processVariants(variantsData) {
@@ -222,22 +222,35 @@ export class Dataset {
         return font;
     }
 
+    /**
+     * @param {string | Object} font
+     * @returns {[string, Record<string, any> & {family: string}]}
+     */
     getFont(font) {
-        return ObjectHelper.withoutKeys(this._getFont(font), ["default", "label"]);
+        const data = ObjectHelper.withoutKeys(this._getFont(font), ["default", "label"]);
+        return [data.family, data];
     }
 
-    setupFonts() {
-        for (const [key, font] of Object.entries(this.fonts)) {
-            if (font.default) {
-                this._defaultFont = key;
-                return;
-            }
-        }
-        this._defaultFont = Object.keys(this.fonts)[0];
+    /**
+     * @param {string | Object} font
+     * @returns {string}
+     */
+    getFontFamily(font) {
+        return this.getFont(font)[0];
+    }
+    
+    getSelectorDisplayFont() {
+        return this.getFont(this.selectorData.font);
+    }
+
+    processFonts(fonts) {
+        this.fonts = fonts;
+        const defaultEntry = Object.entries(fonts).find(([_, font]) => font.default);
+        this._defaultFontKey = defaultEntry ? defaultEntry[0] : Object.keys(fonts)[0];
     }
 
     defaultFont() {
-        return this.fonts[this._defaultFont];
+        return this.fonts[this._defaultFontKey];
     }
 
     /**
@@ -250,7 +263,7 @@ export class Dataset {
             {
                 label: "Font",
                 exclusive: true,
-                checked: checked ?? this._defaultFont
+                checked: checked ?? this._defaultFontKey
             }
         );
         setting.node.classList.add("font-family-setting");
@@ -439,40 +452,32 @@ export class Dataset {
      * @param {HTMLElement} element
      */
     setupGameHeading(element) {
-        try {
-            const gameHeading = this.metadata.gameHeading;
+        const gameHeading = this.metadata.gameHeading;
 
-            if ("font" in gameHeading) {
-                FontHelper.setFont(element, this.getFont(gameHeading.font));
-            } else {
-                FontHelper.clearFont(element);
-            }
-
-            if (this.name === "Atomic Elements") {
-                const container = document.createElement("div");
-                container.classList.add("element-heading-container");
-                const els = [];
-                for (const [no, symbol] of [[19, "K"], [85, "At"], [42, "Mo"], [16, "S"]]) {
-                    const el = DOMHelper.getTemplate("headingElement");
-                    el.querySelector(".heading-element-symbol").textContent = symbol;
-                    el.querySelector(".heading-element-number").textContent = no;
-                    els.push(el);
-                }
-                container.replaceChildren(...els);
-                element.replaceChildren(container);
-            } else {
-                element.replaceChildren(gameHeading.string);
-            }
-
-            element.setAttribute("lang", gameHeading.lang ?? this.metadata.lang);
-            element.setAttribute("dir", gameHeading.dir ?? this.metadata.dir);
+        if ("font" in gameHeading) {
+            FontHelper.setFont(element, ...this.getFont(gameHeading.font));
+        } else {
+            FontHelper.clearFont(element);
         }
-        catch (error) {
-            console.error(error);
-            element.replaceChildren("Kadmos");
-            element.removeAttribute("lang");
-            element.removeAttribute("dir");
+
+        if (this.name === "Atomic Elements") {
+            const container = document.createElement("div");
+            container.classList.add("element-heading-container");
+            const els = [];
+            for (const [no, symbol] of [[19, "K"], [85, "At"], [42, "Mo"], [16, "S"]]) {
+                const el = DOMHelper.getTemplate("headingElement");
+                el.querySelector(".heading-element-symbol").textContent = symbol;
+                el.querySelector(".heading-element-number").textContent = no;
+                els.push(el);
+            }
+            container.replaceChildren(...els);
+            element.replaceChildren(container);
+        } else {
+            element.replaceChildren(gameHeading.string);
         }
+
+        element.setAttribute("lang", gameHeading.lang ?? this.metadata.lang);
+        element.setAttribute("dir", gameHeading.dir ?? this.metadata.dir);
     }
 }
 

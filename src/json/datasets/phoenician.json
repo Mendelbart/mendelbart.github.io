@@ -2,7 +2,6 @@
   "name": "Phoenician",
   "metadata": {
     "gameHeading": {"string": "\uD802\uDD12\uD802\uDD03\uD802\uDD0C"},
-    "terms": {"symbol": "letter", "symbols": "letters"},
     "lang": "phn",
     "dir": "rtl"
   },

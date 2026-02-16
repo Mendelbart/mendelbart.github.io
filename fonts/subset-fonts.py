@@ -5,7 +5,7 @@ from os import listdir
 from os.path import join
 
 datasets_dir = "dist/json/datasets"
-source_fonts_dir = "src/assets/fonts"
+source_fonts_dir = "fonts/ttf"
 subset_fonts_dir = "dist/assets/fonts"
 
 def main():
@@ -127,45 +127,6 @@ def main():
             "-o", join(subset_fonts_dir, font["subsetFilename"])
         ])
         run(command)
-
-
-    tabwidth = 2
-
-    with open("src/css/fonts.scss", "w") as file:
-        def write_property(prop_name, prop_value, ntabs = 1):
-            file.write(" " * ntabs * tabwidth + f'{prop_name}: {prop_value};\n')
-
-        for family, font in fonts.items():
-            file.write("@font-face {\n")
-            write_property("font-family", f'"{family}"')
-            write_property("src", f'url("/kadmos/assets/fonts/{font["subsetFilename"]}")')
-            write_property("font-display", "swap")
-
-            if "weight" in font:
-                weight = font["weight"]
-            elif "variationSettings" in font and "wght" in font["variationSettings"]:
-                weight = font["variationSettings"]["wght"]
-            else:
-                weight = 400
-
-            write_property("font-weight", weight)
-
-            style = font["style"] if "style" in font else "normal"
-            write_property("font-style", style)
-
-            if "variationSettings" in font:
-                settings_str = ", ".join([f'"{key}" {value}' for key, value in font["variationSettings"].items() if key != "wght"])
-                if len(settings_str) > 0:
-                    write_property("font-variation-settings", settings_str)
-
-            file.write("}\n\n")
-
-            if "styleset" in font:
-                file.write(f'@font-feature-values "{font["family"]}" {{\n')
-                file.write("  @styleset {\n")
-                for name, ss_id in font["styleset"].items():
-                    write_property(name, ss_id, 2)
-                file.write("  }\n}")
 
 
 if __name__ == "__main__":

@@ -43,10 +43,14 @@ export function filterKeys(obj, fn) {
 
 /**
  * @param {Object} object
- * @param {Array} keys
+ * @param {Array|string} keys
  * @returns {Object}
  */
 export function withoutKeys(object, keys) {
+    if (typeof keys === "string") {
+        keys = [keys];
+    }
+
     const result = Object.assign({}, object);
     for (const key of keys) {
         delete result[key];

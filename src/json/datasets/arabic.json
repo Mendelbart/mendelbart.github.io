@@ -2,7 +2,6 @@
   "name": "Arabic",
   "metadata": {
     "gameHeading": {"string": "قدموس", "font": {"family": "Noto Sans Arabic", "scale": 1.125}},
-    "terms": {"symbol": "letter", "symbols": "letters"},
     "lang": "ar",
     "dir": "rtl"
   },

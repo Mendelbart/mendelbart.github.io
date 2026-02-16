@@ -3,6 +3,7 @@
  */
 
 import * as ObjectHelper from './object.js';
+import * as FontHelper from './font.js';
 
 let IdPrefixCounter = 0;
 window.hasTouch = 'ontouchstart' in window;
@@ -524,13 +525,14 @@ function getScale(elementSize, containerSize, grow = false) {
  * @param {string[]} fonts
  */
 export function batchUpdate(updates, fonts = []) {
-    Promise.all(fonts.map(font => document.fonts.load(`16px "${font}"`))).then(() => {
-        requestAnimationFrame(() => {
+    Promise.all(fonts.map(FontHelper.loadFont)).then(
+        () => requestAnimationFrame(() => {
             for (const [update, ...args] of updates) {
                 update(...args);
             }
-        });
-    });
+        }),
+        err => console.error(err)
+    );
 }
 
 

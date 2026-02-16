@@ -1,2 +1,3 @@
-.sass-cache
-src/assets/fonts
+**/.sass-cache
+**/.sass-cache/*
+**/*.map

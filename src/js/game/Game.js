@@ -33,16 +33,16 @@ export class Game {
 
         this.onInputKeydown = this.onInputKeydown.bind(this);
         this._show = this._show.bind(this);
-        this.updateSymbolFontFamily = this.updateSymbolFontFamily.bind(this);
+        this.loadAndUpdateSymbolFont = this.loadAndUpdateSymbolFont.bind(this);
     }
 
     setup() {
         this.setupSymbolContainer();
         this.setupInputs();
         this.setupEvals();
-        this.setupFontSettings();
-
         document.getElementById("item-next-button").textContent = "Next";
+
+        return this.setupFontSettings();
     }
 
     getInputMode(propType) {
@@ -117,7 +117,15 @@ export class Game {
         document.querySelector("#game-symbols").style.setProperty("--symbol-weight", value.toString());
     }
 
+    loadAndUpdateSymbolFont(key) {
+        key ??= this.fontSettings.getValue("family");
+        return FontHelper.loadFont(this.dataset.getFontFamily(key)).then(() => {
+            this.updateSymbolFontFamily(key);
+        }, err => console.error(err));
+    }
+
     updateSymbolFontFamily(key) {
+        key ??= this.fontSettings.getValue("family");
         document.querySelectorAll("#game-symbols .symbol-string").forEach(element => {
             this.setSymbolFont(element, key);
         });
@@ -125,8 +133,8 @@ export class Game {
     }
 
     updateSymbolWeightRange(key) {
-        const font = this.dataset.getFont(key);
-        const data = FontHelper.getFontData(font.family);
+        const family = this.dataset.getFontFamily(key);
+        const data = FontHelper.getFontData(family);
         /**
          * @type {Slider}
          */
@@ -154,13 +162,13 @@ export class Game {
         document.querySelector("#font-settings").replaceChildren(...this.fontSettings.nodeList());
 
         this.fontSettings.addUpdateListener("weight", this.updateSymbolWeight);
-        this.fontSettings.addUpdateListener("family", this.updateSymbolFontFamily);
-        this.updateSymbolFontFamily(this.fontSettings.getValue("family"));
+        this.fontSettings.addUpdateListener("family", this.loadAndUpdateSymbolFont);
         this.updateSymbolWeight(weight);
+        return this.loadAndUpdateSymbolFont();
     }
 
     setSymbolFont(element, key) {
-        FontHelper.setFont(element, this.dataset.getFont(key));
+        FontHelper.setFont(element, ...this.dataset.getFont(key));
     }
 
     /**

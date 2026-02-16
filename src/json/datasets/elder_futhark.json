@@ -2,7 +2,7 @@
   "name": "Elder Futhark",
   "metadata": {
     "gameHeading": {"string": "kadmos", "font": {"shift": 0.16}},
-    "terms": {"symbol": "rune", "symbols": "runes"}
+    "terms": {"letter": "rune"}
   },
   "fonts": {
     "junicode": {"family": "Junicode", "styleset": "Elder-futhark", "shift": 0.08, "scale": 1.2}
