@@ -17,7 +17,6 @@ $transitionButton: 10ms;
 /************************* BASE VARS ***********************/
 @mixin light-mode {
   --accent-hue: 210deg;
-  --accent-secondary-hue: calc(var(--accent-hue) - 5deg);
   --accent-border: hsl(var(--accent-hue), 60%, 50%);
   --accent-border-light: hsla(0, 0%, 100%, 25%);
   --accent-bg: hsl(var(--accent-hue), 73%, 48%);
@@ -87,9 +86,6 @@ $transitionButton: 10ms;
 }
 
 @mixin dark-mode {
-  --accent-border: hsl(var(--accent-hue), 50%, 50%);
-  --accent-border-light: hsla(0, 0%, 100%, 25%);
-
   --clr-background: hsl(0, 0%, 8%);
   --clr-surface: hsl(0, 0%, 15%);
   --clr-surface-border: var(--clr-surface);
@@ -105,8 +101,6 @@ $transitionButton: 10ms;
   --clr-text-accent: #fff;
 
   --clr-border-soft: #ffffff29;
-  --clr-button-hover: hsl(var(--accent-hue), 73%, 50%);
-  --clr-button-active: hsl(var(--accent-hue), 73%, 55%);
 
   --clr-button-grey: hsl(0, 0%, 28%);
   --clr-button-grey-hover: hsl(0, 0%, 33%);
@@ -910,7 +904,7 @@ body:not(.playing) #game-container, .playing #new-game-settings {
     width: max(calc(var(--width) * 100%), var(--height));
     height: 100%;
     opacity: 1;
-    background: linear-gradient(to right, hsl(var(--accent-hue), 90%, 45%), hsl(var(--accent-secondary-hue), 70%, 55%));
+    background: linear-gradient(to right, hsl(var(--accent-hue), 90%, 45%), hsl(var(--accent-hue), 70%, 55%));
     background-size: calc(100% / (var(--gradient-scale) * var(--width)));
     border-radius: inherit;
 

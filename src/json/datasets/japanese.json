@@ -1,7 +1,7 @@
 {
   "name": "Japanese Kana",
   "metadata": {
-    "gameHeading": {"string": "カドモス"},
+    "gameHeading": {"string": "カドモス", "font": {"weight": 800}},
     "terms": {"letter": "kana", "letters": "kana"},
     "lang": "ja"
   },
@@ -13,7 +13,7 @@
     "roman": {"type": "list", "label": "Transliteration", "maxDist": 0, "identifier": true}
   },
   "selectorData": {
-    "font": {"family": "Noto Sans Japanese"},
+    "font": {"family": "Noto Sans Japanese", "weight": 600},
     "label": false,
     "blocks": [
       {

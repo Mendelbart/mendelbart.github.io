@@ -10,7 +10,7 @@ const DEFAULT_FONTFACE_DATA = {
 };
 
 /** @type {Record<string,FontFace>} */
-const FONTFACES = {};
+const FONT_FACES = {};
 
 const FONT_PROPERTY_KEYS = {
     family: "font-family",
@@ -32,20 +32,31 @@ export function loadFont(family) {
     if (!family) {
         return Promise.reject("No family given.");
     }
-    if (!(family in FONTFACES)) {
-        FONTFACES[family] = getFontFace(family);
-        document.fonts.add(FONTFACES[family]);
+
+    if (!(family in FONT_FACES)) {
+        FONT_FACES[family] = getFontFace(family);
+        document.fonts.add(FONT_FACES[family]);
     }
 
-    return FONTFACES[family].load();
+    return FONT_FACES[family].load();
 }
 
 function defaultFontURL(family) {
-    return `url(/kadmos/assets/fonts/${family.replaceAll(" ", "")}.woff2`;
+    const url = `/kadmos/assets/fonts/${family.replaceAll(" ", "")}.woff2`;
+    const format = supportsVariableFonts() ? 'woff2-variations' : 'woff2';
+    return `url("${url}") format("${format}")`;
 }
 
-function supportsStylesets() {
-    return CSS.supports("font-variant-alternates", "styleset(x)");
+function supportsSupports() {
+    return "CSS" in window && "supports" in CSS;
+}
+
+export function supportsStylesets() {
+    return supportsSupports() && CSS.supports("font-variant-alternates", "styleset(x)");
+}
+
+export function supportsVariableFonts() {
+    return supportsSupports() && CSS.supports("font-variation-settings", "normal");
 }
 
 /**

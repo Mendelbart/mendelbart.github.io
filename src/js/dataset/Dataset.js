@@ -454,11 +454,7 @@ export class Dataset {
     setupGameHeading(element) {
         const gameHeading = this.metadata.gameHeading;
 
-        if ("font" in gameHeading) {
-            FontHelper.setFont(element, ...this.getFont(gameHeading.font));
-        } else {
-            FontHelper.clearFont(element);
-        }
+        FontHelper.setFont(element, ...this.getFont(gameHeading.font));
 
         if (this.name === "Atomic Elements") {
             const container = document.createElement("div");

@@ -586,6 +586,10 @@ export function showPage(page, container = null) {
         container.querySelector('.pages-next-button'),
         container.querySelector('.pages-finish-button')
     );
+
+    if (!page.nextElementSibling) {
+        container.querySelector('.pages-finish-button').focus();
+    }
 }
 
 /**
