@@ -15,7 +15,7 @@
     "roman": {"type": "list", "label": "Romanization", "maxDist": 0, "identifier": true}
   },
   "selectorData": {
-    "font": {"key": "naskh"},
+    "font": {"key": "naskh", "weight": 650},
     "label": {"property": "name"},
     "style": {"buttonWidth": "4.8ch", "symbolSize": 1.6}
   },
@@ -29,6 +29,9 @@
       "final": {"label": "Final"}
     },
     "exclusive": true
+  },
+  "displayData": {
+    "defaultWeight": 600
   },
   "symbolsData": {
     "format": "rows",

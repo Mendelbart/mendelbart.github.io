@@ -300,7 +300,9 @@
           }
         }
       }
-    }
+    },
+    "required": ["name", "metadata", "fonts", "propsData", "selectorData", "symbolsData"],
+    "additionalProperties": false
   },
   "$defs": {
     "fontWeight": {

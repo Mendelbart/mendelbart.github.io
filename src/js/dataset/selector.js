@@ -32,6 +32,7 @@ export default class ItemSelector {
         // Bind event listener functions
         this.onBlockLabelClick = this.onBlockLabelClick.bind(this);
         this.onBlockButtonClick = this.onBlockButtonClick.bind(this);
+        this.onBlockButtonEnter = this.onBlockButtonEnter.bind(this);
         this.onBlockLabelPointerOverOut = this.onBlockLabelPointerOverOut.bind(this);
         this.onBlockLabelPointerDown = this.onBlockLabelPointerDown.bind(this);
         this.onBlockLabelPointerUpCancel = this.onBlockLabelPointerUpCancel.bind(this);
@@ -228,6 +229,7 @@ export default class ItemSelector {
             return this._gridGapElement();
         }
         const element = DOMHelper.createElement(`span.block-label.block-${type}-label`);
+        element.setAttribute("tabindex", 0);
         element.textContent = content;
         element.dataset.index = index.toString();
 
@@ -299,12 +301,14 @@ export default class ItemSelector {
 
     setupBlockListeners(block) {
         block.node.addEventListener("click", this.onBlockButtonClick);
+        block.node.addEventListener("keydown", this.onBlockButtonEnter);
 
         this.resetRangeSelection();
         block.node.addEventListener("pointerdown", this.onBlockRangePointerDown);
 
         if (block.mode === "grid") {
             block.node.addEventListener("click", this.onBlockLabelClick);
+            block.node.addEventListener("keydown", this.onBlockLabelClick);
             block.node.addEventListener("pointerover", this.onBlockLabelPointerOverOut);
             block.node.addEventListener("pointerout", this.onBlockLabelPointerOverOut);
             block.node.addEventListener("pointerdown", this.onBlockLabelPointerDown);
@@ -313,12 +317,14 @@ export default class ItemSelector {
 
     removeBlockListeners(block) {
         block.node.removeEventListener("click", this.onBlockButtonClick);
+        block.node.removeEventListener("keydown", this.onBlockButtonClick);
 
         block.node.removeEventListener("pointerdown", this.onBlockRangePointerDown);
         block.node.removeEventListener("pointermove", this.onBlockRangePointerMove);
 
         if (block.mode === "grid") {
             block.node.removeEventListener("click", this.onBlockLabelClick);
+            block.node.removeEventListener("keydown", this.onBlockLabelClick);
             block.node.removeEventListener("pointerover", this.onBlockLabelPointerOverOut);
             block.node.removeEventListener("pointerout", this.onBlockLabelPointerOverOut);
             block.node.removeEventListener("pointerdown", this.onBlockLabelPointerDown);
@@ -344,6 +350,15 @@ export default class ItemSelector {
 
         this.lastButtonClicked = button.dataset.indexWithinBlock;
         this.lastBlockClicked = blockIndex;
+    }
+
+    onBlockButtonEnter(event) {
+        if (event.key !== "Enter") return;
+
+        const button = event.target.closest(".selector-item-button");
+        if (!button) return;
+
+        this.toggleItems([button.dataset.index]);
     }
 
     /**
@@ -379,9 +394,12 @@ export default class ItemSelector {
     }
 
     /**
-     * @param {PointerEvent} event
+     * @param {PointerEvent | KeyboardEvent} event
      */
     onBlockLabelClick(event) {
+        if (event.type === "keydown" && event.key !== "Enter") {
+            return;
+        }
         const indices = this.getIndicesFromBlockLabelEvent(event);
         if (!indices) return;
 

@@ -43,7 +43,7 @@
     </TaskOptions>
     <TaskOptions isEnabled="true">
       <option name="arguments" value="-u -i src/json/datasets/$FileName$ -o dist/json/datasets/$FileName$" />
-      <option name="checkSyntaxErrors" value="true" />
+      <option name="checkSyntaxErrors" value="false" />
       <option name="description" />
       <option name="exitCodeBehavior" value="ERROR" />
       <option name="fileExtension" value="json" />
