@@ -3,6 +3,45 @@
   <component name="JsonSchemaMappingsProjectConfiguration">
     <state>
       <map>
+        <entry key="JSON Schema 2020-12">
+          <value>
+            <SchemaInfo>
+              <option name="name" value="JSON Schema 2020-12" />
+              <option name="relativePathToSchema" value="https://json-schema.org/draft/2020-12/schema" />
+              <option name="schemaVersion" value="JSON Schema 202,012" />
+              <option name="applicationDefined" value="true" />
+              <option name="patterns">
+                <list>
+                  <Item>
+                    <option name="path" value="src/json/dataset.schema.json" />
+                  </Item>
+                </list>
+              </option>
+            </SchemaInfo>
+          </value>
+        </entry>
+        <entry key="Kadmos Dataset">
+          <value>
+            <SchemaInfo>
+              <option name="generatedName" value="New Schema" />
+              <option name="name" value="Kadmos Dataset" />
+              <option name="relativePathToSchema" value="src/json/dataset.schema.json" />
+              <option name="schemaVersion" value="JSON Schema 202,012" />
+              <option name="patterns">
+                <list>
+                  <Item>
+                    <option name="directory" value="true" />
+                    <option name="path" value="src/json/datasets" />
+                    <option name="mappingKind" value="Directory" />
+                  </Item>
+                  <Item>
+                    <option name="path" value="src/json/datasets/elements.json" />
+                  </Item>
+                </list>
+              </option>
+            </SchemaInfo>
+          </value>
+        </entry>
         <entry key="No JSON schema">
           <value>
             <SchemaInfo>

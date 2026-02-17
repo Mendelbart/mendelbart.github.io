@@ -13,7 +13,7 @@
     "roman": {"type": "list", "label": "Transliteration", "maxDist": 0, "identifier": true}
   },
   "selectorData": {
-    "font": {"family": "Noto Sans Japanese", "weight": 600},
+    "font": {"key": "sans", "weight": 600},
     "label": false,
     "blocks": [
       {

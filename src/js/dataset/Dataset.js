@@ -205,21 +205,18 @@ export class Dataset {
         if (!font) {
             return this.defaultFont();
         }
+
         if (typeof font === "string") {
-            if (font in this.fonts) {
-                return this.fonts[font];
-            } else {
-                console.warn(`Unknown font key "${font}".`);
-                return this.defaultFont();
-            }
+            font = {key: font};
         }
 
-        if (font.key || !font.family) {
-            const baseFont = font.key ? this.fonts[font.key] : this.defaultFont();
-            return Object.assign({}, baseFont, ObjectHelper.withoutKeys(font, ["key"]));
+        font.key ??= this._defaultFontKey;
+        if (!(font.key) in this.fonts) {
+            console.error(`Unknown font key "${font.key}".`);
+            font.key = this._defaultFontKey;
         }
 
-        return font;
+        return Object.assign({}, this.fonts[font.key], ObjectHelper.withoutKeys(font, ["key"]));
     }
 
     /**

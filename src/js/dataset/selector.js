@@ -107,10 +107,6 @@ export default class ItemSelector {
                 }
             }
 
-            if (this.selectorData.label && this.selectorData.label.position === "right") {
-                this.node.classList.add("labels-right");
-            }
-
             block.node.setAttribute("data-block-index", blockIndex.toString());
             this.applyBlockStyle(block, this.selectorData.style, block.style);
             this.processListenerIndices(block);

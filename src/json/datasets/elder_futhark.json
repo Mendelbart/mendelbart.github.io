@@ -10,7 +10,7 @@
   "selectorData": {
     "font": {"weight": 700},
     "block": {"mode": "grid", "nColumns": 3, "transpose": true, "columnLabels": [1,2,3], "rangeSelectionMode": "walkColumns"},
-    "label": {"property": "name", "position": "right"},
+    "label": {"property": "name"},
     "style": {"buttonMinWidth": "4ch", "buttonMaxWidth": "7ch", "labelGap": "0.15rem"}
   },
   "propsData": {

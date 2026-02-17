@@ -1,0 +1,484 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.com/dataset.schema.json",
+  "title": "Dataset",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Name of the dataset"
+    },
+    "metadata": {
+      "type": "object",
+      "properties": {
+        "gameHeading": {
+          "anyOf": [
+            {
+              "type": "string",
+              "description": "Heading of the game. Equivalent to {\"string\": \"Heading\"}."
+            },
+            {"type": "object",
+              "properties": {
+                "string": {
+                  "type": "string",
+                  "description": "Heading of the game."
+                },
+                "font": {
+                  "$ref": "#/$defs/fontRef",
+                  "additionalProperties": false
+                }
+              }
+            }
+          ]
+        },
+        "lang": {
+          "type": "string",
+          "description": "Value of the HTML lang attribute for letters of this script. Default \"en\"."
+        },
+        "dir": {
+          "enum": ["ltr", "rtl"],
+          "default": "ltr",
+          "description": "Direction of the script: ltr for left-to-right (default) or rtl for right-to-left."
+        },
+        "terms": {
+          "type": "object",
+          "description": "Specify what the equivalent of e.g. \"letter\" and \"letters\" in this font are called.",
+          "properties": {
+            "letter": {
+              "type": "string"
+            },
+            "letters": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "fonts": {
+      "type": "object",
+      "description": "A registry of the fonts used by the dataset, with lowercase keys.",
+      "patternProperties": {
+        "^[a-z]+$": {
+          "type": "object",
+          "allOf": [{
+            "$ref": "#/$defs/fontProperties"
+          }],
+          "properties": {
+            "family": {
+              "type": "string",
+              "description": "Font family name. E.g. \"Noto Sans\" or \"Noto Serif Hebrew\"."
+            },
+            "label": {
+              "type": "string",
+              "description": "Label of the Font in the game font settings. Default: family"
+            },
+            "default": {
+              "type": "boolean",
+              "default": false
+            }
+          },
+          "required": ["family"]
+        }
+      },
+      "additionalProperties": false
+    },
+    "selectorData": {
+      "type": "object",
+      "oneOf": [
+        {},
+        {
+          "properties": {
+            "block": {
+              "$ref": "#/$defs/selectorBlock"
+            }
+          },
+          "required": ["block"]
+        },
+        {
+          "properties": {
+            "blocks": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/selectorBlock"
+              }
+            }
+          },
+          "required": ["blocks"]
+        }
+      ],
+      "properties": {
+        "font": {
+          "$ref": "#/$defs/fontRef"
+        },
+        "label": {
+          "anyOf": [
+            {
+              "const": false
+            },
+            {
+              "type": "object",
+              "description": "Settings for the label underneath letters in the selector. If not set, these won't appear.",
+              "properties": {
+                "property": {
+                  "type": "string",
+                  "description": "Which property to label the items with."
+                },
+                "splitFirst": {
+                  "type": "boolean",
+                  "description": "If true, the property value will be split using the splitter value, and only the first part will be used as a label. E.g. for the letter \"Aleph/Alef\", the label string will be \"Aleph\"",
+                  "default": true
+                },
+                "splitter": {
+                  "type": "string",
+                  "default": "[,;/]"
+                }
+              },
+              "required": ["property"]
+            }
+          ]
+        },
+        "style": {
+          "$ref": "#/$defs/blockStyle"
+        },
+        "defaultActive": {
+          "pattern": "^(all|none|block\\d+)$"
+        }
+      },
+      "additionalProperties": false
+    },
+    "displayData": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "string"
+        },
+        "defaultWeight": {
+          "$ref": "#/$defs/fontWeight"
+        }
+      }
+    },
+    "formsData": {
+      "type": "object",
+      "properties": {
+        "label": {
+          "type": "string",
+          "description": "Label of the forms setting. Default \"forms\".",
+          "default": "Forms"
+        },
+        "keys": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z]+$"
+          }
+        },
+        "setting": {
+          "type": "object",
+          "patternProperties": {
+            "^[a-z]+$": {
+              "type": "object",
+              "properties": {
+                "keys": {
+                  "type": "array",
+                  "description": "Reference keys from the keys array to combine multiple forms into one setting value. By default, this will equal the key pointing to this object.",
+                  "items": {
+                    "type": "string",
+                    "pattern": "^[a-z]+$"
+                  }
+                },
+                "label": {
+                  "type": "string"
+                },
+                "active": {
+                  "type": "boolean",
+                  "default": false
+                }
+              },
+              "required": [
+                "label"
+              ]
+            }
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "propsData": {
+      "type": "object",
+      "patternProperties": {
+        "^[a-z]+$": {
+          "type": "object",
+          "properties": {
+            "type": {
+              "enum": ["list", "string", "integer", "number"],
+              "description": "\"list\", \"string\", \"integer\" or \"number\". Type of letter property. This will mostly be \"list\"."
+            },
+            "label": {
+              "type": "string"
+            },
+            "maxDist": {
+              "type": "integer",
+              "default": 0,
+              "description": "Sets a maximum distance, where the guessed value will still be counted as half-valid. (For strings in levenshtein distance.)"
+            },
+            "active": {
+              "type": "boolean",
+              "default": false
+            },
+            "identifier": {
+              "type": "boolean",
+              "default": false,
+              "deprecated": true
+            },
+            "substitutions": {
+              "type": "object",
+              "patternProperties": {
+                ".*": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "required": ["type", "label"]
+        }
+      },
+      "additionalProperties": false
+    },
+    "symbolsData": {
+      "type": "object",
+      "properties": {
+        "format": {
+          "const": "rows"
+        },
+        "template": {
+          "type": "array",
+          "description": "Keys to assign the rows of data to. Use `display` for the characters, `p:{PROPERTY}` for properties, `p:{PROPERTY}_{LANG}` for properties of a specific language."
+        },
+        "rows": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "prefixItems": [
+              {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                ]
+              }
+            ],
+            "items": {
+              "anyOf": [
+                {
+                  "type": ["string", "number"]
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "source": {
+                      "type": "string"
+                    },
+                    "alts": {
+                      "type": "object",
+                      "patternProperties": {
+                        ".*": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                }
+              ]
+            },
+            "unevaluatedItems": false
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "fontWeight": {
+      "type": "integer",
+      "description": "Font weight.",
+      "minimum": 100,
+      "maximum": 900
+    },
+    "fontProperties": {
+      "type": "object",
+      "properties": {
+        "weight": {
+          "$ref": "#/$defs/fontWeight"
+        },
+        "scale": {
+          "type": "number",
+          "description": "Scale the font-size by this factor.",
+          "default": 1,
+          "minimum": 0
+        },
+        "shift": {
+          "type": "number",
+          "default": 0,
+          "description": "Font up/down shift in em units. Negative: up, positive: down."
+        },
+        "styleset": {
+          "type": "string",
+          "description": "CSS property font-variant-alternates: styleset(...)."
+        },
+        "letterSpacing": {
+          "type": "string",
+          "description": "CSS letter-spacing property."
+        },
+        "lineHeight": {
+          "type": "number",
+          "description": "CSS line-height property."
+        }
+      }
+    },
+    "fontRef": {
+      "description": "A string input is equivalent to {\"key\": \"{STRING}\"}.",
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "object",
+          "allOf": [{ "$ref": "#/$defs/fontProperties" }],
+          "properties": {
+            "key": {
+              "type": "string",
+              "description": "One of the keys set in the dataset.fonts object."
+            }
+          },
+          "additionalProperties": false
+        }
+      ]
+    },
+    "selectorBlock": {
+      "type": "object",
+      "properties": {
+        "mode": {
+          "description": "\"flex\" or \"grid\" for a CSS flexbox or grid layout respectively.",
+          "enum": ["flex", "grid"]
+        },
+        "dblClickGroups": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "$ref": "#/$defs/indicesWithoutGaps"
+          }
+        },
+        "style": {
+          "$ref": "#/$defs/blockStyle"
+        }
+      },
+      "if": {
+        "properties": {
+          "mode": {"const": "grid"}
+        }
+      },
+      "then": {
+        "properties": {
+          "indices": {
+            "$ref": "#/$defs/indicesWithGaps"
+          },
+          "nColumns": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "columnLabels": {
+            "$ref": "#/$defs/blockLabels"
+          },
+          "rowLabels": {
+            "$ref": "#/$defs/blockLabels"
+          },
+          "columnLabelPosition": {
+            "enum": ["start", "end", "both"],
+            "default": "start"
+          },
+          "rowLabelPosition": {
+            "enum": ["start", "end", "both"],
+            "default": "start"
+          },
+          "rangeSelectionMode": {
+            "enum": ["grid", "walkRows", "walkColumns"],
+            "default": "grid",
+            "description": "How elements are selected using range selection."
+          },
+          "transpose": {
+            "type": "boolean",
+            "default": false,
+            "description": "If true, items are ordered in columns first, then rows."
+          }
+        },
+        "required": ["nColumns"]
+      },
+      "else": {
+        "properties": {
+          "indices": {
+            "$ref": "#/$defs/indicesWithoutGaps"
+          }
+        }
+      }
+    },
+    "indicesWithGaps": {
+      "type": "string",
+      "pattern": "^(rest|((gap\\d*|\\d+(:\\d+){0,2}),)*(gap\\d*|\\d+(:\\d+){0,2}))$",
+      "description": "\"rest\" or Python-like range syntax (inclusive ranges!) or gap{WIDTH=1}, separated by commas. E.g. \"0,gap2,1:9\""
+    },
+    "indicesWithoutGaps": {
+      "type": "string",
+      "pattern": "^(rest|(\\d+(:\\d+){0,2},)*(\\d+(:\\d+){0,2}))$",
+      "description": "\"rest\" or Python-like range syntax (inclusive ranges!), separated by commas. E.g. \"0:9:90,2:9:91\"."
+    },
+    "blockLabels": {
+      "description": "If string, split up into characters as labels. Use null for a gap instead of a label.",
+      "anyOf": [
+        {
+          "type": "array",
+          "items": {
+            "type": ["string", "integer", "null"]
+          }
+        },
+        {
+          "type": "string"
+        }
+      ]
+    },
+    "blockStyle": {
+      "type": "object",
+      "properties": {
+        "buttonWidth": {
+          "type": "string",
+          "description": "Equivalent to setting buttonMinWidth and buttonMaxWidth to the same value."
+        },
+        "buttonMinWidth": {
+          "type": "string",
+          "default": "0"
+        },
+        "buttonMaxWidth": {
+          "type": "string",
+          "default": "1fr"
+        },
+        "symbolSize": {
+          "type": "number",
+          "default": 1
+        },
+        "labelGap": {
+          "type": "string",
+          "default": ".1rem"
+        },
+        "symbolMinWidth": {
+          "type": "string",
+          "default": "auto"
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

@@ -1,7 +1,7 @@
 {
   "name": "Greek",
   "metadata": {
-    "gameHeading": {"string": "Κάδμος", "font": {"family": "Noto Sans"}},
+    "gameHeading": {"string": "Κάδμος", "font": {"key": "sans"}},
     "lang": "el"
   },
   "languageData": {

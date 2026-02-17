@@ -2,7 +2,7 @@
   "_source": "https://en.wikipedia.org/wiki/List_of_chemical_elements",
   "name": "Atomic Elements",
   "metadata": {
-    "gameHeading": {"string": "KAtMoS", "font": {"family": "Noto Sans", "letterSpacing": "-.07ch"}},
+    "gameHeading": {"string": "KAtMoS", "font": "sans"},
     "terms": {"letter": "element"}
   },
   "languageData": {
@@ -14,7 +14,7 @@
     "serif": {"family": "Noto Serif", "scale": 0.85, "shift": 0.1, "label": "Serif", "letterSpacing": "-.07ch"}
   },
   "selectorData": {
-    "font": {"family": "Noto Sans", "weight": 700, "lineHeight": 1.25},
+    "font": {"key": "sans", "weight": 700, "scale": 1, "shift": 0, "lineHeight": 1.25},
     "label": false,
     "blocks": [
       {

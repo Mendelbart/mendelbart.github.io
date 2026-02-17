@@ -1,7 +1,7 @@
 {
   "name": "Arabic",
   "metadata": {
-    "gameHeading": {"string": "قدموس", "font": {"family": "Noto Sans Arabic", "scale": 1.125}},
+    "gameHeading": {"string": "قدموس", "font": {"key": "sans", "scale": 1.125}},
     "lang": "ar",
     "dir": "rtl"
   },
@@ -15,7 +15,7 @@
     "roman": {"type": "list", "label": "Romanization", "maxDist": 0, "identifier": true}
   },
   "selectorData": {
-    "font": {"family": "Noto Naskh Arabic"},
+    "font": {"key": "naskh"},
     "label": {"property": "name"},
     "style": {"buttonWidth": "4.8ch", "symbolSize": 1.6}
   },

@@ -804,15 +804,6 @@ $selectorBorderRadius: .2rem;
       }
     }
 
-    &.labels-right {
-      --label-gap: .3rem;
-
-      .selector-item-button {
-        flex-direction: row;
-        align-items: center;
-      }
-    }
-
     .symbol-string {
       min-width: var(--symbol-min-width);
       text-align: center;
