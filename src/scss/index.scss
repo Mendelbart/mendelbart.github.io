@@ -17,10 +17,10 @@ $transitionButton: 10ms;
 /************************* BASE VARS ***********************/
 @mixin light-mode {
   --accent-hue: 250;
-  --accent-border: oklch(0.59 0.16  var(--accent-hue));
+  --accent-border: oklch(0.59 0.16 var(--accent-hue));
   --accent-border-light: hsla(0, 0%, 100%, 25%);
-  --accent-bg: oklch(0.58 0.16  var(--accent-hue));
-  --accent-bg-hover: oklch(0.60 0.16  var(--accent-hue));
+  --accent-bg: oklch(0.58 0.16 var(--accent-hue));
+  --accent-bg-hover: oklch(0.60 0.16 var(--accent-hue));
 
   --clr-background: #ffffff;
   --clr-surface: hsl(0, 0%, 95%);
@@ -39,8 +39,8 @@ $transitionButton: 10ms;
 
   --clr-border-soft: #00000035;
   --clr-button: var(--accent-bg);
-  --clr-button-hover: oklch(0.595 0.165  var(--accent-hue));
-  --clr-button-active: oklch(0.63 0.15  var(--accent-hue));
+  --clr-button-hover: oklch(0.595 0.165 var(--accent-hue));
+  --clr-button-active: oklch(0.63 0.15 var(--accent-hue));
   --clr-button-text: #ffffff;
 
   --clr-button-grey: hsl(0, 0%, 40%);
@@ -50,14 +50,14 @@ $transitionButton: 10ms;
   --clr-grp-button: transparent;
   --clr-grp-button-border: hsla(0, 0%, 0%, .4);
   --clr-grp-button-hover: hsla(0, 0%, 0%, 0.02);
-  --clr-grp-button-active: oklch(0.83 0.063  var(--accent-hue) / 20%);
-  --clr-grp-button-checked: oklch(0.73 0.145  var(--accent-hue) / 17%);
-  --clr-grp-button-checked-hover: oklch(0.73 0.145  var(--accent-hue) / 22%);
+  --clr-grp-button-active: oklch(0.83 0.063 var(--accent-hue) / 20%);
+  --clr-grp-button-checked: oklch(0.73 0.145 var(--accent-hue) / 17%);
+  --clr-grp-button-checked-hover: oklch(0.73 0.145 var(--accent-hue) / 22%);
   --clr-grp-button-checked-border: var(--accent-border);
-  --clr-grp-button-checked-active: oklch(0.67 0.13  var(--accent-hue) / 27%);
+  --clr-grp-button-checked-active: oklch(0.67 0.13 var(--accent-hue) / 27%);
 
   --clr-grp-button-text: hsl(0, 0%, 40%);
-  --clr-grp-button-checked-text: oklch(0.54 0.13  var(--accent-hue));
+  --clr-grp-button-checked-text: oklch(0.54 0.13 var(--accent-hue));
 
   --clr-ribbon-button: var(--clr-surface);
   --clr-ribbon-button-hover: hsl(0, 0%, 92%);
@@ -111,14 +111,14 @@ $transitionButton: 10ms;
   --clr-grp-button: transparent;
   --clr-grp-button-border: hsla(0, 0%, 100%, .3);
   --clr-grp-button-hover: hsla(0, 0%, 100%, 0.03);
-  --clr-grp-button-active: oklch(0.8 0.145  var(--accent-hue) / 14%);
-  --clr-grp-button-checked: oklch(0.73 0.145  var(--accent-hue) / 14%);
-  --clr-grp-button-checked-hover: oklch(0.73 0.145  var(--accent-hue) / 16%);
-  --clr-grp-button-checked-active: oklch(0.73 0.145  var(--accent-hue) / 20%);
+  --clr-grp-button-active: oklch(0.8 0.145 var(--accent-hue) / 14%);
+  --clr-grp-button-checked: oklch(0.73 0.145 var(--accent-hue) / 14%);
+  --clr-grp-button-checked-hover: oklch(0.73 0.145 var(--accent-hue) / 16%);
+  --clr-grp-button-checked-active: oklch(0.73 0.145 var(--accent-hue) / 20%);
 
 
   --clr-grp-button-text: hsl(0, 0%, 70%);
-  --clr-grp-button-checked-text: oklch(0.73 0.16  var(--accent-hue));
+  --clr-grp-button-checked-text: oklch(0.73 0.16 var(--accent-hue));
 
   --clr-ribbon-button-hover: hsl(0, 0%, 20%);
   --clr-ribbon-button-active: hsl(0, 0%, 23%);
@@ -131,7 +131,7 @@ $transitionButton: 10ms;
   --clr-selector-button-active-border: oklch(0.8 0.08 var(--accent-hue) / 0.3);
   --clr-selector-button-checked-active-symbol: hsl(0, 0%, 90%);
   --clr-selector-button-checked-active-label: hsl(0, 0%, 85%);
-  --clr-selector-button-checked-active-border: oklch(0.87 0.08 var(--accent-hue) / 0.5);
+  --clr-selector-button-checked-active-border: oklch(0.81 0.08 var(--accent-hue) / 0.4);
 
 
   --text-green: hsl(118, 70.6%, 66.7%);
@@ -905,7 +905,7 @@ body:not(.playing) #game-container, .playing #new-game-settings {
     width: max(calc(var(--width) * 100%), var(--height));
     height: 100%;
     opacity: 1;
-    background: linear-gradient(to right, oklch(0.54 0.18  var(--accent-hue)), oklch(0.64 0.155  var(--accent-hue)));
+    background: linear-gradient(to right, oklch(0.54 0.18 var(--accent-hue)), oklch(0.64 0.155 var(--accent-hue)));
     background-size: calc(100% / (var(--gradient-scale) * var(--width)));
     border-radius: inherit;
 
