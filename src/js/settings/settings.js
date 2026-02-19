@@ -190,6 +190,8 @@ export class ValueElement {
     node
     /** @type {HTMLSelectElement | HTMLTextAreaElement | HTMLInputElement} */
     valueNode
+    /** @type {FunctionStack} */
+    updateListeners
 
     /**
      * @param {HTMLElement} node

@@ -2,21 +2,21 @@
 <project version="4">
   <component name="ProjectTasksOptions">
     <TaskOptions isEnabled="true">
-      <option name="arguments" value="src/scss/$FileName$:dist/css/$FileNameWithoutExtension$.css --style compressed" />
+      <option name="arguments" value="src/scss/index.scss:dist/css/index.css --style compressed" />
       <option name="checkSyntaxErrors" value="false" />
       <option name="description" />
       <option name="exitCodeBehavior" value="ERROR" />
       <option name="fileExtension" value="scss" />
       <option name="immediateSync" value="false" />
       <option name="name" value="SCSS" />
-      <option name="output" value="dist/css/$FileNameWithoutExtension$.css:dist/css/$FileNameWithoutExtension$.css.map" />
+      <option name="output" value="dist/css/index.css:dist/css/index.css.map" />
       <option name="outputFilters">
         <array />
       </option>
       <option name="outputFromStdout" value="false" />
       <option name="program" value="sass" />
       <option name="runOnExternalChanges" value="true" />
-      <option name="scopeName" value="Project Files" />
+      <option name="scopeName" value="src" />
       <option name="trackOnlyRoot" value="true" />
       <option name="workingDir" value="$PROJECT_DIR$" />
       <envs />

@@ -58,7 +58,7 @@ export default class ItemSelector {
         this.setupBlocks();
         this.setActive(this.processItemsActive(itemsActive));
 
-        this.updateButtons(false);
+        this.updateButtons({scale: false});
     }
 
     setupButtons() {
@@ -643,20 +643,23 @@ export default class ItemSelector {
         return result;
     }
 
-    updateButtons(scale = true) {
-        const forms = this.activeForms();
-        for (const [index, item] of this.items.entries()) {
-            if (item.countQuizItems(forms) === 0) {
-                this.updateButtonForms(index, this.formsData.keys);
-                this.buttons[index].classList.add('disabled');
-            } else {
-                this.updateButtonForms(index, forms);
-                this.buttons[index].classList.remove('disabled');
+    updateButtons({scale = true} = {}) {
+        DOMHelper.updateDOM(() => {
+            const forms = this.activeForms();
+            for (const [index, item] of this.items.entries()) {
+                if (item.countQuizItems(forms) === 0) {
+                    this.updateButtonForms(index, this.formsData.keys);
+                    this.buttons[index].classList.add('disabled');
+                } else {
+                    this.updateButtonForms(index, forms);
+                    this.buttons[index].classList.remove('disabled');
+                }
             }
-        }
-        if (scale) {
-            this.scaleButtons();
-        }
+
+            if (scale) {
+                this.scaleButtons();
+            }
+        }, {transition: false});
     }
 
     /**
@@ -869,13 +872,12 @@ export default class ItemSelector {
         this.node.prepend(this.formsSetting.node);
     }
 
-    destroy() {
+    removeListeners() {
         for (const block of this.blocks) {
             this.removeBlockListeners(block);
         }
         this.removeDocumentRangeListeners();
         this.removeDocumentLabelListeners();
-        this.node.remove();
     }
 
     /**

@@ -41,6 +41,10 @@ export function loadFont(family) {
     return FONT_FACES[family].load();
 }
 
+export function loadFonts(families) {
+    return Promise.all(families.map(family => loadFont(family)));
+}
+
 function defaultFontURL(family) {
     const url = `/kadmos/assets/fonts/${family.replaceAll(" ", "")}.woff2`;
     const format = supportsVariableFonts() ? 'woff2-variations' : 'woff2';

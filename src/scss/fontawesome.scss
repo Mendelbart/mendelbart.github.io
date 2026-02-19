@@ -1,0 +1,47 @@
+@font-face {
+  font-family: "FontAwesome";
+  src: url("/kadmos/assets/fonts/fa-solid-900.woff2");
+  font-display: swap;
+  font-style: normal;
+  font-weight: 900;
+}
+
+.fa {
+  display: inline-block;
+  font-family: "FontAwesome";
+  font-weight: 900;
+  font-style: normal;
+
+  &::before {
+    content: var(--fa, "");
+  }
+}
+
+.fa-gear {
+  --fa: "\f013";
+}
+
+.fa-xmark {
+  --fa: "\f00d";
+}
+
+.fa-play {
+  --fa: "\f04b";
+}
+
+.fa-check {
+  --fa: "\f00c";
+}
+
+.icon-button {
+  appearance: none;
+  -webkit-appearance: none;
+  border: none;
+  background: none;
+  color: var(--clr-text-soft);
+  cursor: pointer;
+
+  &:active {
+    color: var(--clr-text-accent);
+  }
+}

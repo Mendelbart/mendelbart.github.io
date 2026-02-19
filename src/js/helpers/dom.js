@@ -503,6 +503,7 @@ export function scaleAllToFit(elements, options = {}) {
 function getScale(elementSize, containerSize, grow = false) {
     if (elementSize === 0) {
         console.warn("getScale: Element's size is 0.");
+        console.trace();
         return 1;
     }
 
@@ -525,7 +526,7 @@ function getScale(elementSize, containerSize, grow = false) {
  * @param {string[]} fonts
  */
 export function batchUpdate(updates, fonts = []) {
-    Promise.all(fonts.map(FontHelper.loadFont)).then(
+    FontHelper.loadFonts(fonts).then(
         () => requestAnimationFrame(() => {
             for (const [update, ...args] of updates) {
                 update(...args);
@@ -557,22 +558,31 @@ export function log(...args) {
  * @param {HTMLElement} container
  */
 export function setupPages(container) {
-    showPage(container.querySelector('.page-content'), container);
+    showPage(container.querySelector('.page-content'), {container: container, transition: false});
 
     container.querySelector('.pages-next-button').addEventListener('click', () => {
-        showPage(document.getElementById(container.dataset.openPage).nextElementSibling, container);
+        showPage(document.getElementById(container.dataset.openPage).nextElementSibling, {container: container});
     });
     container.querySelector('.pages-back-button').addEventListener('click', () => {
-        showPage(document.getElementById(container.dataset.openPage).previousElementSibling, container);
+        showPage(document.getElementById(container.dataset.openPage).previousElementSibling, {container: container});
     });
 }
 
 /**
  * @param {HTMLElement} page
  * @param {HTMLElement} [container]
+ * @param {boolean} [transition]
  */
-export function showPage(page, container = null) {
-    container ??= page.closest('.pages-container');
+export function showPage(page, {container = null, transition = true} = {}) {
+    const callback = () => _showPage(page, container ?? page.closest('.pages-container'));
+    if (transition) {
+        document.startViewTransition(callback);
+    } else {
+        callback();
+    }
+}
+
+function _showPage(page, container) {
     hide(container.querySelectorAll('.page-content'));
     hide(container.querySelectorAll('.page-heading'));
     show(page);
@@ -610,5 +620,18 @@ export function setSearchParams(params) {
 
     if (hasChanged) {
         history.pushState({}, "", url);
+    }
+}
+
+/**
+ * @param {function(): (Promise<void>|void)} callback
+ * @param {boolean} [transition=false]
+ * @param {string[]} [types=[]]
+ */
+export function updateDOM(callback, {transition = true, types = []} = {}) {
+    if (transition && document.startViewTransition) {
+        document.startViewTransition({update: callback, types: types});
+    } else {
+        requestAnimationFrame(callback);
     }
 }

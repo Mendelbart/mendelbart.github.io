@@ -1,211 +1,6 @@
 $borderRadiusSmall: .5rem;
 $transitionHide: 75ms;
-$transitionButton: 10ms;
-
-/******************** RESET ***********************/
-*, *::before, *::after {
-  box-sizing: border-box;
-}
-
-* {
-  margin: 0;
-  padding: 0;
-  font: inherit;
-}
-
-
-/************************* BASE VARS ***********************/
-@mixin light-mode {
-  --accent-hue: 250;
-  --accent-border: oklch(0.59 0.16 var(--accent-hue));
-  --accent-border-light: hsla(0, 0%, 100%, 25%);
-  --accent-bg: oklch(0.58 0.16 var(--accent-hue));
-  --accent-bg-hover: oklch(0.60 0.16 var(--accent-hue));
-
-  --clr-background: #ffffff;
-  --clr-surface: hsl(0, 0%, 95%);
-  --clr-surface-border: var(--clr-border-soft);
-  --clr-symbol-bg: #f2f5f8;
-  --clr-input: hsla(0, 0%, 50%, 0.04);
-  --clr-range: hsl(0, 0%, 0%, 0.08);
-  --clr-surface-standout: hsl(0, 0%, 95%);
-
-  --clr-border: hsl(0, 0%, 60%);
-
-  --clr-text-soft: hsl(0, 0%, 17%);
-  --clr-text: hsl(0, 0%, 10%);
-
-  --clr-text-accent: var(--clr-text);
-
-  --clr-border-soft: #00000035;
-  --clr-button: var(--accent-bg);
-  --clr-button-hover: oklch(0.595 0.165 var(--accent-hue));
-  --clr-button-active: oklch(0.63 0.15 var(--accent-hue));
-  --clr-button-text: #ffffff;
-
-  --clr-button-grey: hsl(0, 0%, 40%);
-  --clr-button-grey-hover: hsl(0, 0%, 44%);
-  --clr-button-grey-active: hsl(0, 0%, 47%);
-
-  --clr-grp-button: transparent;
-  --clr-grp-button-border: hsla(0, 0%, 0%, .4);
-  --clr-grp-button-hover: hsla(0, 0%, 0%, 0.02);
-  --clr-grp-button-active: oklch(0.83 0.063 var(--accent-hue) / 20%);
-  --clr-grp-button-checked: oklch(0.73 0.145 var(--accent-hue) / 17%);
-  --clr-grp-button-checked-hover: oklch(0.73 0.145 var(--accent-hue) / 22%);
-  --clr-grp-button-checked-border: var(--accent-border);
-  --clr-grp-button-checked-active: oklch(0.67 0.13 var(--accent-hue) / 27%);
-
-  --clr-grp-button-text: hsl(0, 0%, 40%);
-  --clr-grp-button-checked-text: oklch(0.54 0.13 var(--accent-hue));
-
-  --clr-ribbon-button: var(--clr-surface);
-  --clr-ribbon-button-hover: hsl(0, 0%, 92%);
-  --clr-ribbon-button-active: hsl(0, 0%, 88%);
-  --clr-ribbon-button-checked: hsl(0, 0%, 20%);
-  --clr-ribbon-button-checked-hover: hsl(0, 0%, 24%);
-  --clr-ribbon-button-checked-active: hsl(0, 0%, 28%);
-  --clr-ribbon-button-checked-text: var(--clr-surface);
-
-  --clr-selector-button: transparent;
-  --clr-selector-button-hover: hsla(0, 0%, 50%, 0.06);
-  --clr-selector-button-active: hsla(0, 0%, 50%, 0.12);
-  --clr-selector-button-border: hsla(0, 0%, 50%, 0.3);
-  --clr-selector-button-active-border: oklch(0.55 0.25 var(--accent-hue) / 0.35);
-  --clr-selector-button-text: hsl(0, 0%, 50%);
-  --clr-selector-button-checked: hsla(0, 0%, 50%, 0.06);
-  --clr-selector-button-checked-hover: hsla(0, 0%, 50%, 0.12);
-  --clr-selector-button-checked-active: hsla(0, 0%, 50%, 0.16);
-  --clr-selector-button-checked-text: var(--clr-text);
-  --clr-selector-button-checked-border: hsl(0, 0%, 50%, 0.8);
-  --clr-selector-button-checked-active-border: oklch(0.5 0.1 var(--accent-hue) / 0.5);
-  --clr-selector-button-checked-active-symbol: hsl(0, 0%, 10%);
-  --clr-selector-button-checked-active-label: hsl(0, 0%, 15%);
-
-  --text-green: hsl(118.1, 91.9%, 33.9%);
-  --text-yellow: hsl(59.2, 100%, 31.2%);
-  --text-red: hsl(351.7, 98.8%, 33.1%);
-}
-
-@mixin dark-mode {
-  --clr-background: hsl(0, 0%, 8%);
-  --clr-surface: hsl(0, 0%, 15%);
-  --clr-surface-border: var(--clr-surface);
-  --clr-symbol-bg: hsl(210, 9.1%, 12.9%);
-  --clr-input: hsla(0, 0%, 100%, 0.07);
-  --clr-range: var(--clr-input);
-  --clr-surface-standout: var(--clr-surface);
-
-  --clr-border: hsl(0, 0%, 40%);
-
-  --clr-text-soft: hsl(0, 0%, 87%);
-  --clr-text: hsl(0, 0%, 95%);
-  --clr-text-accent: #fff;
-
-  --clr-border-soft: #ffffff29;
-
-  --clr-button-grey: hsl(0, 0%, 28%);
-  --clr-button-grey-hover: hsl(0, 0%, 33%);
-  --clr-button-grey-active: hsl(0, 0%, 38%);
-
-  --clr-grp-button: transparent;
-  --clr-grp-button-border: hsla(0, 0%, 100%, .3);
-  --clr-grp-button-hover: hsla(0, 0%, 100%, 0.03);
-  --clr-grp-button-active: oklch(0.8 0.145 var(--accent-hue) / 14%);
-  --clr-grp-button-checked: oklch(0.73 0.145 var(--accent-hue) / 14%);
-  --clr-grp-button-checked-hover: oklch(0.73 0.145 var(--accent-hue) / 16%);
-  --clr-grp-button-checked-active: oklch(0.73 0.145 var(--accent-hue) / 20%);
-
-
-  --clr-grp-button-text: hsl(0, 0%, 70%);
-  --clr-grp-button-checked-text: oklch(0.73 0.16 var(--accent-hue));
-
-  --clr-ribbon-button-hover: hsl(0, 0%, 20%);
-  --clr-ribbon-button-active: hsl(0, 0%, 23%);
-  --clr-ribbon-button-checked: var(--clr-text);
-  --clr-ribbon-button-checked-active: hsl(0, 0%, 80%);
-  --clr-ribbon-button-checked-hover: var(--clr-text-soft);
-
-  --clr-selector-button: transparent;
-  --clr-selector-button-text: hsla(0, 0%, 50%, 0.7);
-  --clr-selector-button-active-border: oklch(0.8 0.08 var(--accent-hue) / 0.3);
-  --clr-selector-button-checked-active-symbol: hsl(0, 0%, 90%);
-  --clr-selector-button-checked-active-label: hsl(0, 0%, 85%);
-  --clr-selector-button-checked-active-border: oklch(0.81 0.08 var(--accent-hue) / 0.4);
-
-
-  --text-green: hsl(118, 70.6%, 66.7%);
-  --text-yellow: hsl(53.5, 98.1%, 59.4%);
-  --text-red: hsl(351.5, 100%, 69.4%);
-}
-
-
-:root {
-  @include light-mode;
-  @media (prefers-color-scheme: dark) {
-    @include dark-mode;
-  }
-
-  --font-scale: 1;
-  --font-shift: 0;
-  --font-base-size: 1em;
-  --letter-spacing: 0ch;
-}
-
-.light-mode {
-  @include light-mode;
-}
-
-.dark-mode {
-  @include dark-mode;
-}
-
-html {
-  color-scheme: dark light;
-  background-color: var(--clr-background);
-}
-
-body {
-  background-color: var(--clr-background);
-  color: var(--clr-text);
-  font-family: system-ui, sans-serif;
-  font-size: 1rem;
-
-  max-width: 26rem;
-  margin: auto;
-  padding: 0.75rem;
-}
-
-.font-transform {
-  transform-origin: left center;
-  translate: calc(var(--letter-spacing) / 2) calc(var(--font-shift) * 1em);
-  letter-spacing: var(--letter-spacing);
-}
-
-@mixin hideable {
-  visibility: visible;
-  opacity: 1;
-  transition: opacity $transitionHide ease-out;
-
-  &.hidden {
-    @include hidden;
-  }
-}
-
-@mixin hidden {
-  visibility: hidden;
-  opacity: 0;
-  transition: visibility 0ms $transitionHide, opacity $transitionHide ease-out;
-}
-
-.hideable {
-  @include hideable;
-
-  &.hidden {
-    @include hidden;
-  }
-}
-
+$bodyMaxWidth: 26rem;
 
 @mixin button-events($clr-var-prefix) {
   background-color: var(#{$clr-var-prefix});
@@ -223,6 +18,38 @@ body {
   }
 }
 
+@import 'reset';
+@import 'colors';
+@import 'view-transitions';
+@import 'fontawesome';
+
+:root {
+  --font-scale: 1;
+  --font-shift: 0;
+  --font-base-size: 1em;
+  --letter-spacing: 0ch;
+}
+
+html {
+  background-color: var(--clr-background);
+}
+
+body {
+  background-color: var(--clr-background);
+  color: var(--clr-text);
+  font-family: system-ui, sans-serif;
+  font-size: 1rem;
+
+  max-width: $bodyMaxWidth;
+  margin: auto;
+  padding: 0.75rem;
+}
+
+.font-transform {
+  transform-origin: left center;
+  translate: calc(var(--letter-spacing) / 2) calc(var(--font-shift) * 1em);
+  letter-spacing: var(--letter-spacing);
+}
 
 /****************** HEADINGS ******************/
 h1 {
@@ -234,24 +61,17 @@ h1 {
 
 h2 {
   font-weight: 700;
-  font-size: 1.4rem;
-  margin-block: .75rem .25rem;
+  font-size: 1.25rem;
 }
 
-#game-heading {
+.heading-with-buttons {
   display: flex;
   flex-direction: row;
-  margin-block-end: .3rem;
   padding-inline: .125rem;
+  align-items: center;
 
-  &:has(> h1[dir="rtl"]) {
-    flex-direction: row-reverse;
-  }
-
-  &> h1 {
+  &> :is(h1, h2) {
     color: var(--clr-text-accent);
-    font-size: calc(var(--font-scale, 1) * 1.8rem);
-    height: 2.4rem;
     flex: 1;
 
     overflow: visible;
@@ -259,13 +79,31 @@ h2 {
     transform-origin: left center;
 
     display: flex;
+  }
+
+  &> .icon-button {
+    align-self: center;
+    padding: .125rem .25rem;
+    margin-bottom: .1rem;
+  }
+}
+
+#game-heading {
+  margin-block-end: .3rem;
+
+  &:has(> h1[dir="rtl"]) {
+    flex-direction: row-reverse;
+  }
+
+  &> h1 {
+    font-size: calc(var(--font-scale, 1) * 1.8rem);
+    height: 2.4rem;
     align-items: end;
   }
 
-  &> button {
-    align-self: center;
-    padding: .45rem .6rem;
-    margin-bottom: .1rem;
+  &> .icon-button {
+    padding-inline: .5625rem;
+    font-size: 1.0625rem;
   }
 }
 
@@ -294,19 +132,6 @@ h2 {
 
 
 /********************** BUTTONS *******************/
-.button {
-  padding: .4em .625em;
-  font-weight: 650;
-  font-size: 1rem;
-  text-wrap: nowrap;
-  transition: background $transitionButton, border $transitionButton, color $transitionButton;
-
-  border-radius: $borderRadiusSmall;
-  cursor: pointer;
-  user-select: none;
-  border: 1px solid var(--clr-grp-button-border);
-}
-
 input[type="checkbox"], input[type="radio"] {
   &:has(+ .button) {
     display: none;
@@ -328,6 +153,14 @@ input[type="checkbox"], input[type="radio"] {
 
   &> .button {
     border-radius: 0;
+    padding: .4em .625em;
+    font-weight: 650;
+    font-size: 1rem;
+    text-wrap: nowrap;
+
+    cursor: pointer;
+    user-select: none;
+    border: 1px solid var(--clr-grp-button-border);
     @include button-events("--clr-grp-button");
 
     &:first-of-type {
@@ -340,6 +173,7 @@ input[type="checkbox"], input[type="radio"] {
       border-bottom-right-radius: $borderRadiusSmall;
     }
   }
+
   &> input:checked + .button {
     @include button-events("--clr-grp-button-checked");
   }
@@ -347,7 +181,7 @@ input[type="checkbox"], input[type="radio"] {
 
 
 
-button {
+.button-accent, .button-grey {
   appearance: none;
   -webkit-appearance: none;
   background: var(--clr-button);
@@ -357,7 +191,6 @@ button {
   border-radius: $borderRadiusSmall;
   cursor: pointer;
   color: var(--clr-button-text);
-  transition: background $transitionButton, border $transitionButton;
 
   @media (hover: hover) {
     &:hover {
@@ -369,7 +202,7 @@ button {
     background: var(--clr-button-active);
   }
 
-  &:focus {
+  &:focus-visible {
     outline: 2px solid var(--accent-border-light);
     outline-offset: -2px;
   }
@@ -381,19 +214,20 @@ button {
   }
 }
 
-#stop-game-button, .pages-back-button {
+.button-grey {
   @each $suffix in ("", "-hover", "-active") {
     --clr-button#{$suffix}: var(--clr-button-grey#{$suffix});
   }
 }
 
-/************************* INPUTS, SELECT ***************/
+
+/****************** INPUTS, SELECT ***************/
 input[type="text"], select, .item-eval {
   border-radius: $borderRadiusSmall;
   border: 1px solid var(--clr-border-soft);
   color: var(--clr-text);
 
-  &:focus {
+  &:focus-visible {
     outline: 2px solid var(--accent-border);
     outline-offset: -1px;
   }
@@ -414,41 +248,32 @@ select {
   background: var(--clr-surface-standout);
 }
 
-.styled-select > select {
-  width: 100%;
-}
+.styled-select {
+  position: relative;
 
-@supports(mask-image: none) {
-  .styled-select > select {
+  &> select {
+    width: 100%;
     appearance: none;
   }
 
-  .styled-select {
-    position: relative;
-  }
-
-  .styled-select::after {
-    content: "";
-    display: block;
+  &::after {
+    content: "\f0d7";
+    font-family: FontAwesome;
+    font-size: 1.3125rem;
+    color: var(--clr-text);
+    display: grid;
+    place-items: center;
     position: absolute;
-    background: var(--clr-text);
-    mask-image: url("../assets/img/select-arrow.svg");
-    mask-repeat: no-repeat;
-    mask-position: center;
     height: 100%;
-    width: .825rem;
     right: .75rem;
     top: 0;
     pointer-events: none;
   }
 
-  @supports #{'selector(:open)'} {
-    .styled-select:has(> select:open)::after {
-      rotate: 180deg;
-    }
+  &:has(> select:open)::after {
+    rotate: 180deg;
   }
 }
-
 
 input[type="range"] {
   -webkit-appearance: none;
@@ -462,7 +287,7 @@ input[type="range"] {
     margin-top: -.2rem;
     color: white;
     background: white;
-    box-shadow: 0 0 2px hsla(0, 0%, 0%,0.5);
+    box-shadow: 0 0 .2rem hsla(0, 0%, 50%, 1);
     border: none;
     outline: none;
     cursor: pointer;
@@ -473,7 +298,7 @@ input[type="range"] {
 
   &::-moz-range-thumb {
     background: white;
-    box-shadow: 0 0 2px hsla(0, 0%, 0%,0.5);
+    box-shadow: 0 0 .2rem hsla(0, 0%, 50%, 1);
     border: none;
     outline: none;
     cursor: pointer;
@@ -498,7 +323,7 @@ input[type="range"] {
 
 
 .slider-container {
-  margin-top: -.25rem;
+  margin-block: -.25rem;
   position: relative;
 
   .range-min, .range-max {
@@ -564,17 +389,14 @@ input[type="range"] {
 
 .ribbon {
   background: var(--clr-surface);
-  --padding: .8rem;
-  padding: var(--padding);
+  padding: .8rem;
   border: 1px solid var(--clr-surface-border);
   border-radius: .8rem;
   display: flex;
   flex-direction: column;
   gap: .6rem;
-  transition: background $transitionHide, border $transitionHide;
 
   .ribbon-buttons {
-    transition: translate $transitionHide;
     gap: .5rem;
     --clr-grp-button-border: transparent;
     --clr-grp-button-checked-border: transparent;
@@ -593,25 +415,9 @@ input[type="range"] {
     }
   }
 
-  .ribbon-contents {
-    @include hideable;
-
-    &> .ribbon-content.hidden {
-      display: none;
-    }
-  }
-
-  &:has(> .ribbon-contents.hidden) {
+  &.contents-hidden {
     background: transparent;
     border-color: transparent;
-
-    .ribbon-buttons {
-      translate: calc(-1 * var(--padding)) calc(-1 * var(--padding));
-      
-      &> .button {
-        --clr-grp-button: var(--clr-surface-standout);
-      }
-    }
   }
 }
 
@@ -648,7 +454,7 @@ input[type="range"] {
 
 #live-settings {
   position: relative;
-  margin-block-start: .4rem;
+  margin-block: .4rem;
   --clr-surface: var(--clr-surface-standout);
   border-color: transparent;
 
@@ -686,204 +492,71 @@ input[type="range"] {
 }
 
 
-
-
-$selectorBorderRadius: .2rem;
-
-.item-selector {
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
-
-  .selector-block {
-    gap: .25rem;
-    align-self: center;
-    max-width: 100%;
-    user-select: none;
-    padding: 0 1rem;
-
-    --clr-grp-button-text: hsl(0, 0%, 62%);
-    --clr-grp-button-checked: hsla(0, 0%, 100%, .1);
-    --clr-grp-button-checked-border: hsla(0, 0%, 100%, .45);
-    --clr-grp-button-border: hsla(0, 0%, 100%, .25);
-
-    --symbol-min-width: auto;
-    --button-min-width: 0;
-    --button-max-width: 1fr;
-    --label-gap: .1rem;
-    --symbol-size: 1.4;
-
-    &.selector-block-grid {
-      --gridTemplateColumns: repeat(var(--columns), minmax(var(--button-min-width), var(--button-max-width)));
-      display: grid;
-      grid-template-columns: var(--gridTemplateColumns);
-
-      &.has-row-labels-start {
-        grid-template-columns: auto var(--gridTemplateColumns);
-      }
-
-      &.has-row-labels-end {
-        grid-template-columns: var(--gridTemplateColumns) auto;
-      }
-
-      &.has-row-labels-both {
-        grid-template-columns: auto var(--gridTemplateColumns) auto;
-      }
-
-      .block-label {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        border-radius: $selectorBorderRadius;
-        padding: .1rem .2rem;
-        cursor: pointer;
-        font-size: .8rem;
-      }
-
-      @media (hover: hover) {
-        .block-label:hover {
-          background: var(--clr-selector-button-hover);
-        }
-      }
-
-      .block-label:active {
-        background: var(--clr-selector-button-active);
-      }
-
-      .selector-item-button.disabled {
-        pointer-events: none;
-        display: none;
-      }
-    }
-
-    &.selector-block-flex {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-
-      &.selector-block-rtl {
-        flex-direction: row-reverse;
-      }
-
-      .selector-item-button {
-        min-width: var(--button-min-width);
-        max-width: var(--button-max-width);
-
-        &.disabled {
-          pointer-events: none;
-          display: none;
-        }
-      }
-    }
-
-    .selector-item-button {
-      @include button-events("--clr-selector-button");
-      touch-action: none;
-      cursor: pointer;
-
-      padding: .3rem 0;
-
-      border-width: 1px;
-      border-style: solid;
-
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: var(--label-gap);
-
-      border-radius: $selectorBorderRadius;
-
-      &:active, &.active {
-        border-color: var(--clr-selector-button-active-border);
-      }
-
-      &[aria-checked="true"] {
-        @include button-events("--clr-selector-button-checked");
-
-        color: var(--clr-text);
-
-        &:active, &.active {
-          color: var(--clr-selector-button-checked-active-symbol);
-          border-color: var(--clr-selector-button-checked-active-border);
-        }
-
-        &> .symbol-label {
-          color: var(--clr-selector-button-checked-active-label);
-        }
-      }
-    }
-
-    .symbol-string {
-      min-width: var(--symbol-min-width);
-      text-align: center;
-      padding-inline: .125em;
-      font-weight: 600;
-      transform-origin: center;
-    }
-
-    .selector-item-label {
-      font-weight: 400;
-      font-size: .8rem;
-      text-overflow: ellipsis;
-      padding-inline: .3em;
-      pointer-events: none;
-    }
-  }
-
-  // Gap between second and third main group
-  &[data-dataset="elements"] {
-    .selector-block[data-block-index="0"] {
-      --gridTemplateColumns:
-        repeat(2, minmax(var(--button-min-width), var(--button-max-width)))
-        0rem
-        repeat(6, minmax(var(--button-min-width), var(--button-max-width)));
-    }
-  }
+#page-settings-backdrop {
+  position: fixed;
+  inset: 0;
+  background: hsla(0, 0%, 50%, 0.2);
+  z-index: 1;
 }
 
-.flex-rtl {
-  flex-direction: row-reverse;
+#page-settings-container {
+  position: fixed;
+  height: 100vh;
+  max-width: $bodyMaxWidth;
+  margin-inline: auto;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 1rem 1.75rem;
 }
 
-
-
-
-
-
-/************* PLAYING TOGGLE ********************/
-.playing {
-  #start-game-button {
-    display: none;
-  }
-}
-
-body:not(.playing) {
-  #stop-game-button {
-    display: none;
-  }
-
-  #progress-bar {
-    opacity: 0;
-  }
-}
-
-#game-layers {
-  position: relative;
-}
-
-#game-container, #new-game-settings {
-  @include hideable;
-}
-
-body:not(.playing) #game-container, .playing #new-game-settings {
-  @include hidden;
-}
-
-#game-container, #new-game-settings {
-  position: absolute;
+#page-settings {
   width: 100%;
+  max-height: 100%;
+  overflow: auto;
+  background: var(--clr-background);
+  padding: .625rem .875rem .75rem;
+  box-shadow: 0 0 .4rem hsla(0, 0%, 50%, .6);
+  border-radius: .5rem;
+  z-index: 2;
+
+  .heading-with-buttons {
+    padding-block-end: .4rem;
+    border-bottom: 1px solid var(--clr-border-soft);
+    margin-block-end: .6rem;
+
+    &> .icon-button {
+      font-size: .9375rem;
+      align-self: start;
+    }
+  }
 }
+
+#accentHueSlider input {
+  &::-webkit-slider-thumb {
+    background: var(--accent-bg);
+    outline: .2rem solid white;
+    outline-offset: -.2rem;
+  }
+
+  &::-moz-range-thumb {
+    background: var(--accent-bg);
+    outline: .2rem solid white;
+    outline-offset: -.2rem;
+  }
+
+  &::-webkit-slider-runnable-track {
+    background: #{'linear-gradient(in oklch longer hue to right, oklch(0.66 0.18 0), oklch(0.66 0.18 0))'};
+  }
+
+  &::-moz-range-track {
+    background: #{'linear-gradient(in oklch longer hue to right, oklch(0.66 0.18 0), oklch(0.66 0.18 0))'};
+  }
+}
+
+
+@import 'selector';
+
 
 /******************** GAME ******************************/
 #progress-bar {
@@ -1016,9 +689,8 @@ body:not(.playing) #game-container, .playing #new-game-settings {
     font-size: 1rem;
     font-weight: 600;
 
-    display: flex;
-    justify-content: center;
-    align-items: center;
+    display: grid;
+    place-items: center;
   }
 
   &.symbol-reference {

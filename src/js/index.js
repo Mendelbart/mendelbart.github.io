@@ -1,12 +1,11 @@
 import {DOMHelper} from "./helpers/helpers.js";
-import {GameContext} from "./context.js";
+import {setup} from "./context.js";
 
 // --------------- GAME SETUP -----------------
 (function () {
     readDarkLightMode();
 
-    const ctx = new GameContext();
-    ctx.setup();
+    setup();
 
     document.querySelectorAll(".ribbon").forEach((element) => {
         setupRibbon(element, element.classList.contains("ribbon-closable"));
@@ -48,16 +47,16 @@ function setupRibbon(container, closable = false) {
         }
     }
 
-    DOMHelper.addClass(contents.querySelectorAll(".ribbon-content"), "hidden");
-    if (!openId && !(closable && contents.classList.contains("hidden"))) {
+    DOMHelper.hide(contents.querySelectorAll(".ribbon-content"));
+    if (!openId && !closable) {
         openId = inputs[0].dataset.contentId;
         inputs[0].checked = true;
     }
 
     if (openId) {
-        document.getElementById(openId).classList.remove("hidden");
-        contents.classList.remove("hidden");
-        container.dataset.openId = openId;
+        DOMHelper.show([document.getElementById(openId), contents]);
+    } else if (closable) {
+        container.classList.add("contents-hidden");
     }
 
     container.querySelector('.ribbon-buttons').addEventListener("change", ribbonButtonsChangeListener);
@@ -67,25 +66,27 @@ function setupRibbon(container, closable = false) {
  * @param {Event} event
  */
 function ribbonButtonsChangeListener(event) {
-    const input = event.target;
-    const container = input.closest(".ribbon");
-    const contents = container.querySelector('.ribbon-contents');
+    DOMHelper.updateDOM(() => {
+        const input = event.target;
+        const container = input.closest(".ribbon");
+        const contents = container.querySelector('.ribbon-contents');
 
-    if (input.checked) {
-        const previousOpenId = container.dataset.openId;
-        if (!contents.classList.contains("hidden") && previousOpenId) {
-            DOMHelper.addClass(document.getElementById(previousOpenId), "hidden");
-            container.querySelector(`.ribbon-buttons input[data-content-id="${previousOpenId}"]`).checked = false;
+        if (input.checked) {
+            const previousOpenId = container.dataset.openId;
+            if (!container.classList.contains("contents-hidden") && previousOpenId) {
+                DOMHelper.hide(document.getElementById(previousOpenId));
+                container.querySelector(`.ribbon-buttons input[data-content-id="${previousOpenId}"]`).checked = false;
+            }
+
+            container.dataset.openId = input.dataset.contentId;
+            DOMHelper.show([document.getElementById(input.dataset.contentId), contents]);
+            container.classList.remove("contents-hidden");
+        } else if (container.dataset.closable === "true") {
+            container.classList.add("contents-hidden")
+            DOMHelper.hide(contents);
+            container.dataset.openId = "";
+        } else {
+            input.checked = true;
         }
-
-        document.getElementById(input.dataset.contentId).classList.remove("hidden");
-        container.dataset.openId = input.dataset.contentId;
-
-        contents.classList.remove("hidden");
-    } else if (container.dataset.closable === "true") {
-        contents.classList.add("hidden");
-        container.dataset.openId = "";
-    } else {
-        input.checked = true;
-    }
+    }, {transition: true});
 }

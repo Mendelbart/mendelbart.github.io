@@ -1,0 +1,172 @@
+$selectorBorderRadius: .2rem;
+@mixin button-events($clr-var-prefix) {
+  background-color: var(#{$clr-var-prefix});
+  border-color: var(#{$clr-var-prefix}-border, transparent);
+  color: var(#{$clr-var-prefix}-text);
+
+  @media (hover: hover) {
+    &:hover, &.hover {
+      background-color: var(#{$clr-var-prefix}-hover);
+    }
+  }
+
+  &:active, &.active {
+    background-color: var(#{$clr-var-prefix}-active);
+  }
+}
+
+
+.item-selector {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+
+  .selector-block {
+    gap: .25rem;
+    align-self: center;
+    max-width: 100%;
+    user-select: none;
+    padding: 0 1rem;
+
+    --clr-grp-button-text: hsl(0, 0%, 62%);
+    --clr-grp-button-checked: hsla(0, 0%, 100%, .1);
+    --clr-grp-button-checked-border: hsla(0, 0%, 100%, .45);
+    --clr-grp-button-border: hsla(0, 0%, 100%, .25);
+
+    --symbol-min-width: auto;
+    --button-min-width: 0;
+    --button-max-width: 1fr;
+    --label-gap: .1rem;
+    --symbol-size: 1.4;
+
+    &.selector-block-grid {
+      --gridTemplateColumns: repeat(var(--columns), minmax(var(--button-min-width), var(--button-max-width)));
+      display: grid;
+      grid-template-columns: var(--gridTemplateColumns);
+
+      &.has-row-labels-start {
+        grid-template-columns: auto var(--gridTemplateColumns);
+      }
+
+      &.has-row-labels-end {
+        grid-template-columns: var(--gridTemplateColumns) auto;
+      }
+
+      &.has-row-labels-both {
+        grid-template-columns: auto var(--gridTemplateColumns) auto;
+      }
+
+      .block-label {
+        display: grid;
+        place-items: center;
+        border-radius: $selectorBorderRadius;
+        padding: .1rem .2rem;
+        cursor: pointer;
+        font-size: .8rem;
+      }
+
+      @media (hover: hover) {
+        .block-label:hover {
+          background: var(--clr-selector-button-hover);
+        }
+      }
+
+      .block-label:active {
+        background: var(--clr-selector-button-active);
+      }
+
+      .selector-item-button.disabled {
+        pointer-events: none;
+        display: none;
+      }
+    }
+
+    &.selector-block-flex {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+
+      &.selector-block-rtl {
+        flex-direction: row-reverse;
+      }
+
+      .selector-item-button {
+        min-width: var(--button-min-width);
+        max-width: var(--button-max-width);
+
+        &.disabled {
+          pointer-events: none;
+          display: none;
+        }
+      }
+    }
+
+    .selector-item-button {
+      @include button-events("--clr-selector-button");
+      touch-action: none;
+      cursor: pointer;
+
+      padding: .3rem 0;
+
+      border-width: 1px;
+      border-style: solid;
+
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: var(--label-gap);
+
+      border-radius: $selectorBorderRadius;
+
+      &:active, &.active {
+        border-color: var(--clr-selector-button-active-border);
+      }
+
+      &[aria-checked="true"] {
+        @include button-events("--clr-selector-button-checked");
+
+        color: var(--clr-text);
+
+        &:active, &.active {
+          color: var(--clr-selector-button-checked-active-symbol);
+          border-color: var(--clr-selector-button-checked-active-border);
+        }
+
+        &> .symbol-label {
+          color: var(--clr-selector-button-checked-active-label);
+        }
+      }
+    }
+
+    .symbol-string {
+      min-width: var(--symbol-min-width);
+      text-align: center;
+      padding-inline: .125em;
+      font-weight: 600;
+      transform-origin: center;
+    }
+
+    .selector-item-label {
+      font-weight: 400;
+      font-size: .8rem;
+      text-overflow: ellipsis;
+      padding-inline: .3em;
+      pointer-events: none;
+    }
+  }
+
+  // Gap between second and third main group
+  &[data-dataset="elements"] {
+    .selector-block[data-block-index="0"] {
+      --gridTemplateColumns:
+              repeat(2, minmax(var(--button-min-width), var(--button-max-width)))
+              0rem
+              repeat(6, minmax(var(--button-min-width), var(--button-max-width)));
+    }
+  }
+}
+
+.flex-rtl {
+  flex-direction: row-reverse;
+}
