@@ -307,9 +307,11 @@ function startGame(transition) {
     });
 
     GAME.setup().then(() => {
-        GAME.newRound();
-        setPlaying(true, transition);
-        GAME.focus();
+        DOMHelper.updateDOM(() => {
+            _setPlaying(true);
+            GAME.newRound();
+            GAME.focus();
+        }, {transition: transition});
     }, err => console.error(err));
 }
 
