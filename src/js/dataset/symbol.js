@@ -265,9 +265,6 @@ export class ListProperty extends StringProperty {
                 }
 
                 if (score > 0) {
-                    if (guessScores[j] > 0) {
-                        console.warn("Guess matches multiple values, maxDist too high.");
-                    }
                     valueScores[i] = Math.max(valueScores[i], score);
                     guessScores[j] = Math.max(guessScores[j], score);
                 }
