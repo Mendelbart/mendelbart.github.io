@@ -6,7 +6,7 @@
     "lang": "he"
   },
   "fonts": {
-    "serif": {"family" : "Noto Serif Hebrew", "label": "Serif", "lineHeight": 1.25},
+    "serif": {"family" : "Noto Serif Hebrew", "label": "Serif", "lineHeight": 1.25, "default": true},
     "sans": {"family" : "Noto Sans Hebrew", "label": "Sans", "lineHeight": 1.25},
     "rashi": {"family" : "Noto Rashi Hebrew", "label": "Rashi", "lineHeight": 1.25}
   },

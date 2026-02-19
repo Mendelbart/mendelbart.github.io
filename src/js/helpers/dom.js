@@ -624,14 +624,24 @@ export function setSearchParams(params) {
 }
 
 /**
- * @param {function(): (Promise<void>|void)} callback
+ * @param {Function} callback
  * @param {boolean} [transition=false]
  * @param {string[]} [types=[]]
+ * @returns {Promise<void>}
  */
 export function updateDOM(callback, {transition = true, types = []} = {}) {
     if (transition && document.startViewTransition) {
-        document.startViewTransition({update: callback, types: types});
+        return document.startViewTransition({update: callback, types: types}).ready;
     } else {
-        requestAnimationFrame(callback);
+        return new Promise((resolve, reject) => {
+            requestAnimationFrame(() => {
+                try {
+                    callback();
+                } catch (e) {
+                    reject(e);
+                }
+                resolve();
+            });
+        });
     }
 }

@@ -5,7 +5,7 @@
     "gameHeading": {"string": "Кадмос", "font": "sans"}
   },
   "fonts": {
-    "serif": {"family": "Noto Serif", "label": "Serif"},
+    "serif": {"family": "Noto Serif", "label": "Serif", "default": true},
     "sans": {"family": "Noto Sans", "label": "Sans"}
   },
   "propsData": {
@@ -80,7 +80,7 @@
       ["Пп", "Pe", "*"],
       ["Рр", "Er", "*"],
       ["Сс", "Es", "*"],
-      ["С́с́", "Sje", "cnr"],
+      [["С́", "с́"], "Sje", "cnr"],
       ["Тт", "Te", "*"],
       ["Ћћ", "Tshe", "sr,cnr"],
       ["Ќќ", "Kje", "mk"],

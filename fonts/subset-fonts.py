@@ -16,22 +16,22 @@ def main():
     charsets = {family: set() for family in fonts}
     stylesets = {family: set() for family in fonts}
 
-    def validate_font_data(font_data):
-        if "family" not in font_data:
-            print("font family property missing.")
-            return False
+    def get_family(font_data, fonts, default):
+        family = default
+        if "key" in font_data:
+            family = fonts[font_data["key"]]["family"]
 
-        if font_data["family"] not in charsets:
-            raise ValueError(f'Unknown font family "{font_data["family"]}"')
+        if family not in charsets:
+            raise ValueError(f'Unknown font family "{family}"')
 
-        return True
+        return family
 
 
-    def update_charset(font_data, chrs):
+    def update_charset(family, chrs):
         if isinstance(chrs, list):
             chrs = "".join(chrs)
 
-        charsets[font_data["family"]].update(list(chrs))
+        charsets[family].update(list(chrs))
 
 
     for filename in listdir(datasets_dir):
@@ -40,17 +40,31 @@ def main():
 
         print("Processing dataset", dataset["name"])
 
+        default_font = None
+
+        for key, font_data in dataset["fonts"].items():
+            if not "family" in font_data:
+                raise ValueError("No family specified in font entry.")
+
+            if "default" in font_data and font_data["default"]:
+                default_font = font_data["family"]
+                break
+
+        if default_font is None:
+            if len(dataset["fonts"]) == 1:
+                default_font = list(dataset["fonts"].values())[0]["family"]
+            else:
+                raise ValueError("No default font specified.")
+
         dataset_chars = set()
 
-        gameHeading = dataset["metadata"]["gameHeading"]
-        if "font" in gameHeading and validate_font_data(gameHeading["font"]):
-            update_charset(gameHeading["font"], gameHeading["string"])
+        game_heading = dataset["metadata"]["gameHeading"]
+        game_heading_font = default_font
+        if "font" in game_heading:
+            game_heading_font = get_family(game_heading["font"], dataset["fonts"], default_font)
 
-        if "fonts" in gameHeading:
-            assert isinstance(gameHeading["fonts"], list)
-            assert isinstance(gameHeading["string"], list)
-            for font, string in zip(gameHeading["fonts"], gameHeading["string"]):
-                update_charset(font, string)
+        update_charset(game_heading_font, game_heading["string"])
+
 
         symbols = dataset["symbolsData"]["rows"]
         if not isinstance(symbols, list):
@@ -75,10 +89,10 @@ def main():
 
 
         for font_data in dataset["fonts"].values():
-            if not validate_font_data(font_data):
-                continue
+            if not "family" in font_data:
+                raise ValueError("No family specified in font entry.")
 
-            update_charset(font_data, dataset_chars)
+            update_charset(font_data["family"], dataset_chars)
 
             if "styleset" in font_data:
                 vals = font_data["styleset"]

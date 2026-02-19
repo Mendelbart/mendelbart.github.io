@@ -258,28 +258,29 @@ export class Game {
      * @param {string} form
      * @param {string} property
      * @param {string} guess
+     * @returns {QuizItem[]}
      */
     getReferenceItems(form, property, guess) {
         if (!this.referenceItems) {
             return [];
         }
 
-        const items = [];
-        const grades = [];
+        let record = [];
 
-        for (const item of this.referenceItems[form]) {
+        for (const [index, item] of this.referenceItems[form].entries()) {
             const grade = item.properties[property].grade(guess)[0];
             if (ItemProperty.passes(grade)) {
-                items.push(item);
-                grades.push(grades);
+                record.push([index, grade]);
             }
         }
 
-        if (Math.max(...grades) === 1) {
-            return items.filter((_, index) => grades[index] === 1);
+        record.sort(([i1, g1], [i2, g2]) => (g2 - g1) || (i1 - i2));
+
+        if (record.length > 0 && record[0][1] === 1) {
+            record = record.filter(([_, grade]) => grade === 1);
         }
 
-        return items;
+        return record.map(([index, _]) => this.referenceItems[form][index]);
     }
 
     /**

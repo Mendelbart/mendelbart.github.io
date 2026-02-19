@@ -91,7 +91,7 @@ h2 {
 #game-heading {
   margin-block-end: .3rem;
 
-  &:has(> h1[dir="rtl"]) {
+  &:has(> [dir="rtl"]) {
     flex-direction: row-reverse;
   }
 
@@ -105,6 +105,10 @@ h2 {
     padding-inline: .5625rem;
     font-size: 1.0625rem;
   }
+}
+
+[dir="rtl"] ~ #stop-game-button {
+  rotate: 180deg;
 }
 
 .element-heading-container {
@@ -495,7 +499,7 @@ input[type="range"] {
 #page-settings-backdrop {
   position: fixed;
   inset: 0;
-  background: hsla(0, 0%, 50%, 0.2);
+  background: hsla(0, 0%, 50%, 0.16);
   z-index: 1;
 }
 
@@ -591,6 +595,7 @@ input[type="range"] {
   padding-block: .5rem;
   margin-block: .5rem;
   position: relative;
+  --box-shadow-width: .5rem;
 
   &::before, &::after {
     position: absolute;
@@ -598,16 +603,15 @@ input[type="range"] {
     top: 0;
     content: " ";
     width: 1rem;
-    z-index: 1;
   }
 
   &::before {
-    box-shadow: .5rem 0 .5rem -.25rem var(--clr-background) inset;
+    box-shadow: var(--box-shadow-width) 0 var(--box-shadow-width) calc(-0.5 * var(--box-shadow-width)) var(--clr-background) inset;
     left: 0;
   }
 
   &::after {
-    box-shadow: -.5rem 0 .5rem -.25rem var(--clr-background) inset;
+    box-shadow: calc(-1 * var(--box-shadow-width)) 0 var(--box-shadow-width) calc(-0.5 * var(--box-shadow-width)) var(--clr-background) inset;
     right: 0;
   }
 }
@@ -651,6 +655,7 @@ input[type="range"] {
   overflow: hidden;
 
   max-width: calc(var(--symbol-size) * 1.8rem);
+  flex-shrink: 0;
 
   font-weight: var(--symbol-weight, 400);
 
@@ -666,15 +671,17 @@ input[type="range"] {
   }
 
   .symbol-display-container {
-    overflow-y: hidden;
+    overflow: visible hidden;
+    display: flex;
+    justify-content: center;
   }
 
   .symbol {
-    display: flex;
+    display: inline-flex;
     justify-content: center;
     box-sizing: content-box;
     padding: .25em .1em;
-    min-width: .625px;
+    min-width: .625em;
     transform-origin: center;
   }
 

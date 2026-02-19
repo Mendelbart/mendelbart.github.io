@@ -58,7 +58,7 @@ export default class ItemSelector {
         this.setupBlocks();
         this.setActive(this.processItemsActive(itemsActive));
 
-        this.updateButtons({scale: false});
+        this.updateButtons({scale: false, transition: false});
     }
 
     setupButtons() {
@@ -643,15 +643,14 @@ export default class ItemSelector {
         return result;
     }
 
-    updateButtons({scale = true} = {}) {
+    updateButtons({scale = true, transition = true} = {}) {
         DOMHelper.updateDOM(() => {
-            const forms = this.activeForms();
             for (const [index, item] of this.items.entries()) {
-                if (item.countQuizItems(forms) === 0) {
+                if (item.countQuizItems(this.activeForms()) === 0) {
                     this.updateButtonForms(index, this.formsData.keys);
                     this.buttons[index].classList.add('disabled');
                 } else {
-                    this.updateButtonForms(index, forms);
+                    this.updateButtonForms(index, this.formsSetting ? this.formsSetting.value : ["default"]);
                     this.buttons[index].classList.remove('disabled');
                 }
             }
@@ -659,7 +658,7 @@ export default class ItemSelector {
             if (scale) {
                 this.scaleButtons();
             }
-        }, {transition: false});
+        }, {transition: transition, types: ["selector-forms"]});
     }
 
     /**
@@ -667,8 +666,9 @@ export default class ItemSelector {
      * @param {string[]} forms
      */
     updateButtonForms(index, forms) {
-        const formsString = this.items[index].getFormsDisplayString(forms)
-        this.buttons[index].querySelector(".symbol").replaceChildren(formsString);
+        this.buttons[index].querySelectorAll(".symbol-form").forEach(elem => {
+            DOMHelper.toggleShown(forms.includes(elem.dataset.form), elem);
+        });
     }
 
     /**
@@ -691,7 +691,6 @@ export default class ItemSelector {
     /**
      * @param {number|string} index
      * @param {boolean} checked
-     * @param {boolean} [updateInput]
      * @param {boolean} [updateIfDisabled]
      * @param {boolean} [callUpdateListeners]
      */
@@ -820,16 +819,7 @@ export default class ItemSelector {
             "aria-labelledby": id          // setting aria-labelledby to its own content
         });
 
-        const symbolElement = DOMHelper.createElement("span.symbol.symbol-string");
-
-        FontHelper.setFont(symbolElement, ...this.dataset.getSelectorDisplayFont());
-
-        DOMHelper.setAttrs(symbolElement, {
-            lang: this.dataset.metadata.lang,
-            dir: this.dataset.metadata.dir
-        });
-
-        button.append(symbolElement);
+        button.append(this.getSymbolElement(item));
 
         if (this.selectorData.label) {
             const label = DOMHelper.createElement("span.selector-item-label");
@@ -847,6 +837,39 @@ export default class ItemSelector {
         button.dataset.index = index.toString();
 
         return button;
+    }
+
+    getSymbolElement(item) {
+        const elem = DOMHelper.createElement("span.symbol.symbol-string");
+
+        FontHelper.setFont(elem, ...this.dataset.getSelectorDisplayFont());
+
+        DOMHelper.setAttrs(elem, {
+            lang: this.dataset.metadata.lang,
+            dir: this.dataset.metadata.dir
+        });
+
+        const keysByForm =
+            this.formsData.setting
+            ? ObjectHelper.map(this.formsData.setting, (data, key) => data.keys || [key])
+            : {default: this.formsData.keys};
+
+        const formElements = Object.entries(keysByForm)
+            .map(([settingKey, formKeys]) => this.getSymbolFormElement(
+                settingKey,
+                item.getFormsDisplayString(formKeys)
+            ));
+
+        elem.append(...formElements);
+
+        return elem;
+    }
+
+    getSymbolFormElement(formKey, displayString) {
+        const elem = DOMHelper.createElement('span.symbol-form');
+        elem.dataset.form = formKey;
+        elem.textContent = displayString;
+        return elem;
     }
 
     setupFormsSetting(checked = null) {

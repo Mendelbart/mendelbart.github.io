@@ -100,60 +100,64 @@ $selectorBorderRadius: .2rem;
         }
       }
     }
+  }
 
-    .selector-item-button {
-      @include button-events("--clr-selector-button");
-      touch-action: none;
-      cursor: pointer;
+  .selector-item-button {
+    @include button-events("--clr-selector-button");
+    touch-action: none;
+    cursor: pointer;
 
-      padding: .3rem 0;
+    padding: .3rem 0;
 
-      border-width: 1px;
-      border-style: solid;
+    border-width: 1px;
+    border-style: solid;
 
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: var(--label-gap);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--label-gap);
 
-      border-radius: $selectorBorderRadius;
+    border-radius: $selectorBorderRadius;
+
+    &:active, &.active {
+      border-color: var(--clr-selector-button-active-border);
+    }
+
+    &[aria-checked="true"] {
+      @include button-events("--clr-selector-button-checked");
+
+      color: var(--clr-text);
 
       &:active, &.active {
-        border-color: var(--clr-selector-button-active-border);
+        color: var(--clr-selector-button-checked-active-symbol);
+        border-color: var(--clr-selector-button-checked-active-border);
       }
 
-      &[aria-checked="true"] {
-        @include button-events("--clr-selector-button-checked");
-
-        color: var(--clr-text);
-
-        &:active, &.active {
-          color: var(--clr-selector-button-checked-active-symbol);
-          border-color: var(--clr-selector-button-checked-active-border);
-        }
-
-        &> .symbol-label {
-          color: var(--clr-selector-button-checked-active-label);
-        }
+      &> .symbol-label {
+        color: var(--clr-selector-button-checked-active-label);
       }
     }
+  }
 
-    .symbol-string {
-      min-width: var(--symbol-min-width);
-      text-align: center;
-      padding-inline: .125em;
-      font-weight: 600;
-      transform-origin: center;
-    }
+  .symbol-string {
+    min-width: var(--symbol-min-width);
+    text-align: center;
+    padding-inline: .25em;
+    font-weight: 600;
+    transform-origin: center;
+  }
+  //
+  //.symbol-form {
+  //  view-transition-name: match-element;
+  //}
 
-    .selector-item-label {
-      font-weight: 400;
-      font-size: .8rem;
-      text-overflow: ellipsis;
-      padding-inline: .3em;
-      pointer-events: none;
-    }
+  .selector-item-label {
+    font-weight: 400;
+    font-size: .8rem;
+    text-overflow: ellipsis;
+    padding-inline: .3em;
+    pointer-events: none;
   }
 
   // Gap between second and third main group

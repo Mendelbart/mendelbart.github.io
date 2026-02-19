@@ -22,5 +22,6 @@
     @include set-vt-anim(ease-in, timing-function, ease-in);
     @include set-vt-anim(ease-out, timing-function, ease-out);
     @include set-vt-anim(page-settings, duration, 80ms);
+    @include set-vt-anim(selector-forms, duration, 80ms);
   }
 }

@@ -63,7 +63,7 @@ export class Dataset {
      * @param {string} key
      * @returns {?Promise<Dataset>}
      */
-    static fromKey(key) {
+    static fetch(key) {
         if (!(key in DATASETS_METADATA)) {
             console.error(`Invalid dataset key "${key}".`);
             return null;

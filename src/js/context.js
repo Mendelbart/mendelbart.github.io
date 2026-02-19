@@ -50,11 +50,6 @@ function getCachedSettings() {
 }
 
 export function setup() {
-    DOMHelper.updateDOM(() => {
-        setupDatasetSelect();
-        readFromSearchParams(false);
-    }, {transition: true});
-
     setupButtonListeners();
     setupPageSettings();
 
@@ -64,6 +59,11 @@ export function setup() {
             SELECTOR.scaleButtons();
         }
     });
+
+    return DOMHelper.updateDOM(() => {
+        setupDatasetSelect();
+        readFromSearchParams(false);
+    }, {transition: true});
 }
 
 function setupButtonListeners() {
@@ -87,7 +87,7 @@ function setupDatasetSelect() {
 
     select.addEventListener("change", (e) => {
         const key = e.target.value;
-        Dataset.fromKey(key).then(dataset => {
+        Dataset.fetch(key).then(dataset => {
             selectDataset(key, dataset);
         }).catch(console.error);
     });
@@ -185,8 +185,9 @@ function setLightDarkMode(mode, {updateLocalStorage = false, transition = true} 
 /**
  * @param key
  * @param {Dataset} dataset
+ * @param {boolean} [transition=true]
  */
-function selectDataset(key, dataset) {
+function selectDataset(key, dataset, {transition = true} = {}) {
     DATASET = dataset;
     DATASET_KEY = key;
     DOMHelper.setSearchParams({dataset: key});
@@ -211,7 +212,7 @@ function selectDataset(key, dataset) {
         });
 
         DOMHelper.showPage(document.getElementById('game-filters'), {transition: false});
-    }, {transition: true});
+    }, {transition: transition});
 }
 
 function setupTerms() {
@@ -345,8 +346,8 @@ function readFromSearchParams(transition = true) {
     const datasetKey = searchParams.get("dataset") ?? DEFAULT_DATASET;
     document.getElementById("datasetSelect").value = datasetKey;
 
-    Dataset.fromKey(datasetKey).then(dataset => {
-        selectDataset(datasetKey, dataset);
+    Dataset.fetch(datasetKey).then(dataset => {
+        selectDataset(datasetKey, dataset, {transition: false});
 
         if (["1", "true"].includes(searchParams.get("play"))) {
             startGame(transition);

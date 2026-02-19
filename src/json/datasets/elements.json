@@ -10,7 +10,7 @@
     "default": "en"
   },
   "fonts": {
-    "sans": {"family": "Noto Sans", "scale": 0.85, "shift": 0.1, "label": "Sans", "letterSpacing": "-.07ch"},
+    "sans": {"family": "Noto Sans", "scale": 0.85, "shift": 0.1, "label": "Sans", "letterSpacing": "-.07ch", "default": true},
     "serif": {"family": "Noto Serif", "scale": 0.85, "shift": 0.1, "label": "Serif", "letterSpacing": "-.07ch"}
   },
   "selectorData": {
