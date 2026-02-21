@@ -56,22 +56,40 @@ export default class ItemSelector {
         observer.observe(node);
     }
 
-    setMetadata(metadata) {
-        Object.assign(this.metadata, ObjectHelper.onlyKeys(metadata, ["lang", "dir"]));
-        if (this.node) {
-            this.node.querySelectorAll(".symbol").forEach(this.updateSymbolMetadata.bind(this));
-            this.blocks.forEach(block => DOMHelper.classIfElse(this.metadata.dir === "rtl", block.node, "flex-rtl"));
+    assertSetup() {
+        if (!this.buttons || !this.blocks) {
+            throw new Error("Selector not setup yet.");
         }
     }
 
-    setItemIndices(indices, {transition = true} = {}) {
+    setMetadata(metadata) {
+        this.assertSetup();
+
+        metadata = ObjectHelper.onlyKeys(metadata, ["lang", "dir"]);
+        if (Object.keys(metadata).length === 0) {
+            return;
+        }
+
+        this.node.querySelectorAll(".symbol").forEach(elem => DOMHelper.setAttrs(elem, metadata));
+        if (metadata.dir) {
+            this.blocks.forEach(block => block.node.setAttribute("dir", metadata.dir));
+        }
+    }
+
+    setItemIndices(indices) {
+        this.assertSetup();
         this.itemIndices = new Set(indices);
-        return this.updateButtonsForms({transition: transition});
+        this.updateButtonsForms();
+    }
+
+    setSymbolFont(font) {
+        this.assertSetup();
+        this.node.querySelectorAll(".symbol-string").forEach(elem => FontHelper.setFont(elem, font));
     }
 
     setupButtons() {
         /** @type {boolean[]} */
-        this.itemsActive = new Array(this.items.length).fill(false);
+        this.itemsActive = new Array(this.items.length).fill(true);
         /** @type {HTMLElement[]} */
         this.buttons = this.items.map((item, index) => this.getItemButton(item, index));
     }
@@ -111,9 +129,6 @@ export default class ItemSelector {
                 block.node.style.setProperty("--columns", block.nColumns);
             } else {
                 block.node.classList.add("selector-block-flex");
-                if (this.metadata.dir === "rtl") {
-                    block.node.classList.add("flex-rtl");
-                }
             }
 
             block.node.setAttribute("data-block-index", blockIndex.toString());
@@ -651,20 +666,18 @@ export default class ItemSelector {
         return result;
     }
 
-    updateButtonsForms({scale = true, transition = true} = {}) {
-        return DOMHelper.updateDOM(() => {
-            for (const [index, button] of this.buttons.entries()) {
-                if (!this.itemIndices.has(index)) {
-                    button.setAttribute("aria-disabled", true);
-                } else {
-                    this._updateButtonForms(button);
-                }
+    updateButtonsForms({scale = true} = {}) {
+        for (const [index, button] of this.buttons.entries()) {
+            if (!this.itemIndices.has(index)) {
+                button.setAttribute("aria-disabled", true);
+            } else {
+                this._updateButtonForms(button);
             }
+        }
 
-            if (scale) {
-                this.scaleButtons();
-            }
-        }, {transition: transition, types: ["selector-forms"]});
+        if (scale) {
+            this.scaleButtons();
+        }
     }
 
     _updateButtonForms(button) {
@@ -728,7 +741,6 @@ export default class ItemSelector {
 
     scaleButtons() {
         if (this.node.clientWidth === 0) {
-            console.warn("scaleButtons: node size is 0, cannot scale buttons.");
             return;
         }
 
@@ -796,7 +808,7 @@ export default class ItemSelector {
             this.updateItem(index, active, {updateIfDisabled: true, callUpdateListeners: false});
         }
 
-        void this.updateButtonsForms({transition: false});
+        this.updateButtonsForms();
     }
 
     /**
@@ -841,17 +853,8 @@ export default class ItemSelector {
      */
     getSymbolElement(item) {
         const elem = DOMHelper.createElement("span.symbol.symbol-string");
-        FontHelper.setFont(elem, ...this.dataset.getSelectorDisplayFont());
-
-        this.updateSymbolMetadata(elem);
         elem.append(...Object.values(item.getFormNodes()));
         return elem;
-    }
-
-    updateSymbolMetadata(symbolElement) {
-        if (this.metadata) {
-            DOMHelper.setAttrs(symbolElement, this.metadata);
-        }
     }
 
     removeListeners() {
@@ -864,7 +867,7 @@ export default class ItemSelector {
 
     setActiveForms(forms, options = {}) {
         this.activeForms = forms;
-        return this.updateButtonsForms(options);
+        this.updateButtonsForms(options);
     }
 
     activeIndices() {

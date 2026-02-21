@@ -5,7 +5,7 @@ import {setup} from "./context.js";
 (function () {
     readDarkLightMode();
 
-    setup();
+    DOMHelper.transition(setup);
 
     document.querySelectorAll(".ribbon").forEach((element) => {
         setupRibbon(element, element.classList.contains("ribbon-closable"));
@@ -66,7 +66,7 @@ function setupRibbon(container, closable = false) {
  * @param {Event} event
  */
 function ribbonButtonsChangeListener(event) {
-    DOMHelper.updateDOM(() => {
+    DOMHelper.transition(() => {
         const input = event.target;
         const container = input.closest(".ribbon");
         const contents = container.querySelector('.ribbon-contents');

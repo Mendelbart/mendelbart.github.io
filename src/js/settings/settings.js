@@ -23,8 +23,8 @@ import {FunctionStack, ObjectHelper, DOMHelper} from "../helpers/helpers.js";
  * @name Setting#remove
  */
 
-/** @class SettingsCollection */
-export class SettingsCollection {
+/** @class SettingCollection */
+export class SettingCollection {
     constructor() {
         /**
          * @type {Record<string, Setting>}
@@ -39,7 +39,7 @@ export class SettingsCollection {
     /**
      * @param {Record<string,Setting>} settings
      * @param {?string[]} [orderedKeys]
-     * @returns {SettingsCollection}
+     * @returns {SettingCollection}
      */
     static createFrom(settings, orderedKeys = null) {
         const collection = new this();
@@ -60,7 +60,7 @@ export class SettingsCollection {
     }
 
     /**
-     * @param {SettingsCollection} sc
+     * @param {SettingCollection} sc
      */
     extend(sc) {
         this.put(sc.settings, sc.keys);
@@ -120,7 +120,7 @@ export class SettingsCollection {
     }
 
     /**
-     * @param {SettingsCollection} settingsCollection
+     * @param {SettingCollection} settingsCollection
      */
     replaceSelf(settingsCollection) {
         this.removeAll();
@@ -141,7 +141,18 @@ export class SettingsCollection {
      * @param {string} key
      */
     getValue(key) {
+        if (!(key in this.settings)) {
+            throw new Error("Key not in settings collection.");
+        }
         return this.settings[key].value;
+    }
+
+    /**
+     * @param {string} key
+     * @param {any} [defaultValue=null]
+     */
+    getDefault(key, defaultValue = null) {
+        return key in this.settings ? this.settings[key].value : defaultValue;
     }
 
     /**

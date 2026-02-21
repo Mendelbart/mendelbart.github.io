@@ -1,7 +1,7 @@
 import {ItemProperty, QuizItem} from "./symbol.js";
 import {ArrayHelper, DOMHelper, ObjectHelper, FontHelper} from '../helpers/helpers.js';
 import ItemSelector from "./selector.js";
-import {SettingsCollection, ButtonGroup, ValueElement} from "../settings/settings.js";
+import {SettingCollection, ButtonGroup, ValueElement} from "../settings/settings.js";
 import DATASETS_METADATA from '../../json/datasets_meta.json';
 
 DOMHelper.registerTemplate(
@@ -114,18 +114,18 @@ export class Dataset {
         if (this.hasLanguageSetting()) {
             settings.language = this.languageSetting(checked.language);
         }
-        return SettingsCollection.createFrom(settings);
+        return SettingCollection.createFrom(settings);
     }
 
     getFilterSettings(checked) {
         const settings = {};
-        if (this.hasFormsSetting()) {
-            settings.forms = this.formsSetting(checked.forms);
-        }
         if (this.hasVariantSetting()) {
             settings.variant = this.variantSetting(checked.variant);
         }
-        return SettingsCollection.createFrom(settings);
+        if (this.hasFormsSetting()) {
+            settings.forms = this.formsSetting(checked.forms);
+        }
+        return SettingCollection.createFrom(settings);
     }
 
     propertySetting(checked = null) {
@@ -176,11 +176,22 @@ export class Dataset {
         return ValueElement.createSelect(
             ObjectHelper.map(this.variantsData.variants, (variant) => variant.label),
             {
-                label: "Variants",
+                label: "Variant",
                 selected: selected ?? this.variantsData.default ?? Object.keys(this.variantsData.variants)[0],
                 groups: Object.values(this.variantsData.groups) ?? []
             }
         )
+    }
+
+    hasSetting(key) {
+        switch (key) {
+            case "properties": return Object.keys(this.propsData).length > 1;
+            case "language": return this.languageData.languages.length > 1;
+            case "variant": return !!this.variantsData;
+            case "forms": return this.formsData.showSetting ?? Object.keys(this.formsData.setting).length > 1;
+            case "font-family": return Object.keys(this.fonts).length > 1;
+            default: throw new Error(`Invalid settings key ${key}.`);
+        }
     }
 
     hasPropsSetting() {
@@ -205,11 +216,12 @@ export class Dataset {
 
     getItemSelector(node = null) {
         const selector = new ItemSelector(this.items, this);
-        selector.setMetadata({lang: this.metadata.lang ?? null, dir: this.metadata.dir});
         selector.setup(node);
+        selector.setMetadata(ObjectHelper.onlyKeys(this.metadata, ["lang", "dir"]));
         if (this.selectorData.defaultActive) {
             selector.setActive(this.selectorData.defaultActive);
         }
+        selector.setSymbolFont(this.getSelectorDisplayFont());
 
         return selector;
     }
@@ -218,7 +230,11 @@ export class Dataset {
         return ArrayHelper.filterIndices(this.items, item => item.variants.has(key));
     }
 
-    _getFont(font) {
+    /**
+     * @param {string | Record<string, *>} font
+     * @returns {Record<string, *>}
+     */
+    getFont(font) {
         if (!font) {
             return this.defaultFont();
         }
@@ -233,24 +249,7 @@ export class Dataset {
             font.key = this._defaultFontKey;
         }
 
-        return Object.assign({}, this.fonts[font.key], ObjectHelper.withoutKeys(font, ["key"]));
-    }
-
-    /**
-     * @param {string | Object} font
-     * @returns {[string, Record<string, any> & {family: string}]}
-     */
-    getFont(font) {
-        const data = ObjectHelper.withoutKeys(this._getFont(font), ["default", "label"]);
-        return [data.family, data];
-    }
-
-    /**
-     * @param {string | Object} font
-     * @returns {string}
-     */
-    getFontFamily(font) {
-        return this.getFont(font)[0];
+        return ObjectHelper.withoutKeys(Object.assign({}, this.fonts[font.key], font), ["key", "default", "label"]);
     }
     
     getSelectorDisplayFont() {
@@ -495,7 +494,7 @@ export class Dataset {
     setupGameHeading(element) {
         const gameHeading = this.metadata.gameHeading;
 
-        FontHelper.setFont(element, ...this.getFont(gameHeading.font));
+        FontHelper.setFont(element, this.getFont(gameHeading.font));
 
         if (this.name === "Atomic Elements") {
             const container = document.createElement("div");

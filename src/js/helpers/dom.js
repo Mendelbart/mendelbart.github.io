@@ -3,7 +3,6 @@
  */
 
 import * as ObjectHelper from './object.js';
-import * as FontHelper from './font.js';
 
 let IdPrefixCounter = 0;
 window.hasTouch = 'ontouchstart' in window;
@@ -523,22 +522,6 @@ function getScale(elementSize, containerSize, grow = false) {
     return grow ? scale : Math.min(scale, 1);
 }
 
-/**
- * @param {[function, ...*][]} updates
- * @param {string[]} fonts
- */
-export function batchUpdate(updates, fonts = []) {
-    FontHelper.loadFonts(fonts).then(
-        () => requestAnimationFrame(() => {
-            for (const [update, ...args] of updates) {
-                update(...args);
-            }
-        }),
-        err => console.error(err)
-    );
-}
-
-
 export function printError(error) {
     const searchParams = new URLSearchParams(window.location.search);
     if (searchParams.has("debug", "true")) {
@@ -625,37 +608,14 @@ export function setSearchParams(params) {
     }
 }
 
-export function promiseWrapper(callback, resolve, reject) {
-    return () => {
-        try {
-            resolve(callback());
-        } catch (e) {
-            reject(e);
-        }
-    }
-}
-
 /**
- * @param {Function} callback
- * @param {boolean} [transition=false]
+ * @param {Function} update
  * @param {string[]} [types=[]]
- * @returns {Promise<void>}
  */
-export function updateDOM(callback, {transition = true, types = []} = {}) {
-    if (transition) {
-        if (document.startViewTransition) {
-            return new Promise((resolve, reject) => {
-                document.startViewTransition({
-                    update: promiseWrapper(callback, resolve, reject),
-                    types: types
-                });
-            });
-        } else {
-            return new Promise((resolve, reject) => {
-                requestAnimationFrame(promiseWrapper(callback, resolve, reject));
-            });
-        }
+export function transition(update, types = []) {
+    if (document.startViewTransition) {
+        document.startViewTransition({update: () => update(), types: types});
+    } else {
+        requestAnimationFrame(() => update());
     }
-
-    return Promise.resolve(callback());
 }

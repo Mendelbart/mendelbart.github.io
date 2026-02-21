@@ -92,10 +92,6 @@ $selectorBorderRadius: .25rem;
       flex-wrap: wrap;
       justify-content: center;
 
-      &.selector-block-rtl {
-        flex-direction: row-reverse;
-      }
-
       .selector-item-button {
         min-width: var(--button-min-width);
         max-width: var(--button-max-width);
@@ -175,8 +171,4 @@ $selectorBorderRadius: .25rem;
               repeat(6, minmax(var(--button-min-width), var(--button-max-width)));
     }
   }
-}
-
-.flex-rtl {
-  flex-direction: row-reverse;
 }

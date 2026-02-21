@@ -25,12 +25,16 @@ const FONT_PROPERTY_KEYS = {
 const FONT_TRANSFORM_PROPERTIES = ["shift", "scale", "letterSpacing"];
 
 /**
- * @param family
+ * @param {string | Object} family
  * @returns {Promise<FontFace>}
  */
 export function loadFont(family) {
     if (!family) {
         return Promise.reject("No family given.");
+    }
+
+    if (typeof family === "object") {
+        return loadFont(family.family);
     }
 
     if (!(family in FONT_FACES)) {
@@ -41,6 +45,10 @@ export function loadFont(family) {
     return FONT_FACES[family].load();
 }
 
+/**
+ * @param {(string | Object)[]} families
+ * @returns {Promise<Awaited<FontFace>[]>}
+ */
 export function loadFonts(families) {
     return Promise.all(families.map(family => loadFont(family)));
 }
@@ -103,28 +111,47 @@ function digestFontVariationSettings(variationSettings) {
 
 
 /**
+ * Also used as `setFont(element, properties)` with a properties.family entry.
+ *
  * @param {HTMLElement} element
- * @param {string} family
- * @param {{weight?, shift?, scale?, styleset?}} [properties]
+ * @param {string | Object} family
+ * @param {?{weight?, shift?, scale?, styleset?}} [properties]
  */
-export function setFont(element, family, properties = {}) {
-    clearFont(element);
+export function setFont(element, family, properties = null) {
+    if (typeof family === "object") {
+        if ("family" in family && typeof family.family === "string") {
+            setFont(element, family.family, family);
+            return;
+        } else {
+            throw new Error("Need properties.family of type string if family argument is omitted.");
+        }
+    }
 
+    if (!(family in FONT_DATA)) {
+        throw new Error(`Unknown family ${family}.`);
+    }
+
+    clearFont(element);
     setFontFamily(element, family);
+    setFontProperties(element, applyDefaultProperties(properties, family));
+}
+
+function applyDefaultProperties(properties, family) {
     const newProps = Object.assign({}, properties);
     const defaultData = FONT_DATA[family];
+
     if ("shift" in defaultData) {
         newProps.shift = defaultData.shift + (properties.shift ?? 0);
     }
     if ("scale" in defaultData) {
         newProps.scale = defaultData.scale * (properties.scale ?? 1);
     }
-    setFontProperties(element, newProps);
+    return newProps;
 }
 
 /**
  * @param family
- * @returns {Promise<Record<string,*>>}
+ * @returns {Record<string,*>}
  */
 export function getFontData(family) {
     return FONT_DATA[family];
