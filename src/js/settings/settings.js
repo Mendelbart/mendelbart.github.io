@@ -108,7 +108,6 @@ export class SettingsCollection {
         this.settings = {};
         this.keys = [];
     }
-
     /**
      * Replace the setting at the given `key` with a new setting.
      * @param key
@@ -116,7 +115,16 @@ export class SettingsCollection {
      */
     replace(key, setting) {
         this.settings[key].node.replaceWith(setting.node);
+        this.settings[key].remove();
         this.settings[key] = setting;
+    }
+
+    /**
+     * @param {SettingsCollection} settingsCollection
+     */
+    replaceSelf(settingsCollection) {
+        this.removeAll();
+        this.put(settingsCollection.settings);
     }
 
     getValues() {
@@ -245,7 +253,10 @@ export class ValueElement {
         const select = document.createElement("select");
         DOMHelper.setOptions(select, data, options);
 
-        const ve = new this(select);
+        const container = DOMHelper.createElement("div.styled-select");
+        container.append(select);
+
+        const ve = new this(container);
         if (options.id) {
             ve.setId(options.id);
         }

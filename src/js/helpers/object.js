@@ -91,10 +91,22 @@ export function onlyKeys(object, keys, warnOtherKeys = false) {
     return result;
 }
 
+/**
+ * @template V
+ * @param {Record<string, V>} object
+ * @param {function(string): string} callback
+ * @returns {Record<string, V>} Object with {callback(key): value} entries
+ */
 export function mapKeys(object, callback) {
     return Object.fromEntries(Object.entries(object).map(([k, v]) => [callback(k), v]));
 }
 
+/**
+ * @template V
+ * @param {string[]} keys
+ * @param {function(string): V} callback
+ * @returns {Record<string, V>} Object with {key: callback(key)} entries
+ */
 export function mapKeyArrayToValues(keys, callback) {
     return Object.fromEntries(keys.map(key => [key, callback(key)]));
 }

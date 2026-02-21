@@ -44,6 +44,7 @@
   background: none;
   color: var(--clr-text-soft);
   cursor: pointer;
+  transition: border 50ms, background 50ms;
 
   &:active {
     color: var(--clr-text-accent);

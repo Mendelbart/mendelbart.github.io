@@ -1,6 +1,5 @@
 import {DOMHelper, ObjectHelper, FontHelper, ArrayHelper, FunctionStack} from "../helpers/helpers.js";
 const range = ArrayHelper.range;
-import {ButtonGroup} from "../settings/settings.js";
 
 const STYLE_PROPERTIES = {
     buttonMinWidth: "--button-min-width",
@@ -24,10 +23,15 @@ export default class ItemSelector {
      */
     constructor(items, dataset) {
         this.items = items;
+        this.itemIndices = new Set(ArrayHelper.range(items.length));
         this.dataset = dataset;
         this.formsData = dataset.formsData;
         this.selectorData = dataset.selectorData;
         this.updateListeners = new FunctionStack();
+        /** @type {{lang: string?, dir: string?}} */
+        this.metadata = {};
+        /** @type {string[]} */
+        this.activeForms = [];
 
         // Bind event listener functions
         this.onBlockLabelClick = this.onBlockLabelClick.bind(this);
@@ -41,31 +45,35 @@ export default class ItemSelector {
         this.onBlockRangePointerUpCancel = this.onBlockRangePointerUpCancel.bind(this);
     }
 
-    /**
-     * @param {?(boolean[])} itemsActive
-     * @param {?(string[])} checkedForms
-     * @param {?string} datasetKey
-     */
-    setup(itemsActive = null, checkedForms = null, datasetKey = null) {
-        this.node = DOMHelper.createElement("div.item-selector");
-        if (datasetKey) {
-            this.node.setAttribute("data-dataset", datasetKey);
-        }
+    setup(node = null) {
+        this.node = node || DOMHelper.createElement("div.item-selector");
+        this.node.dataset.dataset = this.dataset.key;
 
-        this.setupFormsSetting(checkedForms);
         this.setupButtons();
-
         this.setupBlocks();
-        this.setActive(this.processItemsActive(itemsActive));
 
-        this.updateButtons({scale: false, transition: false});
+        const observer = new ResizeObserver(this.scaleButtons.bind(this));
+        observer.observe(node);
+    }
+
+    setMetadata(metadata) {
+        Object.assign(this.metadata, ObjectHelper.onlyKeys(metadata, ["lang", "dir"]));
+        if (this.node) {
+            this.node.querySelectorAll(".symbol").forEach(this.updateSymbolMetadata.bind(this));
+            this.blocks.forEach(block => DOMHelper.classIfElse(this.metadata.dir === "rtl", block.node, "flex-rtl"));
+        }
+    }
+
+    setItemIndices(indices, {transition = true} = {}) {
+        this.itemIndices = new Set(indices);
+        return this.updateButtonsForms({transition: transition});
     }
 
     setupButtons() {
         /** @type {boolean[]} */
         this.itemsActive = new Array(this.items.length).fill(false);
         /** @type {HTMLElement[]} */
-        this.buttons = this.items.map((item, index) => this.getItemButton(item, index.toString()));
+        this.buttons = this.items.map((item, index) => this.getItemButton(item, index));
     }
 
     setupBlocks() {
@@ -103,7 +111,7 @@ export default class ItemSelector {
                 block.node.style.setProperty("--columns", block.nColumns);
             } else {
                 block.node.classList.add("selector-block-flex");
-                if (this.dataset.metadata.dir === "rtl") {
+                if (this.metadata.dir === "rtl") {
                     block.node.classList.add("flex-rtl");
                 }
             }
@@ -179,10 +187,10 @@ export default class ItemSelector {
 
             if ("rowLabels" in block) {
                 if (block.rowLabelStart) {
-                    labelElements.splice(0, 0, this._gridGapElement());
+                    labelElements.splice(0, 0, this._gridGapElement(true));
                 }
                 if (block.rowLabelEnd) {
-                    labelElements.push(this._gridGapElement());
+                    labelElements.push(this._gridGapElement(true));
                 }
             }
             if (block.columnLabelStart) {
@@ -213,8 +221,8 @@ export default class ItemSelector {
         }
     }
 
-    _gridGapElement() {
-        return DOMHelper.createElement("span.selector-grid-gap");
+    _gridGapElement(label = false) {
+        return DOMHelper.createElement(`span.selector-grid-${label ? "label-" : ""}gap`);
     }
 
     /**
@@ -226,7 +234,7 @@ export default class ItemSelector {
      */
     _labelElement(type, content, index) {
         if (content === null) {
-            return this._gridGapElement();
+            return this._gridGapElement(true);
         }
         const element = DOMHelper.createElement(`span.block-label.block-${type}-label`);
         element.setAttribute("tabindex", 0);
@@ -345,7 +353,7 @@ export default class ItemSelector {
             const groupIndex = button.dataset.dblClickGroup;
             const indices = block.dblClickGroups[groupIndex];
 
-            this.toggleItems(indices);
+            this.toggleItems(indices, {updateIfDisabled: true});
         }
 
         this.lastButtonClicked = button.dataset.indexWithinBlock;
@@ -643,15 +651,13 @@ export default class ItemSelector {
         return result;
     }
 
-    updateButtons({scale = true, transition = true} = {}) {
-        DOMHelper.updateDOM(() => {
-            for (const [index, item] of this.items.entries()) {
-                if (item.countQuizItems(this.activeForms()) === 0) {
-                    this.updateButtonForms(index, this.formsData.keys);
-                    this.buttons[index].classList.add('disabled');
+    updateButtonsForms({scale = true, transition = true} = {}) {
+        return DOMHelper.updateDOM(() => {
+            for (const [index, button] of this.buttons.entries()) {
+                if (!this.itemIndices.has(index)) {
+                    button.setAttribute("aria-disabled", true);
                 } else {
-                    this.updateButtonForms(index, this.formsSetting ? this.formsSetting.value : ["default"]);
-                    this.buttons[index].classList.remove('disabled');
+                    this._updateButtonForms(button);
                 }
             }
 
@@ -661,14 +667,15 @@ export default class ItemSelector {
         }, {transition: transition, types: ["selector-forms"]});
     }
 
-    /**
-     * @param {number} index
-     * @param {string[]} forms
-     */
-    updateButtonForms(index, forms) {
-        this.buttons[index].querySelectorAll(".symbol-form").forEach(elem => {
-            DOMHelper.toggleShown(forms.includes(elem.dataset.form), elem);
+    _updateButtonForms(button) {
+        let allHidden = true;
+        button.querySelectorAll(".symbol-form").forEach(elem => {
+            const shown = this.activeForms.includes(elem.dataset.form);
+            DOMHelper.toggleShown(shown, elem);
+
+            if (shown) allHidden = false;
         });
+        button.setAttribute("aria-disabled", allHidden);
     }
 
     /**
@@ -689,14 +696,14 @@ export default class ItemSelector {
     }
 
     /**
-     * @param {number|string} index
+     * @param {number} index
      * @param {boolean} checked
      * @param {boolean} [updateIfDisabled]
      * @param {boolean} [callUpdateListeners]
      */
     updateItem(index, checked, {updateIfDisabled = false, callUpdateListeners = true} = {}) {
         this.itemsActive[index] = checked;
-        if (!this.buttons[index].classList.contains('disabled') || updateIfDisabled) {
+        if (this.buttons[index].getAttribute("aria-disabled") !== "true" || updateIfDisabled) {
             this.buttons[index].setAttribute('aria-checked', checked.toString());
         }
 
@@ -709,11 +716,10 @@ export default class ItemSelector {
      * @returns {number}
      */
     activeQuizItemCount() {
-        const forms = this.activeForms();
         let count = 0;
-        for (const [index, item] of this.items.entries()) {
+        for (const index of this.itemIndices) {
             if (this.itemsActive[index]) {
-                count += item.countQuizItems(forms);
+                count += this.items[index].countQuizItems(this.activeForms);
             }
         }
 
@@ -721,11 +727,16 @@ export default class ItemSelector {
     }
 
     scaleButtons() {
+        if (this.node.clientWidth === 0) {
+            console.warn("scaleButtons: node size is 0, cannot scale buttons.");
+            return;
+        }
+
         for (const block of this.blocks) {
             const buttons = block.indices
                 .filter(index => index !== null)
                 .map(index => this.buttons[index])
-                .filter(button => !button.classList.contains('disabled'));
+                .filter(button => button.getAttribute("aria-disabled") !== "true");
 
             DOMHelper.scaleAllToFit(
                 buttons.map(button => button.querySelector(".symbol")),
@@ -742,65 +753,50 @@ export default class ItemSelector {
     }
 
     /**
-     * @param {boolean[]} itemsActive
-     * @returns {boolean[]}
+     * @param {string} val
      */
-    processItemsActive(itemsActive) {
-        if (!itemsActive || !Array.isArray(itemsActive) || itemsActive.length !== this.items.length) {
-            if (itemsActive) {
-                console.error("Invalid active items array. Must be boolean array of same length as items.");
-            }
-            return this.defaultItemsActive();
-        }
-
-        return itemsActive.map(x => {
-            if (![true, false, 0, 1].includes(x)) {
-                console.warn("Invalid itemsActive, should be array of booleans or 0s and 1s.");
-            }
-            return !!x;
-        });
-    }
-
-    /**
-     * @param {boolean[]} itemsActive
-     */
-    setActive(itemsActive) {
-        if (!Array.isArray(itemsActive) || itemsActive.length !== this.items.length) {
-            console.error("Invalid active items.");
-            return;
-        }
-        for (const [index, active] of itemsActive.entries()) {
-            this.updateItem(index, active, {callUpdateListeners: false});
-        }
-        this.itemsActive = itemsActive;
-    }
-
-    defaultItemsActive() {
-        let val = this.selectorData.defaultActive ?? "all";
+    processItemsActive(val) {
         if (val === "all" || val === "none") {
             return new Array(this.items.length).fill(val === "all");
         }
 
         const itemsActive = new Array(this.items.length).fill(false);
-        if (val.substring(0,5) === "block") {
-            try {
-                const blockIndices = this.processIndices(val.substring(5));
-                val = blockIndices.map(index => this.blocks[index].indices).flat();
-            } catch (e) {
-                console.error(e);
-                return itemsActive;
-            }
-        }
-
-        if (!Array.isArray(val)) {
-            console.error("Invalid defaultActive.");
-            return itemsActive;
-        }
-
-        for (const index of val) {
+        for (const index of this.processIndices(val)) {
             itemsActive[index] = true;
         }
         return itemsActive;
+    }
+
+    /**
+     * @param {boolean[] | string} itemsActive
+     */
+    setActive(itemsActive) {
+        if (typeof itemsActive === "string") {
+            try {
+                itemsActive = this.processItemsActive(itemsActive);
+            } catch (e) {
+                console.error(e);
+                return;
+            }
+        } else {
+            if (itemsActive.length !== this.items.length) {
+                console.error("Items Active length doens't match number of items.");
+                return;
+            }
+
+            itemsActive.map(x => {
+                if (![true, false, 0, 1].includes(x)) {
+                    console.warn("Invalid itemsActive, should be array of booleans or 0s and 1s.");
+                }
+                return !!x;
+            });
+        }
+
+        for (const [index, active] of itemsActive.entries()) {
+            this.updateItem(index, active, {updateIfDisabled: true, callUpdateListeners: false});
+        }
+
+        void this.updateButtonsForms({transition: false});
     }
 
     /**
@@ -839,60 +835,23 @@ export default class ItemSelector {
         return button;
     }
 
+    /**
+     * @param {DatasetItem} item
+     * @returns {HTMLElement}
+     */
     getSymbolElement(item) {
         const elem = DOMHelper.createElement("span.symbol.symbol-string");
-
         FontHelper.setFont(elem, ...this.dataset.getSelectorDisplayFont());
 
-        DOMHelper.setAttrs(elem, {
-            lang: this.dataset.metadata.lang,
-            dir: this.dataset.metadata.dir
-        });
-
-        const keysByForm =
-            this.formsData.setting
-            ? ObjectHelper.map(this.formsData.setting, (data, key) => data.keys || [key])
-            : {default: this.formsData.keys};
-
-        const formElements = Object.entries(keysByForm)
-            .map(([settingKey, formKeys]) => this.getSymbolFormElement(
-                settingKey,
-                item.getFormsDisplayString(formKeys)
-            ));
-
-        elem.append(...formElements);
-
+        this.updateSymbolMetadata(elem);
+        elem.append(...Object.values(item.getFormNodes()));
         return elem;
     }
 
-    getSymbolFormElement(formKey, displayString) {
-        const elem = DOMHelper.createElement('span.symbol-form');
-        elem.dataset.form = formKey;
-        elem.textContent = displayString;
-        return elem;
-    }
-
-    setupFormsSetting(checked = null) {
-        if (!(this.formsData.showSetting ?? Object.keys(this.formsData.setting).length > 1)) {
-            return;
+    updateSymbolMetadata(symbolElement) {
+        if (this.metadata) {
+            DOMHelper.setAttrs(symbolElement, this.metadata);
         }
-
-        const label = this.formsData.label ?? (this.formsData.exclusive ? "Form" : "Forms");
-        this.formsSetting = ButtonGroup.from(
-            ObjectHelper.map(this.formsData.setting, (p) => p.label),
-            {
-                label: label,
-                exclusive: !!this.formsData.exclusive,
-                checked: checked ?? ObjectHelper.map(this.formsData.setting, (p) => p.active),
-            },
-        );
-
-        this.formsSetting.updateListeners.push(
-            this.updateButtons.bind(this),
-            () => this.updateListeners.call(this)
-        );
-
-        this.node.prepend(this.formsSetting.node);
     }
 
     removeListeners() {
@@ -903,33 +862,14 @@ export default class ItemSelector {
         this.removeDocumentLabelListeners();
     }
 
-    /**
-     * @returns {string[]}
-     */
-    activeForms() {
-        if (!this.formsSetting) {
-            return Object.keys(this.formsData.setting);
-        }
-
-        const result = [];
-
-        let keys = this.formsSetting.value;
-        if (this.formsSetting.exclusive) {
-            keys = [keys];
-        }
-
-        for (const key of keys) {
-            if ("keys" in this.formsData.setting[key]) {
-                result.push(...this.formsData.setting[key].keys);
-            } else {
-                result.push(key);
-            }
-        }
-        return result;
+    setActiveForms(forms, options = {}) {
+        this.activeForms = forms;
+        return this.updateButtonsForms(options);
     }
 
     activeIndices() {
-        return ArrayHelper.filterIndices(this.itemsActive, x => x);
+        return ArrayHelper.filterIndices(this.itemsActive, x => x)
+            .filter(index => this.buttons[index].getAttribute("aria-disabled") !== "true");
     }
 
     /**
@@ -969,6 +909,8 @@ export default class ItemSelector {
             if (allowGaps && range.substring(0, 3) === "gap") {
                 const n = range.length === 3 ? 1 : this.parseInt(range.substring(3));
                 return new Array(n).fill(null);
+            } else if (range.substring(0, 5) === "block") {
+                return this.blocks[range.substring(5)].indices;
             }
             return this.parseRange(range);
         }));

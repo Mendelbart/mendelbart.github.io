@@ -1,5 +1,5 @@
 import {ItemProperty, QuizItem} from "./symbol.js";
-import {DOMHelper, ObjectHelper, FontHelper} from '../helpers/helpers.js';
+import {ArrayHelper, DOMHelper, ObjectHelper, FontHelper} from '../helpers/helpers.js';
 import ItemSelector from "./selector.js";
 import {SettingsCollection, ButtonGroup, ValueElement} from "../settings/settings.js";
 import DATASETS_METADATA from '../../json/datasets_meta.json';
@@ -77,6 +77,7 @@ export class Dataset {
             .then(response => response.json())
             .then(data => {
                 const dataset = new this(data);
+                dataset.key = key;
                 this._cache[key] = dataset;
                 return dataset;
             })
@@ -91,7 +92,7 @@ export class Dataset {
     }
 
     processVariants(variantsData) {
-        if (!variantsData) {
+        if (!variantsData || !variantsData.variants) {
             return null;
         }
 
@@ -99,6 +100,7 @@ export class Dataset {
             if (typeof data === "string") {
                 variantsData.variants[key] = {label: data};
             }
+            variantsData.variants[key].lang ??= key;
         }
 
         return variantsData;
@@ -123,13 +125,7 @@ export class Dataset {
         if (this.hasVariantSetting()) {
             settings.variant = this.variantSetting(checked.variant);
         }
-    }
-
-    getSettings(checkedProperties, checkedLanguage) {
-        return SettingsCollection.createFrom({
-            properties: this.propertySetting(checkedProperties),
-            language: this.languageSetting(checkedLanguage)
-        });
+        return SettingsCollection.createFrom(settings);
     }
 
     propertySetting(checked = null) {
@@ -154,31 +150,41 @@ export class Dataset {
     }
 
     formsSetting(checked = null) {
+        if (!this.hasFormsSetting()) {
+            return null;
+        }
+
         const label = this.formsData.label ?? (this.formsData.exclusive ? "Form" : "Forms");
         return ButtonGroup.from(
             ObjectHelper.map(this.formsData.setting, (p) => p.label),
             {
                 label: label,
                 exclusive: !!this.formsData.exclusive,
-                checked: checked ?? ObjectHelper.map(this.formsData.setting, (p) => p.active),
+                checked: checked ?? ObjectHelper.map(this.formsData.setting, (p) => p.active ?? false),
             },
         );
     }
 
+    getFormsFromSettingsValue(value) {
+        if (typeof value === "string") {
+            value = [value];
+        }
+        return value.map(key => this.formsData.setting[key].keys ?? [key]).flat();
+    }
+
     variantSetting(selected = null) {
-        const variants = this.variantsData.variants;
         return ValueElement.createSelect(
-            ObjectHelper.map(variants, (variant) => variant.label),
+            ObjectHelper.map(this.variantsData.variants, (variant) => variant.label),
             {
                 label: "Variants",
-                selected: selected ?? this.variantsData.default ?? Object.keys(variants)[0],
-                groups: variants.groups ?? []
+                selected: selected ?? this.variantsData.default ?? Object.keys(this.variantsData.variants)[0],
+                groups: Object.values(this.variantsData.groups) ?? []
             }
         )
     }
 
     hasPropsSetting() {
-        return this.propsData.keys.length > 1;
+        return Object.keys(this.propsData).length > 1;
     }
 
     hasLanguageSetting() {
@@ -190,15 +196,26 @@ export class Dataset {
     }
 
     hasFormsSetting() {
-        return Object.keys(this.formsData.setting).length > 1;
+        return this.formsData.showSetting ?? Object.keys(this.formsData.setting).length > 1;
     }
 
-    hasFontSetting() {
+    hasFontFamilySetting() {
         return Object.keys(this.fonts).length > 1;
     }
 
-    getItemSelector() {
-        return new ItemSelector(this.items, this);
+    getItemSelector(node = null) {
+        const selector = new ItemSelector(this.items, this);
+        selector.setMetadata({lang: this.metadata.lang ?? null, dir: this.metadata.dir});
+        selector.setup(node);
+        if (this.selectorData.defaultActive) {
+            selector.setActive(this.selectorData.defaultActive);
+        }
+
+        return selector;
+    }
+
+    getVariantItemIndices(key) {
+        return ArrayHelper.filterIndices(this.items, item => item.variants.has(key));
     }
 
     _getFont(font) {
@@ -254,7 +271,7 @@ export class Dataset {
      * @param checked
      * @returns {ButtonGroup}
      */
-    fontSetting(checked = null) {
+    fontFamilySetting(checked = null) {
         const setting = ButtonGroup.from(
             ObjectHelper.map(this.fonts, font => font.label ?? font.family),
             {
@@ -288,7 +305,7 @@ export class Dataset {
             try {
                 item = this.processItem(itemData);
             } catch (e) {
-                console.warn("Error occured processing item with key", key);
+                console.warn("Error occured processing item at index", index);
                 console.error(e);
                 continue;
             }
@@ -318,31 +335,58 @@ export class Dataset {
     }
 
     processItem(itemData) {
+        const variants = this.hasVariantSetting() ? this.processItemVariants(itemData.variants) : null;
+
         return new DatasetItem(
             this.processDisplayForms(itemData.display),
-            this.processItemProperties(itemData)
+            this.processItemProperties(itemData),
+            variants
         );
     }
 
     processItemProperties(itemData) {
         const properties = {};
         for (const [taggedKey, value] of Object.entries(itemData)) {
-            if (taggedKey.includes(":")) {
-                const splitKey = taggedKey.split(":");
-                if (splitKey.length !== 2) {
-                    console.warn("Ignored invalid symbol key.");
-                    continue;
-                }
-                const [tag, key] = splitKey;
+            if (taggedKey.substring(0, 2) !== "p:") {
+                continue;
+            }
 
-                if (tag === "p") {
-                    properties[key] = value;
-                } else {
-                    console.warn("Ignored invalid tagged symbol key.");
+            const key = taggedKey.substring(2);
+            properties[key] = value;
+        }
+
+        return properties;
+    }
+
+    /**
+     * @param {string[] | string} variants
+     * @returns {string[]}
+     */
+    processItemVariants(variants) {
+        if (!variants || variants === "*") {
+            return Object.keys(this.variantsData.variants);
+        }
+        if (Array.isArray(variants)) {
+            return variants;
+        }
+
+        const adding = variants.substring(0,2) !== "*-";
+        if (!adding) {
+            variants = variants.substring(2);
+        }
+
+        const included = ObjectHelper.map(this.variantsData.variants, () => !adding);
+        for (const key of variants.split(",")) {
+            if (key in this.variantsData.variants) {
+                included[key] = adding;
+            } else if (this.variantsData.groups && key in this.variantsData.groups) {
+                for (const variantKey of this.variantsData.groups[key]) {
+                    included[variantKey] = adding;
                 }
             }
         }
-        return properties;
+
+        return ObjectHelper.filterKeys(included, x => x);
     }
 
     /**
@@ -383,15 +427,15 @@ export class Dataset {
     /**
      * @param {number[]} itemIndices
      * @param {string[]} forms
-     * @param {string[]} properties default "default"
-     * @param {string} [language]
+     * @param {string[]} properties
+     * @param {string?} [language]
      * @returns {QuizItem[]}
      */
-    getQuizItems(itemIndices, forms, properties, language = "default") {
+    getQuizItems(itemIndices, forms, properties, language = null) {
         const items = [];
 
         for (const key of itemIndices) {
-            const displayStrings = this.items[key].getDisplayString(forms);
+            const displayStrings = this.items[key].getDisplayStrings(forms);
             const itemProperties = this.items[key].getItemProperties(properties, this.propsData, language);
             items.push(...Object.entries(displayStrings).map(([form, string]) => new QuizItem(string, itemProperties, form)));
         }
@@ -416,10 +460,10 @@ export class Dataset {
 
     /**
      * @param {string[]} properties
-     * @param {string} [language] default "default"
+     * @param {string?} [language]
      * @returns {Record<string,QuizItem[]>}
      */
-    getReferenceItems(properties, language = "default") {
+    getReferenceItems(properties, language = null) {
         let items;
         const propsData = this.referencePropsData();
 
@@ -479,27 +523,29 @@ class DatasetItem {
     /**
      * @param {Record<string,string>} displayForms
      * @param {Record<string,*>} properties
+     * @param {string[]?} variants
      */
-    constructor(displayForms, properties) {
+    constructor(displayForms, properties, variants = null) {
         this.displayForms = displayForms;
         this.properties = properties;
+        this.variants = new Set(variants);
     }
 
     /**
      * @param forms
      * @returns {Record<string,string>}
      */
-    getDisplayString(forms) {
+    getDisplayStrings(forms) {
         return ObjectHelper.onlyKeys(this.displayForms, forms);
     }
 
     /**
      * @param {string[]} propertyKeys
      * @param {Record<string,*>} propsData
-     * @param {string} [language]
+     * @param {string?} [language]
      * @returns {Object<string,ItemProperty>}
      */
-    getItemProperties(propertyKeys, propsData, language = "default") {
+    getItemProperties(propertyKeys, propsData, language = null) {
         const result = {};
         for (const key of propertyKeys) {
             if (!(key in this.properties)) {
@@ -510,7 +556,7 @@ class DatasetItem {
             result[key] = this.properties[key];
         }
 
-        if (language !== "default") {
+        if (language) {
             for (const key of propertyKeys) {
                 const langKey = key + "_" + language;
                 if (this.properties[langKey]) {
@@ -522,12 +568,23 @@ class DatasetItem {
         return ObjectHelper.map(result, (prop, key) => ItemProperty.fromData(prop, propsData[key]));
     }
 
+    getFormNode(form) {
+        const elem = DOMHelper.createElement('span.symbol-form');
+        elem.dataset.form = form;
+        elem.textContent = this.displayForms[form];
+        return elem;
+    }
+
+    getFormNodes(forms = null) {
+        return ObjectHelper.mapKeyArrayToValues(forms ?? Object.keys(this.displayForms), form => this.getFormNode(form))
+    }
+
     /**
      * @param {string[]} forms
      * @returns {string}
      */
     getFormsDisplayString(forms) {
-        return Object.values(this.getDisplayString(forms)).join("");
+        return Object.values(this.getDisplayStrings(forms)).join("");
     }
 
     /**

@@ -1,4 +1,5 @@
-$selectorBorderRadius: .2rem;
+$selectorBorderRadius: .25rem;
+
 @mixin button-events($clr-var-prefix) {
   background-color: var(#{$clr-var-prefix});
   border-color: var(#{$clr-var-prefix}-border, transparent);
@@ -20,6 +21,10 @@ $selectorBorderRadius: .2rem;
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
+
+  &:not(:first-child) {
+    margin-top: .375rem;
+  }
 
   .selector-block {
     gap: .25rem;
@@ -63,6 +68,7 @@ $selectorBorderRadius: .2rem;
         padding: .1rem .2rem;
         cursor: pointer;
         font-size: .8rem;
+        transition: background 75ms;
       }
 
       @media (hover: hover) {
@@ -75,9 +81,9 @@ $selectorBorderRadius: .2rem;
         background: var(--clr-selector-button-active);
       }
 
-      .selector-item-button.disabled {
+      .selector-item-button[aria-disabled="true"] {
         pointer-events: none;
-        display: none;
+        visibility: hidden;
       }
     }
 
@@ -94,8 +100,7 @@ $selectorBorderRadius: .2rem;
         min-width: var(--button-min-width);
         max-width: var(--button-max-width);
 
-        &.disabled {
-          pointer-events: none;
+        &[aria-disabled="true"] {
           display: none;
         }
       }
@@ -106,6 +111,7 @@ $selectorBorderRadius: .2rem;
     @include button-events("--clr-selector-button");
     touch-action: none;
     cursor: pointer;
+    transition: border $shortTransition, background $shortTransition, color $shortTransition;
 
     padding: .3rem 0;
 

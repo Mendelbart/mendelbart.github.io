@@ -164,6 +164,10 @@ export function setOptions(select, data, {
         const optgroup = document.createElement("OPTGROUP");
         optgroup.label = label;
         for (const key of keys) {
+            if (!(key in data)) {
+                console.warn(`Unknown grouped key ${key} in group ${label}.`);
+                continue;
+            }
             optgroup.append(createOption(key, data[key], selected, disabled));
             grouped[key] = true;
         }
@@ -503,10 +507,8 @@ export function scaleAllToFit(elements, options = {}) {
 function getScale(elementSize, containerSize, grow = false) {
     if (elementSize === 0) {
         console.warn("getScale: Element's size is 0.");
-        console.trace();
         return 1;
     }
-
     if (isNaN(elementSize)) {
         console.error("Element size is NaN.");
         return 1;
@@ -623,6 +625,16 @@ export function setSearchParams(params) {
     }
 }
 
+export function promiseWrapper(callback, resolve, reject) {
+    return () => {
+        try {
+            resolve(callback());
+        } catch (e) {
+            reject(e);
+        }
+    }
+}
+
 /**
  * @param {Function} callback
  * @param {boolean} [transition=false]
@@ -630,18 +642,20 @@ export function setSearchParams(params) {
  * @returns {Promise<void>}
  */
 export function updateDOM(callback, {transition = true, types = []} = {}) {
-    if (transition && document.startViewTransition) {
-        return document.startViewTransition({update: callback, types: types}).ready;
-    } else {
-        return new Promise((resolve, reject) => {
-            requestAnimationFrame(() => {
-                try {
-                    callback();
-                } catch (e) {
-                    reject(e);
-                }
-                resolve();
+    if (transition) {
+        if (document.startViewTransition) {
+            return new Promise((resolve, reject) => {
+                document.startViewTransition({
+                    update: promiseWrapper(callback, resolve, reject),
+                    types: types
+                });
             });
-        });
+        } else {
+            return new Promise((resolve, reject) => {
+                requestAnimationFrame(promiseWrapper(callback, resolve, reject));
+            });
+        }
     }
+
+    return Promise.resolve(callback());
 }

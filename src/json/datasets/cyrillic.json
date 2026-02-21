@@ -39,8 +39,8 @@
     },
     "groups": {
       "ssl": {"label": "South Slavic languages", "keys": ["bg", "sr", "cnr", "mk"]},
-      "esl": {"label": "East Slavic languages", "keys": ["ru", "be", "uk", "rue"]},
-      "tur": {"label": "Turkic languages", "keys": ["ba", "kk", "ky", "tt", "uz"]}
+      "esl": {"label": "East Slavic languages", "keys": ["ru", "be", "uk"]},
+      "tur": {"label": "Turkic languages", "keys": ["kk", "ky", "tt", "uz"]}
     },
     "default": "ru"
   },
@@ -99,8 +99,8 @@
       ["Ыы", "Yeru, Eru", "ru,be,kk,ky,tt"],
       ["Ьь", "soft sign", "*-sr,cnr,mk"],
       ["Ээ", "E", "ru,be,kk,ky,tt"],
-      ["Юю", "Yu, Ju", "*"],
-      ["Яя", "Ya, Ia, Ja", "*"]
+      ["Юю", "Yu, Ju", "*-sr,cnr,mk"],
+      ["Яя", "Ya, Ia, Ja", "*-sr,cnr,mk"]
     ]
   }
 }

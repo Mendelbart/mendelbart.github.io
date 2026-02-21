@@ -14,14 +14,15 @@
       }
 
       &::view-transition-group(*) {
-        animation-duration: 125ms;
+        animation-duration: 100ms;
         animation-timing-function: ease-in-out;
       }
     }
 
     @include set-vt-anim(ease-in, timing-function, ease-in);
     @include set-vt-anim(ease-out, timing-function, ease-out);
-    @include set-vt-anim(page-settings, duration, 80ms);
-    @include set-vt-anim(selector-forms, duration, 80ms);
+    @include set-vt-anim(page-settings, duration, 75ms);
+    @include set-vt-anim(selector-forms, duration, 75ms);
+    @include set-vt-anim(game, duration, 75ms);
   }
 }

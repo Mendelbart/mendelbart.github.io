@@ -1,6 +1,6 @@
 import {DOMHelper, ObjectHelper, FontHelper, FunctionStack} from "../helpers/helpers.js";
 import {ItemDealer} from "./dealer.js";
-import {Slider, SettingsCollection} from "../settings/settings.js";
+import {Slider, SettingsCollection, ValueElement} from "../settings/settings.js";
 import {ItemProperty, ListProperty} from "../dataset/symbol.js";
 
 
@@ -34,6 +34,12 @@ export class Game {
         this.onInputKeydown = this.onInputKeydown.bind(this);
         this._show = this._show.bind(this);
         this.loadAndUpdateSymbolFont = this.loadAndUpdateSymbolFont.bind(this);
+    }
+
+    static genericSettings() {
+        return SettingsCollection.createFrom({
+            seed: ValueElement.createInput("text", "Seed (optional)", {id: "game-seed"})
+        });
     }
 
     setup() {
@@ -117,11 +123,11 @@ export class Game {
         document.querySelector("#game-symbols").style.setProperty("--symbol-weight", value.toString());
     }
 
-    loadAndUpdateSymbolFont(key) {
+    loadAndUpdateSymbolFont({key = null, transition = true} = {}) {
         key ??= this.fontSettings.getValue("family");
-        return FontHelper.loadFont(this.dataset.getFontFamily(key)).then(() => {
-            this.updateSymbolFontFamily(key);
-        }, err => console.error(err));
+        return FontHelper.loadFont(this.dataset.getFontFamily(key)).then(() => DOMHelper.updateDOM(
+            () => this.updateSymbolFontFamily(key), {transition: transition}
+        ), err => console.error(err));
     }
 
     updateSymbolFontFamily(key) {
@@ -155,7 +161,7 @@ export class Game {
         const weightSlider = Slider.create(100, 900, weight);
         weightSlider.label("Weight");
         this.fontSettings = SettingsCollection.createFrom({
-            family: this.dataset.fontSetting(),
+            family: this.dataset.fontFamilySetting(),
             weight: weightSlider
         });
 
@@ -163,8 +169,9 @@ export class Game {
 
         this.fontSettings.addUpdateListener("weight", this.updateSymbolWeight);
         this.fontSettings.addUpdateListener("family", this.loadAndUpdateSymbolFont);
+
         this.updateSymbolWeight(weight);
-        return this.loadAndUpdateSymbolFont();
+        return this.loadAndUpdateSymbolFont({transition: false});
     }
 
     setSymbolFont(element, key) {

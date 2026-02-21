@@ -1,5 +1,5 @@
 $borderRadiusSmall: .5rem;
-$transitionHide: 75ms;
+$shortTransition: 75ms;
 $bodyMaxWidth: 26rem;
 
 @mixin button-events($clr-var-prefix) {
@@ -166,6 +166,7 @@ input[type="checkbox"], input[type="radio"] {
     user-select: none;
     border: 1px solid var(--clr-grp-button-border);
     @include button-events("--clr-grp-button");
+    transition: border $shortTransition, background $shortTransition, color $shortTransition;
 
     &:first-of-type {
       border-top-left-radius: $borderRadiusSmall;
@@ -195,6 +196,7 @@ input[type="checkbox"], input[type="radio"] {
   border-radius: $borderRadiusSmall;
   cursor: pointer;
   color: var(--clr-button-text);
+  transition: border $shortTransition, background $shortTransition;
 
   @media (hover: hover) {
     &:hover {
@@ -263,7 +265,7 @@ select {
   &::after {
     content: "\f0d7";
     font-family: FontAwesome;
-    font-size: 1.3125rem;
+    font-size: 1.125em;
     color: var(--clr-text);
     display: grid;
     place-items: center;
@@ -367,8 +369,11 @@ input[type="range"] {
 }
 
 
-#datasetSelect {
+#game-select-container {
   font-size: 1.35rem;
+}
+
+#datasetSelect {
   padding: 0.4rem 0.7rem;
 
   &> option {
@@ -479,7 +484,7 @@ input[type="range"] {
 #font-settings-button + label {
   padding-block: .25em;
 
-  transition: background $transitionHide;
+  transition: background $shortTransition;
 
   &::before, &::after {
     content: "A";
@@ -569,7 +574,7 @@ input[type="range"] {
   height: var(--height);
   background: var(--clr-range);
   border-radius: .2rem;
-  transition: opacity $transitionHide;
+  transition: opacity $shortTransition;
   margin-block-end: .25rem;
 
   &::after {
