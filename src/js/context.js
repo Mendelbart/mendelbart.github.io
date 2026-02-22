@@ -12,7 +12,7 @@ let GAME = null;
 /** @type {?Dataset} */
 let DATASET = null;
 
-let FILTER_SETTINGS = new SettingCollection();
+let SELECTOR_SETTINGS = new SettingCollection();
 let DATASET_GAME_SETTINGS = new SettingCollection();
 let GENERIC_GAME_SETTINGS = new SettingCollection();
 
@@ -74,7 +74,7 @@ function setupDatasetSelect() {
  */
 function setPlaying(playing) {
     if (!playing) {
-        DOMHelper.showPage(document.getElementById('game-filters'), {transition: false});
+        DOMHelper.showPage(document.getElementById('game-filters'));
     }
 
     DOMHelper.toggleShown(playing,
@@ -190,6 +190,7 @@ function setLightDarkMode(mode, {updateLocalStorage = false} = {}) {
 function selectDataset(dataset) {
     DATASET = dataset;
     DOMHelper.setSearchParams({dataset: dataset.key});
+    updateDocumentTitle();
 
     const cachedSettings = getCachedSettings();
     const gameHeading = DATASET.metadata.gameHeading;
@@ -200,12 +201,16 @@ function selectDataset(dataset) {
     ]).then(() => {
         setupTerms();
 
-        DOMHelper.showPage(document.getElementById('game-filters'), {transition: false});
+        DOMHelper.showPage(document.getElementById('game-filters'));
 
         DATASET.setupGameHeading(document.querySelector("#game-heading h1"));
         setupSettingsCollections(cachedSettings);
         setupSelector(cachedSettings);
     });
+}
+
+function updateDocumentTitle() {
+    document.title = DATASET ? `${DATASET.name} - Kadmos` : "Kadmos";
 }
 
 function setupTerms() {
@@ -231,7 +236,7 @@ function setupSelector(settings = {}) {
     }
     SELECTOR.setActiveForms(getActiveForms(), {scale: false});
     if (DATASET.hasVariantSetting()) {
-        void SELECTOR.setItemIndices(DATASET.getVariantItemIndices(FILTER_SETTINGS.getValue("variant")));
+        DATASET.applyVariant(SELECTOR_SETTINGS.getValue("variant"), SELECTOR);
     }
 
     SELECTOR.updateListeners.push(
@@ -243,25 +248,25 @@ function setupSelector(settings = {}) {
 }
 
 function setupSettingsCollections(settings) {
-    FILTER_SETTINGS.replaceSelf(DATASET.getFilterSettings(settings));
+    SELECTOR_SETTINGS.replaceSelf(DATASET.getFilterSettings(settings));
     DATASET_GAME_SETTINGS.replaceSelf(DATASET.getGameSettings(settings));
 
-    FILTER_SETTINGS.addUpdateListener(saveSettings);
+    SELECTOR_SETTINGS.addUpdateListener(saveSettings);
     DATASET_GAME_SETTINGS.addUpdateListener(saveSettings);
 
     if (DATASET.hasFormsSetting()) {
-        FILTER_SETTINGS.getSetting("forms").updateListeners.push(value => DOMHelper.transition(() => {
-            SELECTOR.setActiveForms(DATASET.getFormsFromSettingsValue(value));
+        SELECTOR_SETTINGS.addUpdateListener("forms", forms => DOMHelper.transition(() => {
+            DATASET.applyFormsSetting(forms, SELECTOR);
         }, ["selector-forms"]));
     }
 
     if (DATASET.hasVariantSetting()) {
-        FILTER_SETTINGS.getSetting("variant").updateListeners.push(value => DOMHelper.transition(() => {
-            SELECTOR.setItemIndices(DATASET.getVariantItemIndices(value));
+        SELECTOR_SETTINGS.addUpdateListener("variant", variant => DOMHelper.transition(() => {
+            DATASET.applyVariant(variant, SELECTOR);
         }));
     }
 
-    document.getElementById("dataset-filter-settings").replaceChildren(...FILTER_SETTINGS.nodeList());
+    document.getElementById("dataset-filter-settings").replaceChildren(...SELECTOR_SETTINGS.nodeList());
     document.getElementById("dataset-game-settings").replaceChildren(...DATASET_GAME_SETTINGS.nodeList());
 }
 
@@ -269,7 +274,7 @@ function getActiveForms() {
     if (!DATASET.hasFormsSetting()) {
         return DATASET.formsData.keys;
     }
-    return DATASET.getFormsFromSettingsValue(FILTER_SETTINGS.getValue("forms"));
+    return DATASET.getFormsFromSettingsValue(SELECTOR_SETTINGS.getValue("forms"));
 }
 
 function getActiveProperties() {
@@ -277,10 +282,7 @@ function getActiveProperties() {
 }
 
 function checkPagesNextButton() {
-    DOMHelper.setAttrs(
-        document.querySelector('.pages-next-button'),
-        {disabled: SELECTOR.activeQuizItemCount() === 0}
-    );
+    document.querySelector('#game-settings-pages .pages-next-button').disabled = SELECTOR.activeQuizItemCount() === 0;
 }
 
 
@@ -356,7 +358,7 @@ function saveSettings() {
 
     const data = Object.assign(
         {items: Base64Helper.encodeBase64BoolArray(SELECTOR.itemsActive)},
-        FILTER_SETTINGS.getValues(),
+        SELECTOR_SETTINGS.getValues(),
         DATASET_GAME_SETTINGS.getValues()
     );
 

@@ -19,14 +19,10 @@ const BLOCK_KEYS = [
 export default class ItemSelector {
     /**
      * @param {DatasetItem[]} items
-     * @param {Dataset} dataset
      */
-    constructor(items, dataset) {
+    constructor(items) {
         this.items = items;
         this.itemIndices = new Set(ArrayHelper.range(items.length));
-        this.dataset = dataset;
-        this.formsData = dataset.formsData;
-        this.selectorData = dataset.selectorData;
         this.updateListeners = new FunctionStack();
         /** @type {{lang: string?, dir: string?}} */
         this.metadata = {};
@@ -45,15 +41,33 @@ export default class ItemSelector {
         this.onBlockRangePointerUpCancel = this.onBlockRangePointerUpCancel.bind(this);
     }
 
-    setup(node = null) {
-        this.node = node || DOMHelper.createElement("div.item-selector");
-        this.node.dataset.dataset = this.dataset.key;
+    /**
+     * @param {?HTMLElement} [node]
+     * @param {?string} [datasetKey]
+     * @param {?(string[])} [labels]
+     * @param {?(Record[])} [blocks]
+     * @param {?Record} style
+     */
+    setup({node = null, datasetKey = null, labels = null, blocks = null, style = null}) {
+        this.setupNode({node: node, datasetKey: datasetKey})
+        blocks ||= [{mode: "flex"}];
 
-        this.setupButtons();
-        this.setupBlocks();
+        this.setupButtons(labels);
+        this.setupBlocks(blocks, style);
 
         const observer = new ResizeObserver(this.scaleButtons.bind(this));
         observer.observe(node);
+    }
+
+    /**
+     * @param {?HTMLElement} [node]
+     * @param {?string} [datasetKey]
+     */
+    setupNode({node = null, datasetKey = null}) {
+        this.node = node || DOMHelper.createElement("div.item-selector");
+        if (datasetKey) {
+            this.node.dataset.dataset = datasetKey;
+        }
     }
 
     assertSetup() {
@@ -87,21 +101,20 @@ export default class ItemSelector {
         this.node.querySelectorAll(".symbol-string").forEach(elem => FontHelper.setFont(elem, font));
     }
 
-    setupButtons() {
+    setupButtons(labels = null) {
         /** @type {boolean[]} */
         this.itemsActive = new Array(this.items.length).fill(true);
         /** @type {HTMLElement[]} */
-        this.buttons = this.items.map((item, index) => this.getItemButton(item, index));
+        this.buttons = this.items.map((item, index) => {
+            return labels ? this.getItemButton(item, index, labels[index]) : this.getItemButton(item, index);
+        });
     }
 
-    setupBlocks() {
-        const blocks =
-            this.selectorData.block
-                ? [this.selectorData.block]
-                : this.selectorData.blocks
-                    ? this.selectorData.blocks
-                    : [{mode: "flex"}];
-
+    /**
+     * @param {Record[]} blocks
+     * @param {?Record} style
+     */
+    setupBlocks(blocks, style = null) {
         this.blocks = blocks.map(data => ObjectHelper.onlyKeys(data, BLOCK_KEYS, true));
 
         const blockIndices = this.processIndexSubsets(
@@ -132,7 +145,7 @@ export default class ItemSelector {
             }
 
             block.node.setAttribute("data-block-index", blockIndex.toString());
-            this.applyBlockStyle(block, this.selectorData.style, block.style);
+            this.applyBlockStyle(block, style, block.style);
             this.processListenerIndices(block);
             this.setupBlockListeners(block);
 
@@ -745,21 +758,11 @@ export default class ItemSelector {
         }
 
         for (const block of this.blocks) {
-            const buttons = block.indices
-                .filter(index => index !== null)
-                .map(index => this.buttons[index])
-                .filter(button => button.getAttribute("aria-disabled") !== "true");
+            DOMHelper.scaleAllToFit(block.node.querySelectorAll(".symbol"), {uniform: 0.75});
 
-            DOMHelper.scaleAllToFit(
-                buttons.map(button => button.querySelector(".symbol")),
-                {containers: buttons, uniform: 0.75}
-            );
-
-            if (this.selectorData.label) {
-                DOMHelper.scaleAllToFit(
-                    buttons.map(button => button.querySelector(".selector-item-label")),
-                    {containers: buttons, uniform: 0.75}
-                );
+            const labels = block.node.querySelectorAll(".selector-item-label");
+            if (labels.length > 0) {
+                DOMHelper.scaleAllToFit(labels, {uniform: 0.75});
             }
         }
     }
@@ -814,9 +817,10 @@ export default class ItemSelector {
     /**
      * @param {DatasetItem} item
      * @param {number} index
+     * @param {?string} [label]
      * @returns {HTMLElement}
      */
-    getItemButton(item, index) {
+    getItemButton(item, index, label = null) {
         const button = DOMHelper.createElement("div.selector-item-button");
         const id = DOMHelper.uniqueIdPrefix("selectorButton") + index.toString();
         DOMHelper.setAttrs(button, {
@@ -829,17 +833,10 @@ export default class ItemSelector {
 
         button.append(this.getSymbolElement(item));
 
-        if (this.selectorData.label) {
-            const label = DOMHelper.createElement("span.selector-item-label");
-            const labelData = this.selectorData.label;
-            let labelContent = item.properties[labelData.property];
-            if (labelData.splitFirst ?? true) {
-                const splitter = labelData.splitter ?? "[,;/]";
-                labelContent = labelContent.split(new RegExp(`\s*(${splitter})\s*`))[0];
-            }
-
-            label.textContent = labelContent;
-            button.append(label);
+        if (label) {
+            const labelElement = DOMHelper.createElement("span.selector-item-label");
+            labelElement.textContent = label;
+            button.append(labelElement);
         }
 
         button.dataset.index = index.toString();

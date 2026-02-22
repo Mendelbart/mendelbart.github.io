@@ -25,7 +25,7 @@ const FONT_PROPERTY_KEYS = {
 const FONT_TRANSFORM_PROPERTIES = ["shift", "scale", "letterSpacing"];
 
 /**
- * @param {string | Object} family
+ * @param {string | Record} family
  * @returns {Promise<FontFace>}
  */
 export function loadFont(family) {
@@ -46,7 +46,7 @@ export function loadFont(family) {
 }
 
 /**
- * @param {(string | Object)[]} families
+ * @param {(string | Record)[]} families
  * @returns {Promise<Awaited<FontFace>[]>}
  */
 export function loadFonts(families) {
@@ -111,7 +111,7 @@ function digestFontVariationSettings(variationSettings) {
 
 
 /**
- * Also used as `setFont(element, properties)` with a properties.family entry.
+ * Also used as `setFont(element, properties)` with a `properties.family` entry.
  *
  * @param {HTMLElement} element
  * @param {string | Object} family

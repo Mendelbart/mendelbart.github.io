@@ -461,9 +461,8 @@ export function scaleToFit(element, options = {}) {
 
 
 /**
- * @param {HTMLElement[]} elements
+ * @param {HTMLElement[] | NodeListOf<HTMLElement>} elements
  * @param options
- * @param {?HTMLElement[]} [options.containers] - default parentElements of the elements.
  * @param {"width" | "height" | "both"} [options.dimension="width"]
  * @param {"content-box" | "padding-box" | "border-box"} [options.elementBox="border-box"]
  * @param {"content-box" | "padding-box" | "border-box"} [options.containerBox="content-box"]
@@ -471,24 +470,12 @@ export function scaleToFit(element, options = {}) {
  * @param {number} [options.uniform=0]
  */
 export function scaleAllToFit(elements, options = {}) {
+    if (!Array.isArray(elements)) {
+        elements = Array.from(elements);
+    }
+
     const uniformFactor = options.uniform ?? 0;
-    const containers = options.containers ?? elements.map(element => element.parentElement);
-    if ("container" in options) {
-        console.warn("Can't set single container for scaleAllToFit.");
-        delete options.container;
-    }
-
-    if (!Array.isArray(containers) || containers.length !== elements.length) {
-        console.error("Containers and elements length don't match.");
-        return;
-    }
-
-    const scales = elements.map(
-        (element, index) => computeScaleToFit(
-            element,
-            Object.assign(options, {container: containers[index]})
-        )
-    );
+    const scales = elements.map(el => computeScaleToFit(el, options));
 
     if (uniformFactor > 0) {
         const minScale = Math.min(...scales);
@@ -522,52 +509,26 @@ function getScale(elementSize, containerSize, grow = false) {
     return grow ? scale : Math.min(scale, 1);
 }
 
-export function printError(error) {
-    const searchParams = new URLSearchParams(window.location.search);
-    if (searchParams.has("debug", "true")) {
-        document.getElementById("errorlog").append(error.toString(), document.createElement("br"));
-    }
-    console.error(error);
-}
-
-export function log(...args) {
-    const searchParams = new URLSearchParams(window.location.search);
-    if (searchParams.has("debug", "true")) {
-        document.getElementById("errorlog").append(...args.map(arg => arg.toString()), document.createElement("br"));
-    }
-    console.log(...args);
-}
-
-
 /**
  * @param {HTMLElement} container
  */
 export function setupPages(container) {
-    showPage(container.querySelector('.page-content'), {container: container, transition: false});
+    showPage(container.querySelector('.page-content'), container);
 
-    container.querySelector('.pages-next-button').addEventListener('click', () => {
-        showPage(document.getElementById(container.dataset.openPage).nextElementSibling, {container: container});
-    });
-    container.querySelector('.pages-back-button').addEventListener('click', () => {
-        showPage(document.getElementById(container.dataset.openPage).previousElementSibling, {container: container});
-    });
+    container.querySelector('.pages-next-button').addEventListener('click', () => transition(() =>
+        showPage(document.getElementById(container.dataset.openPage).nextElementSibling, container)
+    ));
+    container.querySelector('.pages-back-button').addEventListener('click', () => transition(() =>
+        showPage(document.getElementById(container.dataset.openPage).previousElementSibling, container)
+    ));
 }
 
 /**
  * @param {HTMLElement} page
- * @param {HTMLElement} [container]
- * @param {boolean} [transition]
+ * @param {HTMLElement?} [container]
  */
-export function showPage(page, {container = null, transition = true} = {}) {
-    const callback = () => _showPage(page, container ?? page.closest('.pages-container'));
-    if (transition) {
-        document.startViewTransition(callback);
-    } else {
-        callback();
-    }
-}
-
-function _showPage(page, container) {
+export function showPage(page, container = null) {
+    container ??= page.closest(".pages-container");
     hide(container.querySelectorAll('.page-content'));
     hide(container.querySelectorAll('.page-heading'));
     show(page);

@@ -81,7 +81,7 @@ export class Dataset {
                 this._cache[key] = dataset;
                 return dataset;
             })
-            .catch(DOMHelper.printError);
+            .catch(err => console.error(err));
     }
 
     processMetadata(metadata) {
@@ -165,13 +165,6 @@ export class Dataset {
         );
     }
 
-    getFormsFromSettingsValue(value) {
-        if (typeof value === "string") {
-            value = [value];
-        }
-        return value.map(key => this.formsData.setting[key].keys ?? [key]).flat();
-    }
-
     variantSetting(selected = null) {
         return ValueElement.createSelect(
             ObjectHelper.map(this.variantsData.variants, (variant) => variant.label),
@@ -215,8 +208,18 @@ export class Dataset {
     }
 
     getItemSelector(node = null) {
-        const selector = new ItemSelector(this.items, this);
-        selector.setup(node);
+        const blocks = this.selectorData.block ? [this.selectorData.block] : this.selectorData.blocks;
+        const labels = this.selectorData.label ? this.items.map(item => item.getSelectorLabel(this.selectorData.label)) : null;
+
+        const selector = new ItemSelector(this.items);
+        selector.setup({
+            node: node,
+            datasetKey: this.key,
+            blocks: blocks,
+            labels: labels,
+            style: this.selectorData.style ?? null
+        });
+
         selector.setMetadata(ObjectHelper.onlyKeys(this.metadata, ["lang", "dir"]));
         if (this.selectorData.defaultActive) {
             selector.setActive(this.selectorData.defaultActive);
@@ -226,8 +229,27 @@ export class Dataset {
         return selector;
     }
 
-    getVariantItemIndices(key) {
-        return ArrayHelper.filterIndices(this.items, item => item.variants.has(key));
+    /**
+     * @param {string} variant
+     * @param {ItemSelector} selector
+     */
+    applyVariant(variant, selector) {
+        selector.setItemIndices(this.getVariantItemIndices(variant));
+    }
+
+    getVariantItemIndices(variant) {
+        return ArrayHelper.filterIndices(this.items, item => item.variants.has(variant));
+    }
+
+    applyFormsSetting(forms, selector) {
+        selector.setActiveForms(this.getFormsFromSettingsValue(forms));
+    }
+
+    getFormsFromSettingsValue(value) {
+        if (typeof value === "string") {
+            value = [value];
+        }
+        return value.map(key => this.formsData.setting[key].keys ?? [key]).flat();
     }
 
     /**
@@ -593,5 +615,13 @@ class DatasetItem {
      */
     countQuizItems(forms) {
         return forms.reduce((acc, form) => form in this.displayForms ? acc + 1 : acc, 0);
+    }
+
+    getSelectorLabel({property = null, splitFirst = true, splitter = "[,;/]"}) {
+        const str = this.properties[property];
+        if (splitFirst) {
+            return str.split(new RegExp(`\s*(${splitter})\s*`))[0];
+        }
+        return str;
     }
 }
