@@ -17,7 +17,12 @@
     "style": {"buttonMinWidth": "4ch", "buttonMaxWidth": "7ch", "labelGap": "0.15rem"}
   },
   "properties": {
-    "name": {"type": "list", "maxDist": 1, "label": "Name", "active": true},
+    "name": {"type": "list", "maxDist": 1, "label": "Name", "active": true,
+      "substitutions": {
+        "ð": "th",
+        "ʀ": "r"
+      }
+    },
     "meaning": {"type": "list", "maxDist": 1, "label": "Meaning", "active":  false}
   },
   "variants": {
