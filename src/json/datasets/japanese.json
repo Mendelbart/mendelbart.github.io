@@ -1,4 +1,5 @@
 {
+  "key": "japanese",
   "name": "Japanese Kana",
   "metadata": {
     "gameHeading": {"string": "カドモス", "font": {"weight": 800}},
@@ -9,12 +10,11 @@
     "sans": {"family": "Noto Sans Japanese", "label": "Sans", "default": true},
     "serif": {"family": "Noto Serif Japanese", "label": "Serif"}
   },
-  "propsData": {
-    "roman": {"type": "list", "label": "Transliteration", "maxDist": 0, "identifier": true}
+  "properties": {
+    "roman": {"type": "list", "label": "Transliteration", "maxDist": 0}
   },
-  "selectorData": {
+  "selector": {
     "font": {"key": "sans", "weight": 600},
-    "label": false,
     "blocks": [
       {
         "mode": "grid",
@@ -42,19 +42,17 @@
     "style": {"buttonMaxWidth": "4ch"},
     "defaultActive": "block0"
   },
-  "formsData": {
+  "forms": {
     "label": "Kana",
-    "keys": ["hiragana", "katakana"],
-    "setting": {
-      "hiragana": {"label": "Hiragana", "active": true},
-      "katakana": {"label": "Katakana", "active": false}
+    "data": {
+      "hira": "Hiragana",
+      "kata": "Katakana"
     },
     "exclusive": true
   },
-  "symbolsData": {
-    "format": "rows",
-    "template": ["display", "p:roman"],
-    "rows": [
+  "items": {
+    "properties": ["roman"],
+    "data": [
       ["あア", "a"],
       ["いイ", "i"],
       ["うウ", "u"],

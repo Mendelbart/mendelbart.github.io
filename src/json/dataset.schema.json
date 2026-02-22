@@ -1,9 +1,13 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://example.com/dataset.schema.json",
-  "title": "Dataset",
+  "title": "Kadmos Dataset",
   "type": "object",
   "properties": {
+    "key": {
+      "type": "string",
+      "description": "Unique key for this script dataset. Preferably from the <a href=\"https://www.iana.org/assignments/language-subtag-registry/language-subtag-registry\">IANA Language Subtag Registry</a>."
+    },
     "name": {
       "type": "string",
       "description": "Name of the dataset"
@@ -44,15 +48,29 @@
           "type": "object",
           "description": "Specify what the equivalent of e.g. \"letter\" and \"letters\" in this font are called.",
           "properties": {
-            "letter": {
-              "type": "string"
-            },
-            "letters": {
-              "type": "string"
-            }
+            "letter": {"type": "string", "default": "letter"},
+            "letters": {"type": "string", "description": "Default: terms.letter + 's'"}
           }
         }
-      }
+      },
+      "patternProperties": {
+        "^_.+$": {"type": "string"}
+      },
+      "required": ["gameHeading"],
+      "additionalProperties": false
+    },
+    "languages": {
+      "type": "object",
+      "properties": {
+        "keys": {
+          "type": "array",
+          "items": {"type": "string"},
+          "description": "Language subtags. In items, use \"p:PROPERTY_SUBTAG\" (e.g. \"p:name_de\") as key to specify language-specific property values."
+        },
+        "default": {"type": "string"}
+      },
+      "required": ["keys"],
+      "additionalProperties": false
     },
     "fonts": {
       "type": "object",
@@ -60,9 +78,7 @@
       "patternProperties": {
         "^[a-z]+$": {
           "type": "object",
-          "allOf": [{
-            "$ref": "#/$defs/fontProperties"
-          }],
+          "allOf": [{"$ref": "#/$defs/fontProperties"}],
           "properties": {
             "family": {
               "type": "string",
@@ -82,15 +98,13 @@
       },
       "additionalProperties": false
     },
-    "selectorData": {
+    "selector": {
       "type": "object",
       "oneOf": [
         {},
         {
           "properties": {
-            "block": {
-              "$ref": "#/$defs/selectorBlock"
-            }
+            "block": {"$ref": "#/$defs/selectorBlock"}
           },
           "required": ["block"]
         },
@@ -98,112 +112,102 @@
           "properties": {
             "blocks": {
               "type": "array",
-              "items": {
-                "$ref": "#/$defs/selectorBlock"
-              }
+              "items": {"$ref": "#/$defs/selectorBlock"}
             }
           },
           "required": ["blocks"]
         }
       ],
       "properties": {
-        "font": {
-          "$ref": "#/$defs/fontRef"
-        },
+        "font": {"$ref": "#/$defs/fontRef"},
         "label": {
-          "anyOf": [
-            {
-              "const": false
+          "type": "object",
+          "description": "Settings for the label underneath letters in the selector. If not set, these won't appear.",
+          "properties": {
+            "property": {
+              "type": "string",
+              "description": "Which property to label the items with."
             },
-            {
-              "type": "object",
-              "description": "Settings for the label underneath letters in the selector. If not set, these won't appear.",
-              "properties": {
-                "property": {
-                  "type": "string",
-                  "description": "Which property to label the items with."
-                },
-                "splitFirst": {
-                  "type": "boolean",
-                  "description": "If true, the property value will be split using the splitter value, and only the first part will be used as a label. E.g. for the letter \"Aleph/Alef\", the label string will be \"Aleph\"",
-                  "default": true
-                },
-                "splitter": {
-                  "type": "string",
-                  "default": "[,;/]"
-                }
-              },
-              "required": ["property"]
+            "splitFirst": {
+              "type": "boolean",
+              "description": "If true, the property value will be split using the splitter value, and only the first part will be used as a label. E.g. for the letter \"Aleph/Alef\", the label string will be \"Aleph\"",
+              "default": true
+            },
+            "splitter": {
+              "type": "string",
+              "default": "[,;/]"
             }
-          ]
+          },
+          "required": ["property"]
         },
-        "style": {
-          "$ref": "#/$defs/blockStyle"
-        },
-        "defaultActive": {
-          "pattern": "^(all|none|block\\d+)$"
-        }
+        "style": {"$ref": "#/$defs/blockStyle"},
+        "defaultActive": {"type": "string", "pattern": "^(all|none|block\\d+)$"}
       },
       "additionalProperties": false
     },
-    "displayData": {
+    "game": {
       "type": "object",
       "properties": {
-        "type": {
-          "const": "string"
-        },
         "defaultWeight": {
-          "$ref": "#/$defs/fontWeight"
+          "$ref": "#/$defs/fontWeight",
+          "default": 400
         }
       }
     },
-    "formsData": {
+    "forms": {
       "type": "object",
       "properties": {
-        "label": {
-          "type": "string",
-          "description": "Label of the forms setting. Default \"forms\".",
-          "default": "Forms"
-        },
-        "keys": {
-          "type": "array",
-          "items": {
-            "type": "string",
-            "pattern": "^[a-z]+$"
-          }
-        },
-        "setting": {
+        "data": {
           "type": "object",
           "patternProperties": {
             "^[a-z]+$": {
-              "type": "object",
-              "properties": {
-                "keys": {
-                  "type": "array",
-                  "description": "Reference keys from the keys array to combine multiple forms into one setting value. By default, this will equal the key pointing to this object.",
-                  "items": {
-                    "type": "string",
-                    "pattern": "^[a-z]+$"
-                  }
+              "anyOf": [
+                {
+                  "type": "object",
+                  "oneOf": [
+                    {
+                      "properties": {
+                        "label": {"type": "string"},
+                        "active": {
+                          "type": "boolean",
+                          "default": true
+                        }
+                      },
+                      "required": ["label"]
+                    },
+                    {
+                      "properties": {
+                        "groupWith": {
+                          "type": "string",
+                          "description": "If set, this form will not appear in the settings, but will follow the setting of the given key."
+                        }
+                      },
+                      "required": ["groupWith"]
+                    }
+                  ],
+                  "additionalProperties": false
                 },
-                "label": {
-                  "type": "string"
-                },
-                "active": {
-                  "type": "boolean",
-                  "default": false
-                }
-              },
-              "required": [
-                "label"
-              ]
+                {"type": "string"}
+              ],
+              "description": "A form of letter, e.g. lower- or uppercase."
             }
           }
         },
-        "additionalProperties": false
-      }
+        "label": {
+          "type": "string",
+          "description": "Label of the forms setting. Default \"Forms\".",
+          "default": "Forms"
+        },
+        "exclusive": {
+          "type": "boolean",
+          "description": "If true, you can only select one form to play at a time.",
+          "default": false
+        }
+      },
+      "required": ["data"],
+      "additionalProperties": false
     },
-    "propsData": {
+    "properties": {
       "type": "object",
       "patternProperties": {
         "^[a-z]+$": {
@@ -213,9 +217,7 @@
               "enum": ["list", "string", "integer", "number"],
               "description": "\"list\", \"string\", \"integer\" or \"number\". Type of letter property. This will mostly be \"list\"."
             },
-            "label": {
-              "type": "string"
-            },
+            "label": {"type": "string"},
             "maxDist": {
               "type": "integer",
               "default": 0,
@@ -225,50 +227,96 @@
               "type": "boolean",
               "default": false
             },
-            "identifier": {
-              "type": "boolean",
-              "default": false,
-              "deprecated": true
-            },
             "substitutions": {
               "type": "object",
               "patternProperties": {
-                ".*": {
-                  "type": "string"
-                }
+                ".*": {"type": "string"}
               }
             }
           },
-          "required": ["type", "label"]
+          "required": ["type", "label"],
+          "additionalProperties": false
         }
       },
       "additionalProperties": false
     },
-    "symbolsData": {
+    "variants": {
       "type": "object",
       "properties": {
-        "format": {
-          "const": "rows"
+        "data": {
+          "type": "object",
+          "patternProperties": {
+            "^[a-z]+$": {
+              "anyOf": [
+                {
+                  "type": "object",
+                  "properties": {
+                    "label": {"type": "string"},
+                    "lang": {
+                      "type": "string",
+                      "description": "Modifying the HTML lang attribute of the symbols. By default, the key pointing to this entry is used."
+                    },
+                    "default": {
+                      "type": "boolean",
+                      "default": false
+                    },
+                    "fonts": {
+                      "type": "object",
+                      "description": "Modifying the dataset's fonts entries.",
+                      "patternProperties": {
+                        "^[a-z]+$": {"$ref": "#/$defs/fontRef"}
+                      }
+                    }
+                  }
+                },
+                {"type": "string"}
+              ],
+              "description": "A variant of the script, e.g. the Russian or Bulgarian variant of the Cyrillic script. A string value is equivalent to `{\"label\": value}`."
+            }
+          }
         },
-        "template": {
+        "groups": {
+          "type": "object",
+          "patternProperties": {
+            "^[a-z]+$": {
+              "type": "object",
+              "properties": {
+                "label": {"type":  "string"},
+                "keys": {
+                  "type": "array",
+                  "items": {"type": "string"},
+                  "description": "List of keys from the variants.data field."
+                }
+              }
+            }
+          }
+        }
+      },
+      "required": ["data"],
+      "additionalProperties": false
+    },
+    "items": {
+      "type": "object",
+      "properties": {
+        "symbolType": {
+          "enum": ["string"]
+        },
+        "properties": {
           "type": "array",
-          "description": "Keys to assign the rows of data to. Use `display` for the characters, `p:{PROPERTY}` for properties, `p:{PROPERTY}_{LANG}` for properties of a specific language."
+          "description": "Keys to assign the property entries of data rows to. Use `{PROPERTY}_{LANG}` for properties of a specific language.",
+          "items": {"type": "string"}
         },
-        "rows": {
+        "data": {
           "type": "array",
           "items": {
             "type": "array",
             "prefixItems": [
               {
                 "anyOf": [
-                  {
-                    "type": "string"
-                  },
+                  {"type": "string"},
                   {
                     "type": "array",
-                    "items": {
-                      "type": "string"
-                    }
+                    "items": {"type": "string"}
                   }
                 ]
               }
@@ -281,15 +329,11 @@
                 {
                   "type": "object",
                   "properties": {
-                    "source": {
-                      "type": "string"
-                    },
+                    "source": {"type": "string"},
                     "alts": {
                       "type": "object",
                       "patternProperties": {
-                        ".*": {
-                          "type": "string"
-                        }
+                        ".*": {"type": "string"}
                       }
                     }
                   }
@@ -297,13 +341,16 @@
               ]
             },
             "unevaluatedItems": false
-          }
+          },
+          "description": "Array with [[...displayforms], ...properties] entries matching the template. If first element is a string, it will be split into individual characters for forms. Use a single-item array if this isn't wanted."
         }
-      }
-    },
-    "required": ["name", "metadata", "fonts", "propsData", "selectorData", "symbolsData"],
-    "additionalProperties": false
+      },
+      "required": ["properties", "data"],
+      "additionalProperties": false
+    }
   },
+  "required": ["key", "name", "metadata", "fonts", "properties", "selector", "items"],
+  "additionalProperties": false,
   "$defs": {
     "fontWeight": {
       "type": "integer",
@@ -314,9 +361,7 @@
     "fontProperties": {
       "type": "object",
       "properties": {
-        "weight": {
-          "$ref": "#/$defs/fontWeight"
-        },
+        "weight": {"$ref": "#/$defs/fontWeight"},
         "scale": {
           "type": "number",
           "description": "Scale the font-size by this factor.",
@@ -345,12 +390,10 @@
     "fontRef": {
       "description": "A string input is equivalent to {\"key\": \"{STRING}\"}.",
       "anyOf": [
-        {
-          "type": "string"
-        },
+        {"type": "string"},
         {
           "type": "object",
-          "allOf": [{ "$ref": "#/$defs/fontProperties" }],
+          "allOf": [{"$ref": "#/$defs/fontProperties"}],
           "properties": {
             "key": {
               "type": "string",
@@ -375,9 +418,7 @@
             "$ref": "#/$defs/indicesWithoutGaps"
           }
         },
-        "style": {
-          "$ref": "#/$defs/blockStyle"
-        }
+        "style": {"$ref": "#/$defs/blockStyle"}
       },
       "if": {
         "properties": {
@@ -386,19 +427,13 @@
       },
       "then": {
         "properties": {
-          "indices": {
-            "$ref": "#/$defs/indicesWithGaps"
-          },
+          "indices": {"$ref": "#/$defs/indicesWithGaps"},
           "nColumns": {
             "type": "integer",
             "minimum": 1
           },
-          "columnLabels": {
-            "$ref": "#/$defs/blockLabels"
-          },
-          "rowLabels": {
-            "$ref": "#/$defs/blockLabels"
-          },
+          "columnLabels": {"$ref": "#/$defs/blockLabels"},
+          "rowLabels": {"$ref": "#/$defs/blockLabels"},
           "columnLabelPosition": {
             "enum": ["start", "end", "both"],
             "default": "start"
@@ -422,9 +457,7 @@
       },
       "else": {
         "properties": {
-          "indices": {
-            "$ref": "#/$defs/indicesWithoutGaps"
-          }
+          "indices": {"$ref": "#/$defs/indicesWithoutGaps"}
         }
       }
     },
@@ -447,9 +480,7 @@
             "type": ["string", "integer", "null"]
           }
         },
-        {
-          "type": "string"
-        }
+        {"type": "string"}
       ]
     },
     "blockStyle": {

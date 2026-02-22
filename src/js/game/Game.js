@@ -20,14 +20,16 @@ export class Game {
      * @param {QuizItem[]} items
      * @param {string[]} properties
      * @param {string} language
+     * @param {?string} variant
      */
 
-    constructor(dataset, items, properties, language) {
+    constructor(dataset, items, properties, language, variant = null) {
         this.dataset = dataset;
         this.properties = properties;
         this.language = language;
         this.dealer = new ItemDealer(items);
         this.onFinish = new FunctionStack();
+        this.variant = variant;
 
         this.updateProgressBar();
 
@@ -42,13 +44,17 @@ export class Game {
         });
     }
 
-    setup() {
+    /**
+     * @param {number?} defaultWeight
+     * @returns {Promise<void>}
+     */
+    setup({defaultWeight = null} = {}) {
         this.setupSymbolContainer();
         this.setupInputs();
         this.setupEvals();
         document.getElementById("item-next-button").textContent = "Next";
 
-        return this.setupFontSettings();
+        return this.setupFontSettings(defaultWeight);
     }
 
     getInputMode(propType) {
@@ -61,21 +67,19 @@ export class Game {
 
     setupSymbolContainer() {
         const symbol = document.querySelector("#symbol-current .symbol");
-        symbol.classList.add("symbol-" + this.dataset.displayData.type);
+        symbol.classList.add("symbol-string");
         symbol.setAttribute("lang", this.dataset.metadata.lang);
         symbol.setAttribute("dir", this.dataset.metadata.dir);
     }
 
     setupInputs() {
-        /**
-         * @type {Object<string, HTMLInputElement>}
-         */
         this.inputs = ObjectHelper.mapKeyArrayToValues(this.properties, prop => {
+            /** @type {HTMLInputElement} */
             const input = document.createElement("INPUT");
             DOMHelper.setAttrs(input, {
                 type: "text",
-                inputmode: this.getInputMode(this.dataset.propsData[prop].type),
-                placeholder: this.dataset.propsData[prop].label
+                inputmode: this.getInputMode(this.dataset.properties[prop].type),
+                placeholder: this.dataset.properties[prop].label
             });
             if (this.language && this.language !== "default") {
                 input.setAttribute("lang", this.language);
@@ -125,7 +129,7 @@ export class Game {
 
     loadAndUpdateSymbolFont(key = null) {
         key ??= this.fontSettings.getValue("family");
-        return FontHelper.loadFont(this.dataset.getFont(key)).then(
+        return FontHelper.loadFont(this.dataset.getFont(key, this.variant)).then(
             () => this.updateSymbolFontFamily(key)
         ).catch(err => console.error(err));
     }
@@ -139,12 +143,12 @@ export class Game {
     }
 
     updateSymbolWeightRange(key) {
-        const family = this.dataset.getFont(key).family;
+        const family = this.dataset.getFont(key, this.variant).family;
         const data = FontHelper.getFontData(family);
         /**
          * @type {Slider}
          */
-        const weightRange = this.fontSettings.settings.weight;
+        const weightRange = this.fontSettings.getSetting("weight");
 
         if (data.variationSettings && data.variationSettings.wght) {
             const [min, max] = data.variationSettings.wght.split(" ").map(x => parseInt(x, 10));
@@ -156,9 +160,9 @@ export class Game {
         }
     }
 
-    setupFontSettings() {
-        const weight = this.dataset.displayData.defaultWeight ?? 500
-        const weightSlider = Slider.create(100, 900, weight);
+    setupFontSettings(defaultWeight) {
+        defaultWeight ??= 500;
+        const weightSlider = Slider.create(100, 900, defaultWeight);
         weightSlider.label("Weight");
         this.fontSettings = SettingCollection.createFrom({
             family: this.dataset.fontFamilySetting(),
@@ -170,12 +174,12 @@ export class Game {
         this.fontSettings.addUpdateListener("weight", this.updateSymbolWeight);
         this.fontSettings.addUpdateListener("family", () => DOMHelper.transition(this.loadAndUpdateSymbolFont));
 
-        this.updateSymbolWeight(weight);
+        this.updateSymbolWeight(defaultWeight);
         return this.loadAndUpdateSymbolFont();
     }
 
     setSymbolFont(element, key) {
-        FontHelper.setFont(element, this.dataset.getFont(key));
+        FontHelper.setFont(element, this.dataset.getFont(key, this.variant));
     }
 
     /**
@@ -307,7 +311,7 @@ export class Game {
     referenceItemNode(item, property) {
         const container = DOMHelper.getTemplate("symbolContainer");
         container.classList.add("symbol-reference");
-        container.querySelector('.symbol').classList.add("symbol-" + this.dataset.displayData.type);
+        container.querySelector('.symbol').classList.add("symbol-string");
 
         this.updateItemNode(container, item, property, false);
         return container;

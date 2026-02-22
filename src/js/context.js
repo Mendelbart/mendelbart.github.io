@@ -227,6 +227,7 @@ function setupSelector(settings = {}) {
         SELECTOR.removeListeners();
         SELECTOR.node.remove();
     }
+
     const node = DOMHelper.createElement("div.item-selector");
     document.getElementById('dataset-filter-settings').append(node);
     SELECTOR = DATASET.getItemSelector(node);
@@ -235,7 +236,7 @@ function setupSelector(settings = {}) {
         SELECTOR.setActive(settings.items);
     }
     SELECTOR.setActiveForms(getActiveForms(), {scale: false});
-    if (DATASET.hasVariantSetting()) {
+    if (DATASET.hasVariants()) {
         DATASET.applyVariant(SELECTOR_SETTINGS.getValue("variant"), SELECTOR);
     }
 
@@ -254,13 +255,13 @@ function setupSettingsCollections(settings) {
     SELECTOR_SETTINGS.addUpdateListener(saveSettings);
     DATASET_GAME_SETTINGS.addUpdateListener(saveSettings);
 
-    if (DATASET.hasFormsSetting()) {
+    if (DATASET.hasSetting("forms")) {
         SELECTOR_SETTINGS.addUpdateListener("forms", forms => DOMHelper.transition(() => {
             DATASET.applyFormsSetting(forms, SELECTOR);
         }, ["selector-forms"]));
     }
 
-    if (DATASET.hasVariantSetting()) {
+    if (DATASET.hasVariants()) {
         SELECTOR_SETTINGS.addUpdateListener("variant", variant => DOMHelper.transition(() => {
             DATASET.applyVariant(variant, SELECTOR);
         }));
@@ -271,14 +272,14 @@ function setupSettingsCollections(settings) {
 }
 
 function getActiveForms() {
-    if (!DATASET.hasFormsSetting()) {
-        return DATASET.formsData.keys;
+    if (!DATASET.hasSetting("forms")) {
+        return Object.keys(DATASET.forms.data);
     }
     return DATASET.getFormsFromSettingsValue(SELECTOR_SETTINGS.getValue("forms"));
 }
 
 function getActiveProperties() {
-    return DATASET_GAME_SETTINGS.getDefault("properties", Object.keys(DATASET.propsData));
+    return DATASET_GAME_SETTINGS.getDefault("properties", Object.keys(DATASET.properties));
 }
 
 function checkPagesNextButton() {
@@ -303,8 +304,9 @@ function startGame() {
         language
     );
     const referenceItems = DATASET.getReferenceItems(properties, language);
+    const variant = DATASET.hasVariants() ? SELECTOR_SETTINGS.getValue("variant") : null;
 
-    GAME = new Game(DATASET, items, properties, language);
+    GAME = new Game(DATASET, items, properties, language, variant);
 
     const seed = GENERIC_GAME_SETTINGS.getValue("seed");
     if (seed) {
@@ -316,7 +318,7 @@ function startGame() {
         setPlaying(false);
     });
 
-    GAME.setup().then(() => {
+    GAME.setup({defaultWeight: DATASET.gameConfig.defaultWeight}).then(() => {
         setPlaying(true);
         GAME.newRound();
         GAME.focus();

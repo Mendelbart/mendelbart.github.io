@@ -1,21 +1,21 @@
 {
-  "_source": "https://en.wikipedia.org/wiki/List_of_chemical_elements",
+  "key": "elements",
   "name": "Atomic Elements",
   "metadata": {
+    "_source": "https://en.wikipedia.org/wiki/List_of_chemical_elements",
     "gameHeading": {"string": "KAtMoS", "font": "sans"},
     "terms": {"letter": "element"}
   },
-  "languageData": {
-    "languages": ["en", "de"],
+  "languages": {
+    "keys": ["en", "de"],
     "default": "en"
   },
   "fonts": {
     "sans": {"family": "Noto Sans", "scale": 0.85, "shift": 0.1, "label": "Sans", "letterSpacing": "-.07ch", "default": true},
     "serif": {"family": "Noto Serif", "scale": 0.85, "shift": 0.1, "label": "Serif", "letterSpacing": "-.07ch"}
   },
-  "selectorData": {
+  "selector": {
     "font": {"key": "sans", "weight": 700, "scale": 1, "shift": 0, "lineHeight": 1.25},
-    "label": false,
     "blocks": [
       {
         "mode": "grid",
@@ -37,18 +37,16 @@
     "style": {"symbolSize": 1, "buttonMaxWidth": "4ch"},
     "defaultActive": "block0"
   },
-  "displayData": {
-    "type": "string",
+  "game": {
     "defaultWeight": 700
   },
-  "propsData": {
-    "name": {"type": "list", "maxDist": 1, "label": "Name", "identifier":  true, "active": true},
-    "no": {"type": "number", "maxDist": 0, "label": "Atomic Number", "identifier": true}
+  "properties": {
+    "name": {"type": "list", "maxDist": 1, "label": "Name", "active": true},
+    "no": {"type": "number", "maxDist": 0, "label": "Atomic Number"}
   },
-  "symbolsData": {
-    "format": "rows",
-    "template": ["display", "p:no", "p:name", "p:name_de"],
-    "rows": [
+  "items": {
+    "properties": ["no", "name", "name_de"],
+    "data": [
       ["H", 1, "Hydrogen", "Wasserstoff"],
       ["He", 2, "Helium"],
       ["Li", 3, "Lithium"],

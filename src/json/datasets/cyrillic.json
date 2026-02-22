@@ -1,4 +1,5 @@
 {
+  "key": "cyrillic",
   "name": "Cyrillic",
   "metadata": {
     "_source": "https://en.wikipedia.org/wiki/Cyrillic_alphabets#Common_letters",
@@ -8,28 +9,27 @@
     "serif": {"family": "Noto Serif", "label": "Serif", "default": true},
     "sans": {"family": "Noto Sans", "label": "Sans"}
   },
-  "propsData": {
-    "name": {"type": "list", "maxDist": 0, "label": "Name", "active": true, "identifier": true}
+  "properties": {
+    "name": {"type": "list", "maxDist": 0, "label": "Name", "active": true}
   },
-  "formsData": {
+  "forms": {
     "label": "Case",
-    "keys": ["upper", "lower"],
-    "setting": {
-      "upper": {"label": "Uppercase", "active": true},
-      "lower": {"label": "Lowercase", "active": true}
+    "data": {
+      "upper": "Uppercase",
+      "lower": "Lowercase"
     }
   },
-  "selectorData": {
+  "selector": {
     "font": "serif",
     "style": {"buttonWidth": "6.25ch"}
   },
-  "variantsData": {
-    "variants": {
+  "variants": {
+    "data": {
       "bg": "Bulgarian",
       "sr": "Serbian",
       "cnr": "Montenegrin",
       "mk": "Macedonian",
-      "ru": "Russian",
+      "ru": {"label": "Russian", "default": true},
       "be": "Belarusian",
       "uk": "Ukrainian",
       "kk": "Kazakh",
@@ -41,66 +41,64 @@
       "ssl": {"label": "South Slavic languages", "keys": ["bg", "sr", "cnr", "mk"]},
       "esl": {"label": "East Slavic languages", "keys": ["ru", "be", "uk"]},
       "tur": {"label": "Turkic languages", "keys": ["kk", "ky", "tt", "uz"]}
-    },
-    "default": "ru"
+    }
   },
-  "symbolsData": {
-    "format": "rows",
-    "template": ["display", "p:name", "variants"],
-    "rows": [
-      ["Аа", "A", "*"],
-      ["Бб", "Be", "*"],
-      ["Вв", "Ve", "*"],
-      ["Гг", "Ge, Ghe, He", "*"],
-      ["Ґґ", "Ge/Ghe with upturn", "uk"],
-      ["Дд", "De", "*"],
-      ["Ђђ", "Dje", "sr,cnr"],
-      ["Ѓѓ", "Gje", "mk"],
-      ["Ее", "E, Ye, Je, Ie", "*"],
-      ["Ёё", "Yo, Jo, Io", "*-uk,bg,sr,cnr,mk"],
-      ["Єє", "Round Ye", "uk"],
-      ["Жж", "Zhe, Zha, Zhu", "*"],
-      ["Зз", "Ze", "*"],
-      [["З́", "з́"] , "Zje", "cnr"],
-      ["Ѕѕ", "Dze", "mk"],
-      ["Ии", "I", "*"],
-      ["Іі", "dotted i", "be,uk,kk"],
-      ["Її", "Yi, Ji", "uk"],
-      ["Јј", "Je", "sr,cnr,mk"],
-      ["Йй", "Yot, Jot", "*"],
-      ["Кк", "Ka", "*"],
-      ["Лл", "El", "*"],
-      ["Љљ", "Lje", "sr"],
-      ["Мм", "Em", "*"],
-      ["Нн", "En", "*"],
-      ["Ңң", "En with descender", "kk,ky,tt"],
-      ["Њњ", "Nje, Nye", "sr,cnr,mk"],
-      ["Оо", "O", "*"],
-      ["Өө", "Oe", "kk,ky,tt"],
-      ["Пп", "Pe", "*"],
-      ["Рр", "Er", "*"],
-      ["Сс", "Es", "*"],
-      [["С́", "с́"], "Sje", "cnr"],
-      ["Тт", "Te", "*"],
-      ["Ћћ", "Tshe", "sr,cnr"],
-      ["Ќќ", "Kje", "mk"],
-      ["Уу", "U", "*"],
-      ["Ўў", "short U", "be"],
-      ["Ұұ", "Kazakh short U", "kk"],
-      ["Фф", "Ef, Fe", "*"],
-      ["Хх", "Kha, Khe, Xe, Ha", "*"],
-      ["Һһ", "Ha, He", "kk,tt"],
-      ["Цц", "Tse, Ce", "*"],
-      ["Чч", "Che", "*"],
-      ["Џџ", "Dzhe", "sr,cnr,mk"],
-      ["Шш", "Sha", "*"],
-      ["Щщ", "Shcha, Shta, Scha", "*-sr,cnr,mk,be"],
-      ["Ъъ", "Er golyam, hard sign", "bg,ru,kk,ky,tt"],
-      ["Ыы", "Yeru, Eru", "ru,be,kk,ky,tt"],
-      ["Ьь", "soft sign", "*-sr,cnr,mk"],
-      ["Ээ", "E", "ru,be,kk,ky,tt"],
-      ["Юю", "Yu, Ju", "*-sr,cnr,mk"],
-      ["Яя", "Ya, Ia, Ja", "*-sr,cnr,mk"]
+  "items": {
+    "properties": ["name"],
+    "data": [
+      ["Аа", "*", "A"],
+      ["Бб", "*", "Be"],
+      ["Вв", "*", "Ve"],
+      ["Гг", "*", "Ge, Ghe, He"],
+      ["Ґґ", "uk", "Ge/Ghe with upturn"],
+      ["Дд", "*", "De"],
+      ["Ђђ", "sr,cnr", "Dje"],
+      ["Ѓѓ", "mk", "Gje"],
+      ["Ее", "*", "E, Ye, Je, Ie"],
+      ["Ёё", "*-uk,bg,sr,cnr,mk", "Yo, Jo, Io"],
+      ["Єє", "uk", "Round Ye"],
+      ["Жж", "*", "Zhe, Zha, Zhu"],
+      ["Зз", "*", "Ze"],
+      [["З́", "з́"], "cnr", "Zje"],
+      ["Ѕѕ", "mk", "Dze"],
+      ["Ии", "*", "I"],
+      ["Іі", "be,uk,kk", "dotted i"],
+      ["Її", "uk", "Yi, Ji"],
+      ["Јј", "sr,cnr,mk", "Je"],
+      ["Йй", "*", "Yot, Jot"],
+      ["Кк", "*", "Ka"],
+      ["Лл", "*", "El"],
+      ["Љљ", "sr", "Lje"],
+      ["Мм", "*", "Em"],
+      ["Нн", "*", "En"],
+      ["Ңң", "kk,ky,tt", "En with descender"],
+      ["Њњ", "sr,cnr,mk", "Nje, Nye"],
+      ["Оо", "*", "O"],
+      ["Өө", "kk,ky,tt", "Oe"],
+      ["Пп", "*", "Pe"],
+      ["Рр", "*", "Er"],
+      ["Сс", "*", "Es"],
+      [["С́", "с́"], "cnr", "Sje"],
+      ["Тт", "*", "Te"],
+      ["Ћћ", "sr,cnr", "Tshe"],
+      ["Ќќ", "mk", "Kje"],
+      ["Уу", "*", "U"],
+      ["Ўў", "be", "short U"],
+      ["Ұұ", "kk", "Kazakh short U"],
+      ["Фф", "*", "Ef, Fe"],
+      ["Хх", "*", "Kha, Khe, Xe, Ha"],
+      ["Һһ", "kk,tt", "Ha, He"],
+      ["Цц", "*", "Tse, Ce"],
+      ["Чч", "*", "Che"],
+      ["Џџ", "sr,cnr,mk", "Dzhe"],
+      ["Шш", "*", "Sha"],
+      ["Щщ", "*-sr,cnr,mk,be", "Shcha, Shta, Scha"],
+      ["Ъъ", "bg,ru,kk,ky,tt", "Er golyam, hard sign"],
+      ["Ыы", "ru,be,kk,ky,tt", "Yeru, Eru"],
+      ["Ьь", "*-sr,cnr,mk", "soft sign"],
+      ["Ээ", "ru,be,kk,ky,tt", "E"],
+      ["Юю", "*-sr,cnr,mk", "Yu, Ju"],
+      ["Яя", "*-sr,cnr,mk", "Ya, Ia, Ja"]
     ]
   }
 }

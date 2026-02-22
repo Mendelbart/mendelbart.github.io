@@ -1,4 +1,5 @@
 {
+  "key": "phoenician",
   "name": "Phoenician",
   "metadata": {
     "gameHeading": {"string": "\uD802\uDD12\uD802\uDD03\uD802\uDD0C"},
@@ -8,19 +9,18 @@
   "fonts": {
     "sans": {"family": "Noto Sans Phoenician"}
   },
-  "propsData": {
-    "name": {"type": "string", "label": "Name", "maxDist": 1, "identifier": true, "active": true, "substitutions": {"[ʾʿ]*": ""}},
+  "properties": {
+    "name": {"type": "string", "label": "Name", "maxDist": 1, "active": true, "substitutions": {"[ʾʿ]*": ""}},
     "transl": {"type": "string", "label": "Transliteration", "maxDist": 0, "active": false},
     "meaning": {"type": "list", "label": "Meaning", "maxDist": 0, "active": false}
   },
-  "selectorData": {
+  "selector": {
     "label": {"property": "name"},
     "style": {"buttonWidth": "5ch", "symbolSize": 1.5}
   },
-  "symbolsData": {
-    "format": "rows",
-    "template": ["display", "p:name", "p:transl", "p:meaning"],
-    "rows": [
+  "items": {
+    "properties": ["name", "transl", "meaning"],
+    "data": [
       ["𐤀", "ʾālep", "ʾ", "ox, head of cattle"],
       ["𐤁", "bēt", "b", "house"],
       ["𐤂", "gīml", "g", "throwing stick (or camel)"],

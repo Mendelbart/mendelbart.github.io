@@ -1,37 +1,37 @@
 {
+  "key": "greek",
   "name": "Greek",
   "metadata": {
     "gameHeading": {"string": "Κάδμος", "font": {"key": "sans"}},
     "lang": "el"
   },
-  "languageData": {
-    "languages": ["en", "de"],
+  "languages": {
+    "keys": ["en", "de"],
     "default": "en"
   },
   "fonts": {
     "serif": {"family": "Noto Serif", "label": "Serif", "default": true},
     "sans": {"family": "Noto Sans", "label": "Sans"}
   },
-  "propsData": {
-    "name": {"type": "list", "label": "Name", "maxDist": 1, "identifier": true, "active": true}
+  "properties": {
+    "name": {"type": "list", "label": "Name", "maxDist": 1, "active": true}
   },
-  "selectorData": {
-    "font": {"family": "Noto Serif"},
+  "selector": {
+    "font": "serif",
     "label": {"property": "name"},
     "style": {"buttonWidth": "5ch", "symbolSize": 1.35}
   },
-  "formsData": {
+  "forms": {
     "label": "Case",
-    "keys": ["upper", "lower", "final"],
-    "setting": {
-      "upper": {"label": "Uppercase", "active": true},
-      "lower": {"keys": ["lower", "final"], "label": "Lowercase", "active": true}
+    "data": {
+      "upper": "Uppercase",
+      "lower": "Lowercase",
+      "final": {"groupWith": "lower"}
     }
   },
-  "symbolsData": {
-    "format": "rows",
-    "template": ["display", "p:name", "p:name_de"],
-    "rows": [
+  "items": {
+    "properties": ["name", "name_de"],
+    "data": [
       ["Αα", "alpha", "Alpha"],
       ["Ββ", "beta", "Beta"],
       ["Γγ", "gamma", "Gamma"],

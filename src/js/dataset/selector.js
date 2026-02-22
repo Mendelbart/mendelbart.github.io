@@ -811,7 +811,7 @@ export default class ItemSelector {
             this.updateItem(index, active, {updateIfDisabled: true, callUpdateListeners: false});
         }
 
-        this.updateButtonsForms();
+        this.updateButtonsForms({scale: false});
     }
 
     /**
@@ -827,7 +827,7 @@ export default class ItemSelector {
             id: id,
             role: "checkbox",
             tabindex: "0",
-            "aria-checked": "false",
+            "aria-checked": "true",
             "aria-labelledby": id          // setting aria-labelledby to its own content
         });
 

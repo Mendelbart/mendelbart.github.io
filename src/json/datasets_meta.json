@@ -6,5 +6,6 @@
   "greek": {"name": "Greek", "file": "greek.json"},
   "hebrew": {"name": "Hebrew", "file": "hebrew.json"},
   "japanese": {"name": "Japanese Kana", "file": "japanese.json"},
-  "phoenician": {"name": "Phoenician", "file": "phoenician.json"}
+  "phoenician": {"name": "Phoenician", "file": "phoenician.json"},
+  "younger_futhark": {"name": "Younger Futhark", "file": "younger_futhark.json"}
 }

@@ -3,12 +3,13 @@ import {ArrayHelper, ObjectHelper} from "../helpers/helpers.js";
 
 export class QuizItem {
     /**
-     *
+     * @param {"string"} type
      * @param {string} displayString
      * @param {Record<string,ItemProperty>} properties
      * @param {string} form
      */
-    constructor(displayString, properties, form) {
+    constructor(type, displayString, properties, form) {
+        this.type = type;
         this.displayString = displayString;
         this.properties = properties;
         this.form = form;

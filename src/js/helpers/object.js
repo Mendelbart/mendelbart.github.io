@@ -112,6 +112,21 @@ export function mapKeyArrayToValues(keys, callback) {
 }
 
 /**
+ * @template T
+ * @param {string[]} keys
+ * @param {T[]} values
+ * @param {boolean} warnLessValues
+ * @returns {Record<string, T>}
+ */
+export function fromKeysValues(keys, values, warnLessValues = true) {
+    if (warnLessValues && keys.length > values.length) {
+        console.warn("More keys than values.");
+    }
+
+    return Object.fromEntries(values.map((v, i) => [keys[i], v]))
+}
+
+/**
  * @typedef {"none"|"all"|string[]|Record<string,boolean>} SubsetSpecifier
  */
 

@@ -1,4 +1,5 @@
 {
+  "key": "elder_futhark",
   "name": "Elder Futhark",
   "metadata": {
     "gameHeading": {"string": "kadmos", "font": {"shift": 0.16}},
@@ -7,21 +8,20 @@
   "fonts": {
     "junicode": {"family": "Junicode", "styleset": "Elder-futhark", "shift": 0.08, "scale": 1.2}
   },
-  "selectorData": {
+  "selector": {
     "font": {"weight": 700},
     "block": {"mode": "grid", "nColumns": 3, "transpose": true, "columnLabels": [1,2,3], "rangeSelectionMode": "walkColumns"},
     "label": {"property": "name"},
     "style": {"buttonMinWidth": "4ch", "buttonMaxWidth": "7ch", "labelGap": "0.15rem"}
   },
-  "propsData": {
-    "name": {"type": "list", "maxDist": 1, "label": "Name", "identifier": true, "active": true},
+  "properties": {
+    "name": {"type": "list", "maxDist": 1, "label": "Name", "active": true},
     "pron": {"type": "list", "maxDist": 0, "label": "Pronunciation", "active": false},
-    "meaning": {"type": "list", "maxDist": 1, "label": "Meaning", "active":  false, "reference": false}
+    "meaning": {"type": "list", "maxDist": 1, "label": "Meaning", "active":  false}
   },
-  "symbolsData": {
-    "format": "rows",
-    "template": ["display", "p:name", "p:pron", "p:meaning"],
-    "rows": [
+  "items": {
+    "properties": ["name", "pron", "meaning"],
+    "data": [
       ["f", "Fehu", "f", "cattle, wealth"],
       ["u", "Uruz, Ur", "u", "aurochs, wild ox"],
       ["þ", "Thurisaz", "þ, th (/θ/ or /ð/)", "Thunraz/Thor (god)"],

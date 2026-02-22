@@ -3,6 +3,7 @@ import json
 from subprocess import run
 from os import listdir
 from os.path import join
+import re
 
 datasets_dir = "dist/json/datasets"
 source_fonts_dir = "fonts/ttf"
@@ -66,26 +67,12 @@ def main():
         update_charset(game_heading_font, game_heading["string"])
 
 
-        symbols = dataset["symbolsData"]["rows"]
-        if not isinstance(symbols, list):
-            symbols = symbols.values()
+        items = dataset["items"]["data"]
+        if not isinstance(items, list):
+            items = items.values()
 
-        template = False
-        display_index = None
-        if "template" in dataset["symbolsData"]:
-            template = True
-            try:
-                display_index = dataset["symbolsData"]["template"].index("display")
-            except ValueError:
-                raise ValueError("display not in template.")
-
-        for symbol in symbols:
-            if template and isinstance(symbol, list):
-                chars = "".join(symbol[display_index])
-            else:
-                chars = "".join(symbol["display"])
-
-            dataset_chars.update(list(chars))
+        for item in items:
+            dataset_chars.update(list("".join(item[0])))
 
 
         for font_data in dataset["fonts"].values():
@@ -95,9 +82,7 @@ def main():
             update_charset(font_data["family"], dataset_chars)
 
             if "styleset" in font_data:
-                vals = font_data["styleset"]
-                if isinstance(vals, str):
-                    vals = [vals]
+                vals = re.split(r",\s*", font_data["styleset"])
 
                 for val in vals:
                     stylesets[font_data["family"]].add(fonts[font_data["family"]]["styleset"][val])
