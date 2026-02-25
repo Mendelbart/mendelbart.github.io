@@ -19,37 +19,32 @@ export default class SelectorBlock {
          * @readonly
          * @type {*[]}
          */
-        this.items = items;
+        if (!Array.isArray(items)) {
+            throw new Error("Invalid argument: SelectorBlock.items must be an array.");
+        }
 
-        /**
-         * @readonly
-         * @type {HTMLDivElement}
-         */
-        this.node = DOMHelper.createElement("div.selector-block");
+        this.items = items;
         this.updateListeners = new FunctionStack();
 
         this._bindListeners();
-        this._setupListeners();
+        this._setupButtons();
     }
 
-    /**
-     * @param {function(HTMLDivElement, any, number): void} callback
-     */
-    setupButtons(callback) {
+    /** @private */
+    _bindListeners() {
+        this._onButtonClick = this._onButtonClick.bind(this);
+        this._onRangePointerDown = this._onRangePointerDown.bind(this);
+        this._onRangePointerMove = this._onRangePointerMove.bind(this);
+        this._onRangePointerUpCancel = this._onRangePointerUpCancel.bind(this);
+    }
+
+    _setupButtons() {
         this._buttonIdPrefix = DOMHelper.uniqueIdPrefix("selectorButton");
         /** @type {boolean[]} */
         this.checked = new Array(this.items.length).fill(true);
         /** @type {HTMLDivElement[]} */
         this.buttons = range(this.items.length).map(index => this._createButton(index, true));
-        this.node.append(...this.buttons);
-
-        this.buttonSW = new SizeWatcher();
-        this.buttonSW.watch(this.buttons);
-        this._setupButtonFitter();
-
-        this.updateButtonContents(callback);
     }
-
 
     /**
      * @param index
@@ -69,51 +64,50 @@ export default class SelectorBlock {
         });
 
         button.dataset.index = index.toString();
-        button.append(DOMHelper.createElement("div.selector-button-content"));
-
         return button;
     }
 
-    /** @private */
-    _bindListeners() {
-        this._onButtonClick = this._onButtonClick.bind(this);
-        this._onRangePointerDown = this._onRangePointerDown.bind(this);
-        this._onRangePointerMove = this._onRangePointerMove.bind(this);
-        this._onRangePointerUpCancel = this._onRangePointerUpCancel.bind(this);
+    _setupNode() {
+        this.node = DOMHelper.createElement("div.selector-block");
+        this.node.append(...this.buttons);
+    }
+
+    _setupButtonWatcher() {
+        this.buttonWatcher = new SizeWatcher();
+        this.buttonWatcher.watch(this.buttons);
     }
 
     /** @private */
-    _callUpdateListeners() {
-        this.updateListeners.call(this, this.checked);
-    }
-
-    /** @private */
-    _setupButtonFitter() {
-        this.buttonFitter = new ElementFitter({
-            watcher: this.buttonSW,
+    _setupContentFitter() {
+        if (!this.buttonWatcher) {
+            this._setupButtonWatcher();
+        }
+        this.contentFitter = new ElementFitter({
+            watcher: this.buttonWatcher,
             uniformFactor: 1.5,
             dimension: "width"
         });
-        this.buttonFitter.fit(this.buttons.map(button => button.querySelector(".selector-button-content")));
+        this.contentFitter.fit(this.buttons.map(button => button.querySelector(".selector-button-content")));
     }
 
     /** @private */
     _setupLabelFitter() {
         this.labelFitter = new ElementFitter({
-            watcher: this.buttonSW,
+            watcher: this.buttonWatcher,
             dimension: "width"
         });
         this.labelFitter.fit(this.buttons.map(button => button.querySelector(".selector-button-label")));
     }
 
     /**
-     * @param {function(HTMLDivElement, any, number): void} callback
+     * @param {function(any, number): HTMLElement} callback
      */
-    updateButtonContents(callback) {
-        for (const [index, button] of this.buttons.entries()) {
-            callback(button.querySelector(".selector-button-content"), this.items[index], index);
-        }
-        this.buttonFitter.updateChildren();
+    setupButtonContents(callback) {
+        this.items.forEach((item, index) => {
+            const content = callback(item, index);
+            content.classList.add("selector-button-content");
+            this.buttons[index].prepend(content);
+        });
     }
 
     /**
@@ -143,6 +137,32 @@ export default class SelectorBlock {
         }
 
         labelElement.textContent = label;
+    }
+
+    finishSetup() {
+        /**
+         * @readonly
+         * @type {HTMLDivElement}
+         */
+        this._setupNode();
+        this._setupListeners();
+        this._setupButtonWatcher();
+        this._setupContentFitter();
+    }
+
+    /** @private */
+    _callUpdateListeners() {
+        this.updateListeners.call(this, this.checked);
+    }
+
+    /**
+     * @param {function(HTMLElement, any, number): void} callback
+     */
+    updateButtonContents(callback) {
+        for (const [index, button] of this.buttons.entries()) {
+            callback(button.querySelector(".selector-button-content"), this.items[index], index);
+        }
+        this.contentFitter.updateChildren();
     }
 
     /**
@@ -306,7 +326,7 @@ export default class SelectorBlock {
      * @returns {number|null}
      * @private
      */
-    _clickTargetIndex(target) {
+    _rangeTargetIndex(target) {
         const el = this._buttonFromTarget(target);
         return el ? parseInt(el.dataset.index) : null;
     }
@@ -325,7 +345,7 @@ export default class SelectorBlock {
             this._setButtonChecked(index, !this.isChecked(index));
         }
 
-        const targetIndex = this._clickTargetIndex(event.target);
+        const targetIndex = this._rangeTargetIndex(event.target);
         if (targetIndex === null) return;
 
         if (event.type === "click" && event.detail % 2 === 0 && this.lastClickTargetIndex === targetIndex) {
@@ -357,7 +377,7 @@ export default class SelectorBlock {
         if (!this.isRangeSelecting) return;
         const target = document.elementFromPoint(event.clientX, event.clientY);
 
-        const clickItemIndex = this._clickTargetIndex(target);
+        const clickItemIndex = this._rangeTargetIndex(target);
         if (clickItemIndex === null || this.rangeStopIndex === clickItemIndex) return;
 
         this.rangeStartIndex ??= clickItemIndex;
@@ -370,7 +390,7 @@ export default class SelectorBlock {
      * @private
      */
     _onRangePointerDown(event) {
-        const clickItemIndex = this._clickTargetIndex(event.target);
+        const clickItemIndex = this._rangeTargetIndex(event.target);
         if (clickItemIndex !== null) {
             this.rangeStartIndex = clickItemIndex;
             this.rangeStopIndex = clickItemIndex;
@@ -464,8 +484,8 @@ export default class SelectorBlock {
 
     teardown() {
         this._removeListeners();
-        this.buttonSW.teardown();
-        this.buttonFitter.teardown();
+        this.buttonWatcher.teardown();
+        this.contentFitter.teardown();
         if (this.labelFitter) {
             this.labelFitter.teardown();
         }

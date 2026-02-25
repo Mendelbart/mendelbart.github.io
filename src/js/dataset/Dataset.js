@@ -276,25 +276,27 @@ export class Dataset {
     }
 
     getSelector(variant = null) {
-        const selector = new Selector(this.items, this.selectorData.blocks.map(block => block.indices ?? "rest"), ["flex"]);
+        const selector = new Selector(this.items, this.selectorData.blocks.map(block => block.indices ?? "rest"));
 
         const lang = this.getLang(variant);
         const dir = this.getDir();
         const font = this.getSelectorDisplayFont();
 
-        selector.node.dir = dir;
-
-        selector.setupButtons((content, item) => {
+        selector.setupButtonContents(item => {
+            const content = DOMHelper.createElement("span.symbol-string");
             content.append(...Object.values(item.getFormNodes()));
-            content.classList.add("symbol-string");
             FontHelper.setFont(content, font);
             if (lang) content.lang = lang;
             if (dir) content.dir = dir;
+            return content;
         });
 
         if (this.selectorData.label) {
             selector.labelButtons(item => item.getSelectorLabel(this.selectorData.label));
         }
+
+        selector.finishSetup();
+        selector.node.dir = dir;
 
         if (this.selectorData.style) {
             selector.applyStyle(this.selectorData.style);

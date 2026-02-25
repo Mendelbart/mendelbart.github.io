@@ -22,9 +22,6 @@ export default class Selector {
             return createBlockCallback ? createBlockCallback(items, s) : new SelectorBlock(items);
         });
 
-        this.node = DOMHelper.createElement("div.selector");
-        this.node.append(...this.blocks.map(block => block.node));
-
         this.updateListeners = new FunctionStack();
         this._callUpdateListeners = this._callUpdateListeners.bind(this);
         this.blocks.forEach(block => block.updateListeners.push(this._callUpdateListeners));
@@ -57,10 +54,20 @@ export default class Selector {
     }
 
     /**
-     * @param {function(HTMLDivElement, any, number): void} callback
+     * @param {function(any, number): HTMLElement} callback
      */
-    setupButtons(callback) {
-        this._buttonCallback((b, f) => b.setupButtons(f), callback)
+    setupButtonContents(callback) {
+        this._itemCallback((b, f) => b.setupButtonContents(f), callback)
+    }
+
+    _setupNode() {
+        this.node = DOMHelper.createElement("div.selector");
+        this.node.append(...this.blocks.map(block => block.node));
+    }
+
+    finishSetup() {
+        this.blocks.forEach(block => block.finishSetup());
+        this._setupNode();
     }
 
     /**
