@@ -2,8 +2,9 @@ import {SettingCollection, Slider, ButtonGroup} from "./settings/settings.js";
 import {Game} from "./game/Game.js";
 import {Dataset, DEFAULT_DATASET, TERMS} from "./dataset/Dataset.js";
 import DATASETS_METADATA from '../json/datasets_meta.json';
-import {DOMHelper, Base64Helper, ObjectHelper} from "./helpers/helpers.js";
+import {DOMHelper, Base64Helper, ObjectHelper} from "./helpers";
 import * as FontHelper from "./helpers/font";
+import {Selector, SelectorBlock, SelectorGridBlock} from './selector';
 
 
 /** @type {?Game} */
@@ -16,7 +17,7 @@ let SELECTOR_SETTINGS = new SettingCollection();
 let DATASET_GAME_SETTINGS = new SettingCollection();
 let GENERIC_GAME_SETTINGS = new SettingCollection();
 
-/** @type {?ItemSelector} */
+/** @type {?Selector} */
 let SELECTOR = null;
 
 /** @type {?SettingCollection} */
@@ -224,21 +225,17 @@ function setupTerms() {
 
 function setupSelector(settings = {}) {
     if (SELECTOR) {
-        SELECTOR.removeListeners();
+        SELECTOR.teardown();
         SELECTOR.node.remove();
     }
 
-    const node = DOMHelper.createElement("div.item-selector");
-    document.getElementById('dataset-filter-settings').append(node);
-    SELECTOR = DATASET.getItemSelector(node);
+    SELECTOR = DATASET.getSelector();
+    document.getElementById('dataset-filter-settings').append(SELECTOR.node);
 
-    if (settings.items) {
-        SELECTOR.setActive(settings.items);
+    if (settings.checked) {
+        SELECTOR.setChecked((_, index) => settings.checked[index]);
     }
-    SELECTOR.setActiveForms(getActiveForms(), {scale: false});
-    if (DATASET.hasVariants()) {
-        DATASET.applyVariant(SELECTOR_SETTINGS.getValue("variant"), SELECTOR);
-    }
+    DATASET.applySettings(SELECTOR, SELECTOR_SETTINGS.getValues());
 
     SELECTOR.updateListeners.push(
         checkPagesNextButton,
@@ -255,17 +252,9 @@ function setupSettingsCollections(settings) {
     SELECTOR_SETTINGS.addUpdateListener(saveSettings);
     DATASET_GAME_SETTINGS.addUpdateListener(saveSettings);
 
-    if (DATASET.hasSetting("forms")) {
-        SELECTOR_SETTINGS.addUpdateListener("forms", forms => DOMHelper.transition(() => {
-            DATASET.applyFormsSetting(forms, SELECTOR);
-        }, ["selector-forms"]));
-    }
-
-    if (DATASET.hasVariants()) {
-        SELECTOR_SETTINGS.addUpdateListener("variant", variant => DOMHelper.transition(() => {
-            DATASET.applyVariant(variant, SELECTOR);
-        }));
-    }
+    SELECTOR_SETTINGS.addUpdateListener(() => DOMHelper.transition(() => {
+        DATASET.applySettings(SELECTOR, SELECTOR_SETTINGS.getValues());
+    }));
 
     document.getElementById("dataset-filter-settings").replaceChildren(...SELECTOR_SETTINGS.nodeList());
     document.getElementById("dataset-game-settings").replaceChildren(...DATASET_GAME_SETTINGS.nodeList());
@@ -283,7 +272,7 @@ function getActiveProperties() {
 }
 
 function checkPagesNextButton() {
-    document.querySelector('#game-settings-pages .pages-next-button').disabled = SELECTOR.activeQuizItemCount() === 0;
+    document.querySelector('#game-settings-pages .pages-next-button').disabled = SELECTOR.checkedCount() === 0;
 }
 
 
@@ -298,7 +287,7 @@ function startGame() {
     const properties = getActiveProperties();
     const language = DATASET_GAME_SETTINGS.getDefault("language", null);
     const items = DATASET.getQuizItems(
-        SELECTOR.activeIndices(),
+        SELECTOR.getCheckedItems(),
         getActiveForms(),
         properties,
         language
@@ -359,7 +348,7 @@ function saveSettings() {
     DOMHelper.setSearchParams({dataset: DATASET.key});
 
     const data = Object.assign(
-        {items: Base64Helper.encodeBase64BoolArray(SELECTOR.itemsActive)},
+        {checked: Base64Helper.encodeBase64BoolArray(SELECTOR.getChecked())},
         SELECTOR_SETTINGS.getValues(),
         DATASET_GAME_SETTINGS.getValues()
     );
@@ -376,7 +365,9 @@ function getCachedSettings() {
 
     try {
         const settings = JSON.parse(settingsJSON);
-        settings.items = Base64Helper.decodeBase64BoolArray(settings.items);
+        if (typeof settings.checked === "string") {
+            settings.checked = Base64Helper.decodeBase64BoolArray(settings.checked);
+        }
         return settings;
     } catch (e) {
         console.error(e);

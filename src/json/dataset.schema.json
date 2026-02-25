@@ -411,13 +411,6 @@
           "description": "\"flex\" or \"grid\" for a CSS flexbox or grid layout respectively.",
           "enum": ["flex", "grid"]
         },
-        "dblClickGroups": {
-          "type": "array",
-          "items": {
-            "type": "string",
-            "$ref": "#/$defs/indicesWithoutGaps"
-          }
-        },
         "style": {"$ref": "#/$defs/blockStyle"}
       },
       "if": {

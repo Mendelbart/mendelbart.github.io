@@ -1,4 +1,4 @@
-import {DOMHelper, ObjectHelper, FontHelper, ArrayHelper, FunctionStack} from "../helpers/helpers.js";
+import {DOMHelper, ObjectHelper, FontHelper, ArrayHelper, FunctionStack} from "../helpers";
 const range = ArrayHelper.range;
 
 const STYLE_PROPERTIES = {
@@ -353,7 +353,7 @@ export default class ItemSelector {
 
     removeBlockListeners(block) {
         block.node.removeEventListener("click", this.onBlockButtonClick);
-        block.node.removeEventListener("keydown", this.onBlockButtonClick);
+        block.node.removeEventListener("keydown", this.onBlockButtonEnter);
 
         block.node.removeEventListener("pointerdown", this.onBlockRangePointerDown);
         block.node.removeEventListener("pointermove", this.onBlockRangePointerMove);
@@ -758,11 +758,11 @@ export default class ItemSelector {
         }
 
         for (const block of this.blocks) {
-            DOMHelper.scaleAllToFit(block.node.querySelectorAll(".symbol"), {uniform: 0.75});
+            DOMHelper.scaleAllToFit(block.node.querySelectorAll(".symbol"), {maxScaleRatio: Infinity});
 
             const labels = block.node.querySelectorAll(".selector-item-label");
             if (labels.length > 0) {
-                DOMHelper.scaleAllToFit(labels, {uniform: 0.75});
+                DOMHelper.scaleAllToFit(labels, {maxScaleRatio: 1.5});
             }
         }
     }

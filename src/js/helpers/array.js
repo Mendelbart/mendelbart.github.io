@@ -88,5 +88,13 @@ export function range(start, stop = null, step = 1) {
 
     const n = Math.ceil((stop - start) / step);
 
-    return new Array(n).fill(0).map((_, i) => start + step * i);
+    return full(n, i => start + step * i);
+}
+
+export function full(length, callback) {
+    const result = new Array(length);
+    for (let i = 0; i < length; i++) {
+        result[i] = callback(i);
+    }
+    return result;
 }

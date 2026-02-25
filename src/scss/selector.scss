@@ -17,7 +17,7 @@ $selectorBorderRadius: .25rem;
 }
 
 
-.item-selector {
+.selector {
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
@@ -43,6 +43,21 @@ $selectorBorderRadius: .25rem;
     --button-max-width: 1fr;
     --label-gap: .1rem;
     --symbol-size: 1.4;
+
+    &:not(.selector-block-grid) {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+
+      .selector-button {
+        min-width: var(--button-min-width);
+        max-width: var(--button-max-width);
+
+        &[aria-disabled="true"] {
+          display: none;
+        }
+      }
+    }
 
     &.selector-block-grid {
       --gridTemplateColumns: repeat(var(--columns), minmax(var(--button-min-width), var(--button-max-width)));
@@ -81,29 +96,14 @@ $selectorBorderRadius: .25rem;
         background: var(--clr-selector-button-active);
       }
 
-      .selector-item-button[aria-disabled="true"] {
+      .selector-button[aria-disabled="true"] {
         pointer-events: none;
         visibility: hidden;
       }
     }
-
-    &.selector-block-flex {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-
-      .selector-item-button {
-        min-width: var(--button-min-width);
-        max-width: var(--button-max-width);
-
-        &[aria-disabled="true"] {
-          display: none;
-        }
-      }
-    }
   }
 
-  .selector-item-button {
+  .selector-button {
     @include button-events("--clr-selector-button");
     touch-action: none;
     cursor: pointer;
@@ -154,7 +154,7 @@ $selectorBorderRadius: .25rem;
   //  view-transition-name: match-element;
   //}
 
-  .selector-item-label {
+  .selector-button-label {
     font-weight: 400;
     font-size: .8rem;
     text-overflow: ellipsis;

@@ -18,7 +18,8 @@
     "blocks": [
       {
         "mode": "grid",
-        "indices": "0:35,gap,36,gap,37:43,gap3,44",
+        "indices": "0:44",
+        "gaps": "36,38,46:48",
         "nColumns": 5,
         "columnLabels": "aiueo",
         "rowLabels": "∅kstnhmyrw",
@@ -45,7 +46,7 @@
   "forms": {
     "label": "Kana",
     "data": {
-      "hira": "Hiragana",
+      "hira": {"label": "Hiragana", "active": true},
       "kata": "Katakana"
     },
     "exclusive": true

@@ -111,11 +111,13 @@ function digestFontVariationSettings(variationSettings) {
 
 
 /**
- * Also used as `setFont(element, properties)` with a `properties.family` entry.
- *
  * @param {HTMLElement} element
  * @param {string | Object} family
  * @param {?{weight?, shift?, scale?, styleset?}} [properties]
+ *
+ * @example
+ * setFont(element, properties)
+ * // -> setFont(element, properties.family, properties)
  */
 export function setFont(element, family, properties = null) {
     if (typeof family === "object") {

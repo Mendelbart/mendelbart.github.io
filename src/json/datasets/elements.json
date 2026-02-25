@@ -19,11 +19,11 @@
     "blocks": [
       {
         "mode": "grid",
-        "indices": "0,gap7,1:3,gap,4:11,gap,12:19,gap,30:37,gap,48:55,gap,80:87,gap,112:117",
+        "indices": "0:19,30:37,48:55,80:87,112:117",
+        "gaps": "1:6",
         "nColumns": 9,
         "columnLabels": [1,2,null,13,14,15,16,17,18],
-        "rowLabels": [1,2,3,4,5,6,7],
-        "dblClickGroups": ["0:9:54,8,1:9:55", "rest"]
+        "rowLabels": [1,2,3,4,5,6,7]
       },
       {
         "mode": "grid",

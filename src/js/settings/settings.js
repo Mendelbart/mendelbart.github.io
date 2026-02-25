@@ -1,4 +1,4 @@
-import {FunctionStack, ObjectHelper, DOMHelper} from "../helpers/helpers.js";
+import {FunctionStack, ObjectHelper, DOMHelper} from "../helpers";
 
 /**
  * @interface Setting
@@ -485,15 +485,6 @@ export class ButtonGroup {
     }
 
     get value() {
-        if (this.exclusive && !this.decheckable) {
-            for (const input of Object.values(this.inputs)) {
-                if (input.checked) {
-                    return input.value;
-                }
-            }
-            return null;
-        }
-
         return ObjectHelper.filterKeys(this.inputs, input => input.checked);
     }
 
