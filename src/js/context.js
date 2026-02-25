@@ -4,7 +4,6 @@ import {Dataset, DEFAULT_DATASET, TERMS} from "./dataset/Dataset.js";
 import DATASETS_METADATA from '../json/datasets_meta.json';
 import {DOMHelper, Base64Helper, ObjectHelper} from "./helpers";
 import * as FontHelper from "./helpers/font";
-import {Selector, SelectorBlock, SelectorGridBlock} from './selector';
 
 
 /** @type {?Game} */

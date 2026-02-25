@@ -1,6 +1,5 @@
 import {ItemProperty, QuizItem} from "./symbol.js";
-import {ArrayHelper, DOMHelper, ObjectHelper, FontHelper} from '../helpers';
-import ItemSelector from "./selector.js";
+import {DOMHelper, ObjectHelper, FontHelper} from '../helpers';
 import {SettingCollection, ButtonGroup, ValueElement} from "../settings/settings.js";
 import DATASETS_METADATA from '../../json/datasets_meta.json';
 import Selector from "../selector/selector";
