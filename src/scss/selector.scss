@@ -17,10 +17,11 @@ $selectorBorderRadius: .25rem;
 }
 
 
-.item-selector {
+.selector {
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
+  width: 100%;
 
   &:not(:first-child) {
     margin-top: .375rem;
@@ -44,55 +45,12 @@ $selectorBorderRadius: .25rem;
     --label-gap: .1rem;
     --symbol-size: 1.4;
 
-    &.selector-block-grid {
-      --gridTemplateColumns: repeat(var(--columns), minmax(var(--button-min-width), var(--button-max-width)));
-      display: grid;
-      grid-template-columns: var(--gridTemplateColumns);
-
-      &.has-row-labels-start {
-        grid-template-columns: auto var(--gridTemplateColumns);
-      }
-
-      &.has-row-labels-end {
-        grid-template-columns: var(--gridTemplateColumns) auto;
-      }
-
-      &.has-row-labels-both {
-        grid-template-columns: auto var(--gridTemplateColumns) auto;
-      }
-
-      .block-label {
-        display: grid;
-        place-items: center;
-        border-radius: $selectorBorderRadius;
-        padding: .1rem .2rem;
-        cursor: pointer;
-        font-size: .8rem;
-        transition: background 75ms;
-      }
-
-      @media (hover: hover) {
-        .block-label:hover {
-          background: var(--clr-selector-button-hover);
-        }
-      }
-
-      .block-label:active {
-        background: var(--clr-selector-button-active);
-      }
-
-      .selector-item-button[aria-disabled="true"] {
-        pointer-events: none;
-        visibility: hidden;
-      }
-    }
-
     &.selector-block-flex {
       display: flex;
       flex-wrap: wrap;
       justify-content: center;
 
-      .selector-item-button {
+      .selector-button {
         min-width: var(--button-min-width);
         max-width: var(--button-max-width);
 
@@ -101,9 +59,42 @@ $selectorBorderRadius: .25rem;
         }
       }
     }
+
+    &.selector-block-grid {
+      display: grid;
+
+      .selector-label-gap {
+        visibility: hidden;
+      }
+
+      .grid-label {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        border-radius: $selectorBorderRadius;
+        padding: .1rem .2rem;
+        cursor: pointer;
+        font-size: .8rem;
+        transition: background 75ms;
+      }
+
+      @media (hover: hover) {
+        .grid-label:hover {
+          background: var(--clr-selector-button-hover);
+        }
+      }
+
+      .grid-label:active {
+        background: var(--clr-selector-button-active);
+      }
+
+      .selector-button[aria-disabled="true"] {
+        visibility: hidden;
+      }
+    }
   }
 
-  .selector-item-button {
+  .selector-button {
     @include button-events("--clr-selector-button");
     touch-action: none;
     cursor: pointer;
@@ -154,7 +145,7 @@ $selectorBorderRadius: .25rem;
   //  view-transition-name: match-element;
   //}
 
-  .selector-item-label {
+  .selector-button-label {
     font-weight: 400;
     font-size: .8rem;
     text-overflow: ellipsis;

@@ -1,8 +1,10 @@
 import {ItemProperty, QuizItem} from "./symbol.js";
-import {ArrayHelper, DOMHelper, ObjectHelper, FontHelper} from '../helpers/helpers.js';
-import ItemSelector from "./selector.js";
-import {SettingCollection, ButtonGroup, ValueElement} from "../settings/settings.js";
+import {DOMHelper, ObjectHelper, FontHelper} from '../helpers';
+import {SettingCollection, ButtonGroup, ValueElement} from "../settings";
 import DATASETS_METADATA from '../../json/datasets_meta.json';
+import {range} from "../helpers/array";
+import {Selector, SelectorBlock, SelectorGridBlock, Matrix} from "../selector";
+import {parseMatrixRanges, processIndexSubsets} from "../selector/indices";
 
 DOMHelper.registerTemplate(
     "headingElement",
@@ -88,7 +90,7 @@ export class Dataset {
         this.gameConfig = data.game ?? {};
         this.forms = this.processForms(data.forms);
         this.properties = data.properties;
-        this.selectorData = data.selector ?? {};
+        this.selectorData = this.processSelectorData(data.selector);
         this.variants = this.processVariants(data.variants);
 
         this.languages = data.languages ?? DEFAULT_LANGUAGES;
@@ -98,7 +100,6 @@ export class Dataset {
     }
 
     /**
-     *
      * @param {string} key
      * @returns {?Promise<Dataset>}
      */
@@ -123,10 +124,23 @@ export class Dataset {
             .catch(err => console.error(err));
     }
 
+    // ============================= INITIAL PROCESSING ============================
+    processSelectorData(selectorData) {
+        selectorData ??= {};
+        if (!selectorData.blocks) {
+            selectorData.block ??= {};
+            selectorData.block.indices = "rest";
+            selectorData.blocks = [selectorData.block];
+            delete selectorData.block;
+        }
+
+        return selectorData;
+    }
+
     processMetadata(metadata) {
         metadata = Object.assign({}, DEFAULT_METADATA, metadata);
-        metadata.terms.letter ??= "letter";
-        metadata.terms.letters ??= metadata.terms.letter + "s";
+        metadata.terms.letter ||= "letter";
+        metadata.terms.letters ||= metadata.terms.letter + "s";
         return metadata;
     }
 
@@ -153,243 +167,6 @@ export class Dataset {
         }
 
         return variants;
-    }
-
-    getGameSettings(checked) {
-        const settings = {};
-        if (this.hasSetting("properties")) {
-            settings.properties = this.propertySetting(checked.properties);
-        }
-        if (this.hasSetting("language")) {
-            settings.language = this.languageSetting(checked.language);
-        }
-        return SettingCollection.createFrom(settings);
-    }
-
-    getFilterSettings(checked) {
-        const settings = {};
-        if (this.hasVariants()) {
-            settings.variant = this.variantSetting(checked.variant);
-        }
-        if (this.hasSetting("forms")) {
-            settings.forms = this.formsSetting(checked.forms);
-        }
-        return SettingCollection.createFrom(settings);
-    }
-
-    propertySetting(checked = null) {
-        return ButtonGroup.from(
-            ObjectHelper.map(this.properties, p => p.label),
-            {
-                label: "Properties",
-                checked: checked ?? ObjectHelper.map(this.properties, p => !!p.active)
-            }
-        );
-    }
-
-    languageSetting(checked = null) {
-        return ButtonGroup.from(
-            ObjectHelper.onlyKeys(LANGUAGES, this.languages.keys),
-            {
-                label: "Language",
-                checked: checked ?? this.languages.default,
-                exclusive: true
-            }
-        );
-    }
-
-    ungroupedForms() {
-        return ObjectHelper.filter(this.forms.data, f => !("groupWith" in f));
-    }
-
-    formsSetting(checked = null) {
-        if (!this.hasSetting("forms")) {
-            return null;
-        }
-
-        const label = this.forms.label ?? (this.forms.exclusive ? "Form" : "Forms");
-        const ungroupedForms = this.ungroupedForms();
-        return ButtonGroup.from(
-            ObjectHelper.map(ungroupedForms, (p) => p.label),
-            {
-                label: label,
-                exclusive: this.forms.exclusive,
-                checked: checked ?? ObjectHelper.map(ungroupedForms, f => f.active ?? !this.forms.exclusive),
-            },
-        );
-    }
-
-    variantSetting(selected = null) {
-        return ValueElement.createSelect(
-            ObjectHelper.map(this.variants.data, (variant) => variant.label),
-            {
-                label: "Variant",
-                selected: selected ?? this.variants.default ?? Object.keys(this.variants.data)[0],
-                groups: this.variants.groups ? Object.values(this.variants.groups) : []
-            }
-        )
-    }
-
-    /**
-     * @param {string} key
-     * @returns {boolean}
-     */
-    hasSetting(key) {
-        switch (key) {
-            case "properties":
-                return Object.keys(this.properties).length > 1;
-            case "language":
-                return this.languages.keys.length > 1;
-            case "variant":
-                return this.hasVariants();
-            case "forms":
-                return Object.keys(this.ungroupedForms()).length > 1;
-            case "font-family":
-                return Object.keys(this.fonts).length > 1;
-            default:
-                throw new Error(`Invalid settings key ${key}.`);
-        }
-    }
-
-    hasVariants() {
-        return !!this.variants;
-    }
-
-    /**
-     * @param {?HTMLElement} node
-     * @returns {ItemSelector}
-     */
-    getItemSelector(node = null) {
-        const blocks = this.selectorData.block ? [this.selectorData.block] : this.selectorData.blocks;
-        const labels = this.selectorData.label ? this.items.map(item => item.getSelectorLabel(this.selectorData.label)) : null;
-
-        const selector = new ItemSelector(this.items);
-        selector.setup({
-            node: node,
-            datasetKey: this.key,
-            blocks: blocks,
-            labels: labels,
-            style: this.selectorData.style ?? null
-        });
-
-        selector.setMetadata(ObjectHelper.onlyKeys(this.metadata, ["lang", "dir"]));
-        if (this.selectorData.defaultActive) {
-            selector.setActive(this.selectorData.defaultActive);
-        }
-        selector.setSymbolFont(this.getSelectorDisplayFont());
-
-        return selector;
-    }
-
-    /**
-     * @param {string} variant
-     * @param {ItemSelector} selector
-     */
-    applyVariant(variant, selector) {
-        selector.setItemIndices(this.getVariantItemIndices(variant));
-        selector.setSymbolFont(this.getSelectorDisplayFont(variant));
-    }
-
-    getVariantItemIndices(variant) {
-        return ArrayHelper.filterIndices(this.items, item => item.variants.has(variant));
-    }
-
-    applyFormsSetting(forms, selector) {
-        selector.setActiveForms(this.getFormsFromSettingsValue(forms));
-    }
-
-    getFormsFromSettingsValue(value) {
-        if (typeof value === "string") {
-            value = [value];
-        }
-        const keys = value.slice();
-
-        for (const [key, form] of Object.entries(this.forms.data)) {
-            if ("groupWith" in form && value.includes(form.groupWith)) {
-                const index = keys.indexOf(form.groupWith);
-                if (index !== -1) {
-                    keys.splice(index + 1, 0, key);
-                }
-            }
-        }
-
-        return keys;
-    }
-
-    getVariantFontModification(key, variant) {
-        if (variant) {
-            const fonts = this.variants.data[variant].fonts;
-            if (fonts && key in fonts) {
-                return fonts[key];
-            }
-        }
-
-        return null;
-    }
-
-    /**
-     * @param {Record<string, *>} font
-     * @param {?string} [variant]
-     * @returns {Record<string, *>}
-     */
-    getFont(font, variant = null) {
-        if (!font) {
-            return this.defaultFont();
-        }
-
-        if (typeof font === "string") {
-            font = {key: font};
-        }
-
-        if ("family" in font) {
-            console.warn(`Found family property "${font.family}" in font: Will be overwritten!`);
-        }
-
-        font.key ??= this._defaultFontKey;
-        if (!(font.key in this.fonts)) {
-            console.error(`Unknown font key "${font.key}".`);
-            font.key = this._defaultFontKey;
-        }
-
-        return ObjectHelper.withoutKeys(
-            Object.assign({},
-                this.fonts[font.key],
-                this.getVariantFontModification(font.key, variant),
-                font
-            ),
-            ["key", "default", "label"]
-        );
-    }
-    
-    getSelectorDisplayFont(variant) {
-        return this.getFont(this.selectorData.font, variant);
-    }
-
-    processFonts(fonts) {
-        this.fonts = fonts;
-        const defaultEntry = Object.entries(fonts).find(([_, font]) => font.default);
-        this._defaultFontKey = defaultEntry ? defaultEntry[0] : Object.keys(fonts)[0];
-    }
-
-    defaultFont() {
-        return this.fonts[this._defaultFontKey];
-    }
-
-    /**
-     * @param checked
-     * @returns {ButtonGroup}
-     */
-    fontFamilySetting(checked = null) {
-        const setting = ButtonGroup.from(
-            ObjectHelper.map(this.fonts, font => font.label ?? font.family),
-            {
-                label: "Font",
-                exclusive: true,
-                checked: checked ?? this._defaultFontKey
-            }
-        );
-        setting.node.classList.add("font-family-setting");
-        return setting;
     }
 
     /**
@@ -484,26 +261,396 @@ export class Dataset {
         return ObjectHelper.onlyKeys(display, Object.keys(this.forms.data), true);
     }
 
+
+    // ============================= SETTINGS ============================
+    getGameSettings(checked) {
+        const settings = {};
+        if (this.hasSetting("properties")) {
+            settings.properties = this.propertySetting(checked.properties);
+        }
+        if (this.hasSetting("language")) {
+            settings.language = this.languageSetting(checked.language);
+        }
+        return SettingCollection.createFrom(settings);
+    }
+
+    getFilterSettings(checked) {
+        const settings = {};
+        if (this.hasVariants()) {
+            settings.variant = this.variantSetting(checked.variant);
+        }
+        if (this.hasSetting("forms")) {
+            settings.forms = this.formsSetting(checked.forms);
+        }
+        return SettingCollection.createFrom(settings);
+    }
+
+    propertySetting(checked = null) {
+        return ButtonGroup.from(
+            ObjectHelper.map(this.properties, p => p.label),
+            {
+                label: "Properties",
+                checked: checked ?? ObjectHelper.map(this.properties, p => !!p.active)
+            }
+        );
+    }
+
+    languageSetting(checked = null) {
+        return ButtonGroup.from(
+            ObjectHelper.onlyKeys(LANGUAGES, this.languages.keys),
+            {
+                label: "Language",
+                checked: checked ?? this.languages.default,
+                exclusive: true
+            }
+        );
+    }
+
+    ungroupedForms() {
+        return ObjectHelper.filter(this.forms.data, f => !("groupWith" in f));
+    }
+
+    formsSetting(checked = null) {
+        if (!this.hasSetting("forms")) {
+            return null;
+        }
+
+        const label = this.forms.label ?? (this.forms.exclusive ? "Form" : "Forms");
+        const ungroupedForms = this.ungroupedForms();
+        return ButtonGroup.from(
+            ObjectHelper.map(ungroupedForms, (p) => p.label),
+            {
+                label: label,
+                exclusive: this.forms.exclusive,
+                checked: checked ?? ObjectHelper.map(ungroupedForms, f => f.active ?? !this.forms.exclusive),
+            },
+        );
+    }
+
+    variantSetting(selected = null) {
+        const data = ObjectHelper.map(this.variants.data, (variant) => variant.label);
+        selected ||=  this.variants.default || Object.keys(this.variants.data)[0];
+        const label = this.variants.setting?.label || "Variant";
+
+        if (this.variants.setting?.type === "buttonGroup") {
+            return ButtonGroup.from(data, {
+                label: label,
+                exclusive: true,
+                checked: selected
+            });
+        } else {
+            const groups = this.variants.groups ? Object.values(this.variants.groups) : []
+            return ValueElement.createSelect(data, {
+                label: label,
+                selected: selected,
+                groups: groups
+            });
+        }
+    }
+
     /**
-     * @param {number[]} itemIndices
+     * @param {string} key
+     * @returns {boolean}
+     */
+    hasSetting(key) {
+        switch (key) {
+            case "properties":
+                return Object.keys(this.properties).length > 1;
+            case "language":
+                return this.languages.keys.length > 1;
+            case "variant":
+                return this.hasVariants();
+            case "forms":
+                return Object.keys(this.ungroupedForms()).length > 1;
+            case "font-family":
+                return Object.keys(this.fonts).length > 1;
+            default:
+                throw new Error(`Invalid settings key ${key}.`);
+        }
+    }
+
+    hasVariants() {
+        return !!this.variants;
+    }
+
+
+    // ==================================== SELECTOR ================
+    /**
+     * @param {string} [variant]
+     * @returns {Selector}
+     */
+    getSelector(variant) {
+        const selector = this.createSelector();
+        this.setupSelectorButtons(selector, variant);
+        selector.finishSetup();
+        this.applySelectorFont(selector, variant);
+        this.applySelectorStyles(selector);
+
+        return selector;
+    }
+
+    createSelector() {
+        const subsets = processIndexSubsets(
+            this.selectorData.blocks.map(block => block.indices),
+            this.items.length,
+            x => parseInt(x) - 1
+        );
+
+        return new Selector(this.items, subsets, (items, b) => {
+            const data = this.selectorData.blocks[b];
+            if (data.grid) {
+                const block = new SelectorGridBlock(items);
+
+                this.setupSelectorGrid(block, data);
+                if (data.rowLabels) this.setupGridLabels(block, "row", data.rowLabels, data.rowLabelPosition);
+                if (data.columnLabels) this.setupGridLabels(block, "column", data.columnLabels, data.columnLabelPosition);
+
+                if (data.rangeMode) block.setRangeMode(data.rangeMode);
+
+                return block;
+            } else {
+                return new SelectorBlock(items);
+            }
+        });
+    }
+
+    setupSelectorButtons(selector, variant) {
+        const lang = this.getLang(variant);
+        const dir = this.getDir();
+
+        selector.setupButtonContents(item => {
+            const content = DOMHelper.createElement("span.symbol-string");
+            content.append(...Object.values(item.getFormNodes()));
+            if (lang) content.lang = lang;
+            if (dir) content.dir = dir;
+            return content;
+        });
+
+        if (this.selectorData.label) {
+            selector.labelButtons(item => item.getSelectorLabel(this.selectorData.label));
+        }
+    }
+
+    getLang(variant = null) {
+        if (variant) {
+            return this.variants.data[variant].lang ?? variant;
+        } else {
+            return this.metadata.lang;
+        }
+    }
+
+    getDir() {
+        return this.metadata.dir;
+    }
+
+    applySelectorFont(selector, variant) {
+        const font = this.getSelectorDisplayFont(variant);
+        selector.updateButtonContents(content => {
+            FontHelper.setFont(content, font);
+        });
+    }
+
+    /**
+     * @param {SelectorGridBlock} block
+     * @param {[number, number]} dimensions
+     * @param {string} gaps
+     * @param {"rows" | "columns"} [fillDirection="rows"]
+     */
+    setupSelectorGrid(block, {dimensions, gaps, fillDirection = "rows"} = {}) {
+        const covered = new Matrix(...dimensions).fill(true);
+        for (const [i, j] of parseMatrixRanges(gaps, x => parseInt(x) - 1)) {
+            covered.set(i, j, false);
+        }
+        block.generateGrid(covered, fillDirection);
+    }
+
+    /**
+     * @param {SelectorGridBlock} block
+     * @param {string} type
+     * @param {string | string[]} labels
+     * @param {"start" | "end"} position
+     */
+    setupGridLabels(block, type, labels, position) {
+        if (typeof labels === "string") {
+            labels = labels.split("");
+        }
+        block.setGridLabels(type, labels, position);
+    }
+
+    applySelectorStyles(selector) {
+        selector.node.dir = this.getDir();
+
+        if (this.selectorData.style) {
+            selector.applyStyle(this.selectorData.style);
+        }
+
+        this.selectorData.blocks.forEach((block, index) => {
+            if (block.style) selector.blocks[index].applyStyle(block.style);
+        });
+    }
+
+    /**
+     * @param {Selector} selector
+     * @param {string[]} [forms]
+     * @param {string} [variant]
+     */
+    applySettings(selector, {forms, variant}) {
+        const formKeys = this.getFormKeysFromSetting(forms);
+        selector.updateButtonContents(content => {
+            content.querySelectorAll(".symbol-form").forEach(elem => {
+                const shown = formKeys.includes(elem.dataset.form);
+                DOMHelper.toggleShown(shown, elem);
+            });
+        });
+
+        const variantIndices = this.getVariantItemIndices(variant);
+        selector.setDisabled(
+            (item, index) => !variantIndices.has(index) || item.getForms(formKeys).length === 0
+        );
+        this.applySelectorFont(selector, variant);
+    }
+
+    /**
+     * @param [variant]
+     * @returns {Set<number>}
+     */
+    getVariantItemIndices(variant) {
+        if (!variant) return new Set(range(this.items.length));
+
+        const indices = new Set();
+        this.items.forEach((item, index) => {
+            if (item.variants.has(variant)) {
+                indices.add(index);
+            }
+        });
+
+        return indices;
+    }
+
+    /**
+     * @param {string[] | string} [value]
+     * @returns {string[]}
+     */
+    getFormKeysFromSetting(value) {
+        if (!value) return Object.keys(this.forms.data);
+
+        if (typeof value === "string") {
+            value = [value];
+        }
+
+        const keys = value.slice();
+
+        for (const [key, form] of Object.entries(this.forms.data)) {
+            if ("groupWith" in form && value.includes(form.groupWith)) {
+                const index = keys.indexOf(form.groupWith);
+                if (index !== -1) {
+                    keys.splice(index + 1, 0, key);
+                }
+            }
+        }
+
+        return keys;
+    }
+
+
+    // ============================= FONTS ====================================
+    /**
+     * @param {Record<string, *>} font
+     * @param {?string} [variant]
+     * @returns {Record<string, *>}
+     */
+    getFont(font, variant = null) {
+        if (!font) {
+            return this.defaultFont();
+        }
+
+        if (typeof font === "string") {
+            font = {key: font};
+        }
+
+        if ("family" in font) {
+            console.warn(`Found family property "${font.family}" in font: Will be overwritten!`);
+        }
+
+        font.key ??= this._defaultFontKey;
+        if (!(font.key in this.fonts)) {
+            console.error(`Unknown font key "${font.key}".`);
+            font.key = this._defaultFontKey;
+        }
+
+        return ObjectHelper.withoutKeys(
+            Object.assign({},
+                this.fonts[font.key],
+                this.getVariantFontModification(font.key, variant),
+                font
+            ),
+            ["key", "default", "label"]
+        );
+    }
+
+    getVariantFontModification(key, variant) {
+        if (variant) {
+            const fonts = this.variants.data[variant].fonts;
+            if (fonts && key in fonts) {
+                return fonts[key];
+            }
+        }
+
+        return null;
+    }
+
+    getSelectorDisplayFont(variant) {
+        return this.getFont(this.selectorData.font, variant);
+    }
+
+    processFonts(fonts) {
+        this.fonts = fonts;
+        const defaultEntry = Object.entries(fonts).find(([_, font]) => font.default);
+        this._defaultFontKey = defaultEntry ? defaultEntry[0] : Object.keys(fonts)[0];
+    }
+
+    defaultFont() {
+        return this.fonts[this._defaultFontKey];
+    }
+
+    /**
+     * @param checked
+     * @returns {ButtonGroup}
+     */
+    fontFamilySetting(checked = null) {
+        const setting = ButtonGroup.from(
+            ObjectHelper.map(this.fonts, font => font.label ?? font.family),
+            {
+                label: "Font",
+                exclusive: true,
+                checked: checked ?? this._defaultFontKey
+            }
+        );
+        setting.node.classList.add("font-family-setting");
+        return setting;
+    }
+
+
+    // =================================== QUIZ ITEMS ===================================
+    /**
+     * @param {DatasetItem[]} items
      * @param {string[]} forms
      * @param {string[]} properties
      * @param {?string} [language]
      * @returns {QuizItem[]}
      */
-    getQuizItems(itemIndices, forms, properties, language = null) {
-        const items = [];
+    getQuizItems(items, forms, properties, language = null) {
+        const result = [];
 
-        for (const index of itemIndices) {
-            const item = this.items[index];
+        for (const item of items) {
             const displayStrings = item.getDisplayStrings(forms);
             const itemProperties = item.getItemProperties(properties, this.properties, language);
-            items.push(...Object.entries(displayStrings).map(
+            result.push(...Object.entries(displayStrings).map(
                 ([form, string]) => new QuizItem(item.type, string, itemProperties, form)
             ));
         }
 
-        return items;
+        return result;
     }
 
 
@@ -554,11 +701,12 @@ export class Dataset {
 
     /**
      * @param {HTMLElement} element
+     * @param {string} [variant]
      */
-    setupGameHeading(element) {
+    setupGameHeading(element, variant) {
         const gameHeading = this.metadata.gameHeading;
 
-        FontHelper.setFont(element, this.getFont(gameHeading.font));
+        FontHelper.setFont(element, this.getFont(gameHeading.font, variant));
 
         if (this.name === "Atomic Elements") {
             const container = document.createElement("div");
@@ -633,6 +781,10 @@ class DatasetItem {
         return ObjectHelper.map(result, (prop, key) => ItemProperty.fromData(prop, propsData[key]));
     }
 
+    getFormNodes(forms = null) {
+        return ObjectHelper.mapKeyArrayToValues(this.getForms(forms), form => this.getFormNode(form))
+    }
+
     getFormNode(form) {
         const elem = DOMHelper.createElement('span.symbol-form');
         elem.dataset.form = form;
@@ -640,8 +792,15 @@ class DatasetItem {
         return elem;
     }
 
-    getFormNodes(forms = null) {
-        return ObjectHelper.mapKeyArrayToValues(forms ?? Object.keys(this.displayForms), form => this.getFormNode(form))
+    /**
+     * Returns the form keys that this letter possesses.
+     * @param {string[]} forms
+     * @returns {string[]}
+     */
+    getForms(forms = null) {
+        if (!forms) return Object.keys(this.displayForms);
+
+        return forms.filter(form => form in this.displayForms);
     }
 
     /**
@@ -661,7 +820,13 @@ class DatasetItem {
         return forms.reduce((acc, form) => form in this.displayForms ? acc + 1 : acc, 0);
     }
 
-    getSelectorLabel({property = null, splitFirst = true, splitter = "[,;/]"}) {
+    /**
+     * @param {?string} [property]
+     * @param {boolean} [splitFirst]
+     * @param {string} [splitter]
+     * @returns {string}
+     */
+    getSelectorLabel({property = null, splitFirst = true, splitter = "[,;/]"} = {}) {
         const str = this.properties[property];
         if (splitFirst) {
             return str.split(new RegExp(`\s*(${splitter})\s*`))[0];

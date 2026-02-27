@@ -5,4 +5,4 @@ export * as ArrayHelper from './array.js';
 export * as FontHelper from './font.js';
 export * as Base64Helper from './base64.js';
 
-export {FunctionStack} from './classes.js';
+export {FunctionStack} from './classes/FunctionStack';

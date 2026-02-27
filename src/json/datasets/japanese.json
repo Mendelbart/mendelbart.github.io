@@ -17,26 +17,25 @@
     "font": {"key": "sans", "weight": 600},
     "blocks": [
       {
-        "mode": "grid",
-        "indices": "0:35,gap,36,gap,37:43,gap3,44",
-        "nColumns": 5,
-        "columnLabels": "aiueo",
+        "grid": true,
+        "indices": "1:45",
+        "dimensions": [10, 5],
+        "gaps": "(8|2,4);(10|2:4)",
         "rowLabels": "∅kstnhmyrw",
-        "rangeSelectionMode": "grid"
+        "columnLabels": "aiueo"
       },
       {
-        "mode": "grid",
-        "indices": "45:69",
-        "nColumns": 5,
-        "columnLabels": "aiueo",
+        "grid": true,
+        "indices": "46:70",
+        "dimensions": [5, 5],
         "rowLabels": "gzdbp",
-        "rangeSelectionMode": "grid"
+        "columnLabels": "aiueo"
       },
       {
-        "mode": "grid",
-        "indices": "rest",
-        "nColumns": 1,
-        "rowLabels": ["n"]
+        "grid": true,
+        "indices": "71",
+        "dimensions": [1, 1],
+        "rowLabels": "n"
       }
     ],
     "style": {"buttonMaxWidth": "4ch"},
@@ -45,7 +44,7 @@
   "forms": {
     "label": "Kana",
     "data": {
-      "hira": "Hiragana",
+      "hira": {"label": "Hiragana", "active": true},
       "kata": "Katakana"
     },
     "exclusive": true

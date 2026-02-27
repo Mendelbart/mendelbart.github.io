@@ -1,4 +1,4 @@
-import {DOMHelper} from "./helpers/helpers.js";
+import {DOMHelper} from "./helpers";
 import {setup} from "./context.js";
 
 // --------------- GAME SETUP -----------------
@@ -88,5 +88,5 @@ function ribbonButtonsChangeListener(event) {
         } else {
             input.checked = true;
         }
-    }, {transition: true});
+    });
 }

@@ -22,7 +22,7 @@
       <envs />
     </TaskOptions>
     <TaskOptions isEnabled="true">
-      <option name="arguments" value="--bundle src/js/index.js --outdir=dist/js --minify --sourcemap" />
+      <option name="arguments" value="--bundle src/js/index.js --target=es2020 --outdir=dist/js --minify --sourcemap" />
       <option name="checkSyntaxErrors" value="true" />
       <option name="description" />
       <option name="exitCodeBehavior" value="ERROR" />
@@ -74,7 +74,7 @@
         <array />
       </option>
       <option name="outputFromStdout" value="false" />
-      <option name="program" value="$PROJECT_DIR$/fonts/subset-fonts.py" />
+      <option name="program" value="$PROJECT_DIR$/scripts/subset-fonts.py" />
       <option name="runOnExternalChanges" value="true" />
       <option name="scopeName" value="datasets" />
       <option name="trackOnlyRoot" value="false" />
@@ -97,6 +97,26 @@
       <option name="program" value="minhtml" />
       <option name="runOnExternalChanges" value="true" />
       <option name="scopeName" value="src" />
+      <option name="trackOnlyRoot" value="false" />
+      <option name="workingDir" value="$PROJECT_DIR$" />
+      <envs />
+    </TaskOptions>
+    <TaskOptions isEnabled="true">
+      <option name="arguments" value="" />
+      <option name="checkSyntaxErrors" value="true" />
+      <option name="description" />
+      <option name="exitCodeBehavior" value="ERROR" />
+      <option name="fileExtension" value="scss" />
+      <option name="immediateSync" value="true" />
+      <option name="name" value="Font Awesome Subsetting" />
+      <option name="output" value="" />
+      <option name="outputFilters">
+        <array />
+      </option>
+      <option name="outputFromStdout" value="false" />
+      <option name="program" value="$PROJECT_DIR$/scripts/subset-fontawesome.py" />
+      <option name="runOnExternalChanges" value="true" />
+      <option name="scopeName" value="Font Awesome" />
       <option name="trackOnlyRoot" value="false" />
       <option name="workingDir" value="$PROJECT_DIR$" />
       <envs />

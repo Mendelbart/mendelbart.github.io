@@ -224,6 +224,39 @@ export function setAttrOnKeys(elements, keys, attr, value = "") {
     }
 }
 
+
+const booleanAttributes = new Set([
+    "allowfullscreen",
+    "alpha",
+    "async",
+    "autofocus",
+    "autoplay",
+    "checked",
+    "controls",
+    "default",
+    "defer",
+    "disabled",
+    "formnovalidate",
+    "inert",
+    "ismap",
+    "itemscope",
+    "loop",
+    "multiple",
+    "muted",
+    "nomodule",
+    "novalidate",
+    "open",
+    "playsinline",
+    "readonly",
+    "required",
+    "reversed",
+    "selected",
+    "shadowrootclonable",
+    "shadowrootcustomelementregistry",
+    "shadowrootdelegatesfocus",
+    "shadowrootserializable"
+]);
+
 /**
  * Set the `attrs` on the `object`.
  * @param {Element} element
@@ -231,7 +264,7 @@ export function setAttrOnKeys(elements, keys, attr, value = "") {
  */
 export function setAttrs(element, attrs) {
     for (const [key, value] of Object.entries(attrs)) {
-        if (typeof value === "boolean") {
+        if (booleanAttributes.has(key)) {
             if (value) {
                 element.setAttribute(key, key);
             } else {
@@ -433,8 +466,8 @@ export function computeScaleToFit(element, {
 } = {}) {
     container ??= element.parentElement;
 
-    let [elementWidth, elementHeight] = elementSize(element, elementBox, true);
-    let [containerWidth, containerHeight] = elementSize(container, containerBox);
+    const [elementWidth, elementHeight] = elementSize(element, elementBox, true);
+    const [containerWidth, containerHeight] = elementSize(container, containerBox);
 
     const scaleWidth = getScale(elementWidth, containerWidth, grow);
     const scaleHeight = getScale(elementHeight, containerHeight, grow);
@@ -467,27 +500,44 @@ export function scaleToFit(element, options = {}) {
  * @param {"content-box" | "padding-box" | "border-box"} [options.elementBox="border-box"]
  * @param {"content-box" | "padding-box" | "border-box"} [options.containerBox="content-box"]
  * @param {boolean} [options.grow=false]
- * @param {number} [options.uniform=0]
+ * @param {number} [options.maxScaleRatio=Infinity]
+ * @param {boolean} [options.skipZeroSize=true]
  */
 export function scaleAllToFit(elements, options = {}) {
     if (!Array.isArray(elements)) {
         elements = Array.from(elements);
     }
 
-    const uniformFactor = options.uniform ?? 0;
-    const scales = elements.map(el => computeScaleToFit(el, options));
-
-    if (uniformFactor > 0) {
-        const minScale = Math.min(...scales);
-        const newMaxScale = minScale / uniformFactor;
-        for (const [index, scale] of scales.entries()) {
-            scales[index] = Math.min(newMaxScale, scale);
-        }
+    if (elements.length === 0) {
+        return;
     }
+
+    let scales = elements.map(el => computeScaleToFit(el, options));
+    scales = uniformScales(scales, options.maxScaleRatio ?? Infinity)
 
     for (const [index, element] of elements.entries()) {
         element.style.scale = scales[index];
     }
+}
+
+/**
+ * @param {number[]} scales
+ * @param {number} [maxScaleRatio=Infinity]
+ */
+function uniformScales(scales, maxScaleRatio = Infinity) {
+    if (maxScaleRatio === Infinity) {
+        return scales;
+    }
+
+    const minScale = Math.min(...scales);
+    const maxScale = Math.max(...scales);
+
+    if (minScale === 0 || maxScale / minScale <= maxScaleRatio) {
+        return scales;
+    }
+
+    const power = Math.log(maxScaleRatio) / Math.log(maxScale / minScale);
+    return scales.map(scale => (scale / minScale) ** power * minScale);
 }
 
 function getScale(elementSize, containerSize, grow = false) {
@@ -508,6 +558,8 @@ function getScale(elementSize, containerSize, grow = false) {
 
     return grow ? scale : Math.min(scale, 1);
 }
+
+
 
 /**
  * @param {HTMLElement} container
@@ -580,3 +632,23 @@ export function transition(update, types = []) {
         requestAnimationFrame(() => update());
     }
 }
+
+/**
+ * @param {HTMLElement} element
+ * @param {string} attribute
+ * @param value
+ * @private
+ */
+export function setARIA(element, attribute, value) {
+    element.setAttribute("aria-" + attribute, value);
+}
+
+/**
+ * @param {HTMLElement} element
+ * @param {string} attribute
+ * @returns {?string}
+ */
+export function getARIA(element, attribute) {
+    return element.getAttribute("aria-" + attribute);
+}
+

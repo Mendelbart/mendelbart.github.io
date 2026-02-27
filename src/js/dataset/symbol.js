@@ -1,5 +1,5 @@
 import {levenshtein} from "../game/string-metrics.js";
-import {ArrayHelper, ObjectHelper} from "../helpers/helpers.js";
+import {ArrayHelper, ObjectHelper} from "../helpers";
 
 export class QuizItem {
     /**

@@ -1,4 +1,4 @@
-import {FunctionStack, ObjectHelper, DOMHelper} from "../helpers/helpers.js";
+import {FunctionStack, ObjectHelper, DOMHelper} from "../helpers";
 
 /**
  * @interface Setting
@@ -355,7 +355,7 @@ export class ValueElement {
     }
 }
 
-DOMHelper.registerTemplate("buttonGroupContainer", DOMHelper.createElement("fieldset.button-group"));
+DOMHelper.registerTemplate("buttonGroupContainer", DOMHelper.createElement("fieldset.button-group.setting"));
 
 /** @implements Setting */
 export class ButtonGroup {
@@ -485,7 +485,7 @@ export class ButtonGroup {
     }
 
     get value() {
-        if (this.exclusive && !this.decheckable) {
+        if (this.exclusive) {
             for (const input of Object.values(this.inputs)) {
                 if (input.checked) {
                     return input.value;

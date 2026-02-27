@@ -10,14 +10,14 @@
   },
   "selector": {
     "font": {"weight": 700},
-    "block": {"mode": "grid", "nColumns": 3, "transpose": true, "columnLabels": [1,2,3], "rangeSelectionMode": "walkColumns"},
+    "block": {"grid": true, "dimensions": [8, 3], "fillDirection": "columns", "columnLabels": [1,2,3], "rangeMode": "walkColumns"},
     "label": {"property": "name"},
     "style": {"buttonMinWidth": "4ch", "buttonMaxWidth": "7ch", "labelGap": "0.15rem"}
   },
   "properties": {
     "name": {"type": "list", "maxDist": 1, "label": "Name", "active": true},
-    "pron": {"type": "list", "maxDist": 0, "label": "Pronunciation", "active": false},
-    "meaning": {"type": "list", "maxDist": 1, "label": "Meaning", "active":  false}
+    "pron": {"type": "list", "maxDist": 0, "label": "Pronunciation"},
+    "meaning": {"type": "list", "maxDist": 1, "label": "Meaning"}
   },
   "items": {
     "properties": ["name", "pron", "meaning"],

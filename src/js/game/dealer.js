@@ -1,4 +1,4 @@
-import {RandomNumberGenerator, ArrayHelper} from "../helpers/helpers.js";
+import {RandomNumberGenerator, ArrayHelper} from "../helpers";
 
 export class ItemDealer {
     _punishFactor = 2
