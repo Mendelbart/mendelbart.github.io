@@ -224,6 +224,39 @@ export function setAttrOnKeys(elements, keys, attr, value = "") {
     }
 }
 
+
+const booleanAttributes = new Set([
+    "allowfullscreen",
+    "alpha",
+    "async",
+    "autofocus",
+    "autoplay",
+    "checked",
+    "controls",
+    "default",
+    "defer",
+    "disabled",
+    "formnovalidate",
+    "inert",
+    "ismap",
+    "itemscope",
+    "loop",
+    "multiple",
+    "muted",
+    "nomodule",
+    "novalidate",
+    "open",
+    "playsinline",
+    "readonly",
+    "required",
+    "reversed",
+    "selected",
+    "shadowrootclonable",
+    "shadowrootcustomelementregistry",
+    "shadowrootdelegatesfocus",
+    "shadowrootserializable"
+]);
+
 /**
  * Set the `attrs` on the `object`.
  * @param {Element} element
@@ -231,7 +264,7 @@ export function setAttrOnKeys(elements, keys, attr, value = "") {
  */
 export function setAttrs(element, attrs) {
     for (const [key, value] of Object.entries(attrs)) {
-        if (typeof value === "boolean") {
+        if (booleanAttributes.has(key)) {
             if (value) {
                 element.setAttribute(key, key);
             } else {

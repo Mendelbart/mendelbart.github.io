@@ -10,8 +10,13 @@
   },
   "selector": {
     "font": {"weight": 700},
-    "block": {"mode": "grid", "nColumns": 3, "transpose": true, "columnLabels": [1,2,3], "rangeSelectionMode": "walkColumns",
-      "indices": "0:10,gap,11:15,gap"
+    "block": {
+      "grid": true,
+      "dimensions": [6, 3],
+      "fillDirection": "columns",
+      "columnLabels": [1,2,3],
+      "rangeMode": "walkColumns",
+      "gaps": "(6|2,3)"
     },
     "label": {"property": "name"},
     "style": {"buttonMinWidth": "4ch", "buttonMaxWidth": "7ch", "labelGap": "0.15rem"}
@@ -34,6 +39,9 @@
         }
       },
       "shorttwig": "Short-twig"
+    },
+    "setting": {
+      "type": "buttonGroup"
     }
   },
   "items": {

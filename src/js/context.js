@@ -1,4 +1,4 @@
-import {SettingCollection, Slider, ButtonGroup} from "./settings/settings.js";
+import {SettingCollection, Slider, ButtonGroup} from "./settings";
 import {Game} from "./game/Game.js";
 import {Dataset, DEFAULT_DATASET, TERMS} from "./dataset/Dataset.js";
 import DATASETS_METADATA from '../json/datasets_meta.json';
@@ -203,8 +203,9 @@ function selectDataset(dataset) {
 
         DOMHelper.showPage(document.getElementById('game-filters'));
 
-        DATASET.setupGameHeading(document.querySelector("#game-heading h1"));
         setupSettingsCollections(cachedSettings);
+        DATASET.setupGameHeading(document.querySelector("#game-heading h1"), SELECTOR_SETTINGS.getDefault("variant"));
+
         setupSelector(cachedSettings);
     });
 }
@@ -255,6 +256,12 @@ function setupSettingsCollections(settings) {
         DATASET.applySettings(SELECTOR, SELECTOR_SETTINGS.getValues());
     }));
 
+    if (DATASET.hasVariants()) {
+        SELECTOR_SETTINGS.addUpdateListener("variant", value => {
+            DATASET.setupGameHeading(document.querySelector("#game-heading h1"), value);
+        });
+    }
+
     document.getElementById("dataset-filter-settings").replaceChildren(...SELECTOR_SETTINGS.nodeList());
     document.getElementById("dataset-game-settings").replaceChildren(...DATASET_GAME_SETTINGS.nodeList());
 }
@@ -263,7 +270,7 @@ function getActiveForms() {
     if (!DATASET.hasSetting("forms")) {
         return Object.keys(DATASET.forms.data);
     }
-    return DATASET.getFormsFromSettingsValue(SELECTOR_SETTINGS.getValue("forms"));
+    return DATASET.getFormKeysFromSetting(SELECTOR_SETTINGS.getValue("forms"));
 }
 
 function getActiveProperties() {
@@ -336,10 +343,10 @@ function readFromSearchParams() {
 }
 
 /**
- * @param {string?} datasetKey
+ * @param {string?} [datasetKey]
  * @returns {string}
  */
-function localStorageSettingsKey(datasetKey = null) {
+function localStorageSettingsKey(datasetKey) {
     return "settings_" + (datasetKey || DATASET.key);
 }
 
@@ -347,7 +354,7 @@ function saveSettings() {
     DOMHelper.setSearchParams({dataset: DATASET.key});
 
     const data = Object.assign(
-        {checked: Base64Helper.encodeBase64BoolArray(SELECTOR.getChecked())},
+        {checked: Base64Helper.encodeBase64BoolArray(SELECTOR.getChecked({includeDisabled: true}))},
         SELECTOR_SETTINGS.getValues(),
         DATASET_GAME_SETTINGS.getValues()
     );

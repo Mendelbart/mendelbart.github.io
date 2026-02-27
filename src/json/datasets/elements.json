@@ -18,21 +18,26 @@
     "font": {"key": "sans", "weight": 700, "scale": 1, "shift": 0, "lineHeight": 1.25},
     "blocks": [
       {
-        "mode": "grid",
-        "indices": "0:19,30:37,48:55,80:87,112:117",
-        "gaps": "1:6",
-        "nColumns": 9,
-        "columnLabels": [1,2,null,13,14,15,16,17,18],
-        "rowLabels": [1,2,3,4,5,6,7]
+        "grid": true,
+        "indices": "1:20,31:38,49:56,81:88,113:118",
+        "gaps": "(1|2:7)",
+        "dimensions": [7, 8],
+        "rowLabels": [1,2,3,4,5,6,7],
+        "columnLabels": [1,2,13,14,15,16,17,18]
       },
       {
-        "mode": "grid",
-        "indices": "20:29,38:47,70:79,102:111",
-        "nColumns": 10,
-        "columnLabels": [3,4,5,6,7,8,9,10,11,12],
-        "rowLabels": [4,5,6,7]
+        "grid": true,
+        "indices": "21:30,39:48,71:80,103:112",
+        "dimensions": [4, 10],
+        "rowLabels": [4,5,6,7],
+        "columnLabels": [3,4,5,6,7,8,9,10,11,12]
       },
-      {"mode": "grid", "indices": "56:69,88:101", "nColumns": 14, "rowLabels": [6, 7]}
+      {
+        "grid": true,
+        "indices": "57:70,89:102",
+        "dimensions": [2, 14],
+        "rowLabels": [6, 7]
+      }
     ],
     "style": {"symbolSize": 1, "buttonMaxWidth": "4ch"},
     "defaultActive": "block0"

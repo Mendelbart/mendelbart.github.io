@@ -1,6 +1,5 @@
 import {invertSubsets, processIndexSubsets} from "./indices";
 import SelectorBlock from "./block";
-import SelectorGridBlock from "./grid";
 import {range, sum} from "../helpers/array";
 import {DOMHelper, FunctionStack} from "../helpers";
 
@@ -103,15 +102,14 @@ export default class Selector {
      * @returns {any[]}
      */
     getCheckedItems() {
-        const checked = this.getChecked();
-        return this.items.filter((_, i) => checked[i]);
+        return [].concat(...this.blocks.map(block => block.getCheckedItems()));
     }
 
     /**
      * @param {boolean} [includeDisabled=false]
      * @returns {boolean[]}
      */
-    getChecked(includeDisabled = false) {
+    getChecked({includeDisabled = false} = {}) {
         const blocksChecked = this.blocks.map(block => block.getChecked(includeDisabled));
         return range(this.items.length).map(i => {
             const [s, j] = this.subsetsInverse[i];

@@ -76,25 +76,50 @@ export function filterIndices(arr, callback) {
 }
 
 /**
+ * Range from `start` (inclusive) to `stop` (exclusive), with an optional `step` size (default `1`).
  * @param {number} start
- * @param {?number} [stop]
+ * @param {number} [stop]
  * @param {number} step
+ * @returns {number[]}
  */
-export function range(start, stop = null, step = 1) {
-    if (stop === null) {
+export function range(start, stop, step = 1) {
+    if (stop == null) {
         stop = start;
         start = 0;
     }
 
+    if (step === 0) throw new Error("Range step cannot be 0.");
+
     const n = Math.ceil((stop - start) / step);
+    if (n <= 0) return [];
 
     return full(n, i => start + step * i);
 }
 
-export function full(length, callback) {
-    const result = new Array(length);
-    for (let i = 0; i < length; i++) {
-        result[i] = callback(i);
+/**
+ * Returns all integers between `a` and `b` including `a` and `b`.
+ * Equivalent to `range(Math.min(a, b), Math.max(a, b))`
+ * @param {number} a
+ * @param {number} b
+ * @returns {number[]}
+ */
+export function rangeBetween(a, b) {
+    if (a > b) {
+        [a, b] = [b, a];
     }
-    return result;
+    return range(a, b + 1);
+}
+
+/**
+ * @template T
+ * @param {number} length
+ * @param {function(number, number[]): T} callback
+ * @returns {T[]} `arr` with `arr[i] = callback(i)`
+ */
+export function full(length, callback) {
+    const arr = new Array(length);
+    for (let i = 0; i < length; i++) {
+        arr[i] = callback(i, arr);
+    }
+    return arr;
 }

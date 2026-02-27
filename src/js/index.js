@@ -88,5 +88,5 @@ function ribbonButtonsChangeListener(event) {
         } else {
             input.checked = true;
         }
-    }, {transition: true});
+    });
 }

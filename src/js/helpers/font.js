@@ -54,7 +54,7 @@ export function loadFonts(families) {
 }
 
 function defaultFontURL(family) {
-    const url = `/kadmos/assets/fonts/${family.replaceAll(" ", "")}.woff2`;
+    const url = `/kadmos/assets/fonts/scripts/${family.replaceAll(" ", "")}.woff2`;
     const format = supportsVariableFonts() ? 'woff2-variations' : 'woff2';
     return `url("${url}") format("${format}")`;
 }

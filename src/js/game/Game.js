@@ -1,6 +1,6 @@
 import {DOMHelper, ObjectHelper, FontHelper, FunctionStack} from "../helpers";
 import {ItemDealer} from "./dealer.js";
-import {Slider, SettingCollection, ValueElement} from "../settings/settings.js";
+import {Slider, SettingCollection, ValueElement} from "../settings";
 import {ItemProperty, ListProperty} from "../dataset/symbol.js";
 
 

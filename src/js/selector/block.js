@@ -1,5 +1,6 @@
 import {DOMHelper, ArrayHelper, FunctionStack} from "../helpers";
 import {ElementFitter, SizeWatcher} from "../helpers/classes/ElementFitter";
+import {rangeBetween} from "../helpers/array";
 const range = ArrayHelper.range;
 
 const STYLE_PROPERTIES = {
@@ -26,40 +27,37 @@ export default class SelectorBlock {
         this.items = items;
         this.updateListeners = new FunctionStack();
 
-        this._bindListeners();
-        this._setupButtons();
+        this.bindListeners();
+        this.setupButtons();
     }
 
-    /** @private */
-    _bindListeners() {
-        this._onButtonClick = this._onButtonClick.bind(this);
-        this._onRangePointerDown = this._onRangePointerDown.bind(this);
-        this._onRangePointerMove = this._onRangePointerMove.bind(this);
-        this._onRangePointerUpCancel = this._onRangePointerUpCancel.bind(this);
+    bindListeners() {
+        this.onButtonClick = this.onButtonClick.bind(this);
+        this.onRangePointerDown = this.onRangePointerDown.bind(this);
+        this.onRangePointerMove = this.onRangePointerMove.bind(this);
+        this.onRangePointerUpCancel = this.onRangePointerUpCancel.bind(this);
     }
 
-    _setupButtons() {
-        this._buttonIdPrefix = DOMHelper.uniqueIdPrefix("selectorButton");
+    setupButtons() {
+        this.buttonIdPrefix = DOMHelper.uniqueIdPrefix("selectorButton");
         /** @type {boolean[]} */
         this.checked = new Array(this.items.length).fill(true);
         /** @type {HTMLDivElement[]} */
-        this.buttons = range(this.items.length).map(index => this._createButton(index, true));
+        this.buttons = range(this.items.length).map(index => this.createButton(index));
     }
 
     /**
      * @param index
-     * @param {boolean} checked
      * @returns {HTMLDivElement}
-     * @private
      */
-    _createButton(index, checked) {
+    createButton(index) {
         const button = DOMHelper.createElement("div.selector-button");
-        const id = this._buttonIdPrefix + index.toString();
+        const id = this.buttonIdPrefix + index.toString();
         DOMHelper.setAttrs(button, {
             id: id,
             role: "checkbox",
             tabindex: 0,
-            "aria-checked": checked,
+            "aria-checked": this.checked[index],
             "aria-labelledby": id          // setting aria-labelledby to its own content
         });
 
@@ -67,20 +65,19 @@ export default class SelectorBlock {
         return button;
     }
 
-    _setupNode() {
-        this.node = DOMHelper.createElement("div.selector-block");
+    setupNode() {
+        this.node = DOMHelper.createElement("div.selector-block.selector-block-flex");
         this.node.append(...this.buttons);
     }
 
-    _setupButtonWatcher() {
+    setupButtonWatcher() {
         this.buttonWatcher = new SizeWatcher();
         this.buttonWatcher.watch(this.buttons);
     }
 
-    /** @private */
-    _setupContentFitter() {
+    setupContentFitter() {
         if (!this.buttonWatcher) {
-            this._setupButtonWatcher();
+            this.setupButtonWatcher();
         }
         this.contentFitter = new ElementFitter({
             watcher: this.buttonWatcher,
@@ -90,8 +87,7 @@ export default class SelectorBlock {
         this.contentFitter.fit(this.buttons.map(button => button.querySelector(".selector-button-content")));
     }
 
-    /** @private */
-    _setupLabelFitter() {
+    setupLabelFitter() {
         this.labelFitter = new ElementFitter({
             watcher: this.buttonWatcher,
             dimension: "width"
@@ -119,7 +115,7 @@ export default class SelectorBlock {
         }
 
         if (!this.labelFitter) {
-            this._setupLabelFitter();
+            this.setupLabelFitter();
         }
         this.labelFitter.updateChildren();
     }
@@ -144,14 +140,13 @@ export default class SelectorBlock {
          * @readonly
          * @type {HTMLDivElement}
          */
-        this._setupNode();
-        this._setupListeners();
-        this._setupButtonWatcher();
-        this._setupContentFitter();
+        this.setupNode();
+        this.setupListeners();
+        this.setupButtonWatcher();
+        this.setupContentFitter();
     }
 
-    /** @private */
-    _callUpdateListeners() {
+    callUpdateListeners() {
         this.updateListeners.call(this, this.checked);
     }
 
@@ -187,7 +182,7 @@ export default class SelectorBlock {
      * @param {string} property
      * @param {function(any, number): boolean} callback
      */
-    _setARIAProperty(property, callback) {
+    setARIAProperty(property, callback) {
         for (const [index, button] of this.buttons.entries()) {
             DOMHelper.setARIA(button, property, callback(this.items[index], index));
         }
@@ -197,7 +192,7 @@ export default class SelectorBlock {
      * @param {function(any, number): boolean} callback
      */
     setChecked(callback) {
-        this.items.forEach((item, index) => this._setButtonChecked(
+        this.items.forEach((item, index) => this.setButtonChecked(
             index, callback(item, index), {
                 updateIfDisabled: true, callUpdateListeners: false
             })
@@ -208,7 +203,7 @@ export default class SelectorBlock {
      * @param {function(any, number): boolean} callback
      */
     setDisabled(callback) {
-        this._setARIAProperty("disabled", callback);
+        this.setARIAProperty("disabled", callback);
     }
 
     /**
@@ -244,7 +239,7 @@ export default class SelectorBlock {
      * @param {boolean} [updateIfDisabled=true]
      * @param {boolean} [callUpdateListeners=true]
      */
-    _setButtonChecked(index, checked, {updateIfDisabled = false, callUpdateListeners = true} = {}) {
+    setButtonChecked(index, checked, {updateIfDisabled = false, callUpdateListeners = true} = {}) {
         if (!updateIfDisabled && this.isDisabled(index)) {
             return;
         }
@@ -253,7 +248,7 @@ export default class SelectorBlock {
         this.checked[index] = checked;
 
         if (callUpdateListeners) {
-            this._callUpdateListeners();
+            this.callUpdateListeners();
         }
     }
 
@@ -275,66 +270,71 @@ export default class SelectorBlock {
     }
 
     /**
+     * @param {number[]} indices
+     * @param {boolean} [includeDisabled=false]
+     * @returns {boolean}
+     */
+    allChecked(indices, includeDisabled = false) {
+        return indices.every(index => (!includeDisabled && this.isDisabled(index)) || this.checked[index]);
+    }
+
+    /**
      * @param {(?number)[]} indices
      * @param {boolean} [updateIfDisabled=false]
      * @param {boolean} [callUpdateListeners=true]
      */
-    _toggleItems(indices, {updateIfDisabled = false, callUpdateListeners = true} = {}) {
-        const checked = indices.findIndex(index => !this.isChecked(index)) !== -1;
+    toggleItems(indices, {updateIfDisabled = false, callUpdateListeners = true} = {}) {
+        if (!indices) return;
 
+        const checked = !this.allChecked(indices);
         for (const index of indices) {
-            this._setButtonChecked(index, checked, {
+            this.setButtonChecked(index, checked, {
                 updateIfDisabled: updateIfDisabled,
                 callUpdateListeners: false
             });
         }
 
         if (callUpdateListeners) {
-            this._callUpdateListeners();
+            this.callUpdateListeners();
         }
     }
 
-    /** @private */
-    _setupListeners() {
-        this.node.addEventListener("click", this._onButtonClick);
-        this.node.addEventListener("keypress", this._onButtonClick);
+    setupListeners() {
+        this.node.addEventListener("click", this.onButtonClick);
+        this.node.addEventListener("keypress", this.onButtonClick);
 
-        this._resetRangeSelection();
-        this.node.addEventListener("pointerdown", this._onRangePointerDown);
+        this.resetRangeSelection();
+        this.node.addEventListener("pointerdown", this.onRangePointerDown);
     }
 
-    /** @private */
-    _removeListeners() {
-        this.node.removeEventListener("click", this._onButtonClick);
-        this.node.removeEventListener("keypress", this._onButtonClick);
+    removeListeners() {
+        this.node.removeEventListener("click", this.onButtonClick);
+        this.node.removeEventListener("keypress", this.onButtonClick);
 
-        this.node.removeEventListener("pointerdown", this._onRangePointerDown);
-        this.node.removeEventListener("pointermove", this._onRangePointerMove);
-    }
+        this.node.removeEventListener("pointerdown", this.onRangePointerDown);
+        this.node.removeEventListener("pointermove", this.onRangePointerMove);
 
-    /**
-     * @param {HTMLElement} target
-     * @returns {*}
-     * @private
-     */
-    _buttonFromTarget(target) {
-        return target.closest(".selector-button");
+        this.removeRangeListeners();
     }
 
     /**
      * @param {HTMLElement} target
      * @returns {number|null}
-     * @private
      */
-    _rangeTargetIndex(target) {
-        const el = this._buttonFromTarget(target);
+    rangeTargetIndex(target) {
+        const el = target.closest(".selector-button");
         return el ? parseInt(el.dataset.index) : null;
     }
 
     /**
      * @param {PointerEvent | KeyboardEvent} event
      */
-    _onButtonClick(event) {
+    onButtonClick(event) {
+        this.handleButtonClick(event);
+        this.handleButtonDblClick(event);
+    }
+
+    handleButtonClick(event) {
         if (event.type === "keypress" && event.key !== "Enter") {
             return;
         }
@@ -342,25 +342,26 @@ export default class SelectorBlock {
         const button = event.target.closest(".selector-button, .selector-button-gap");
         if (button && button.classList.contains("selector-button")) {
             const index = button.dataset.index;
-            this._setButtonChecked(index, !this.isChecked(index));
+            this.setButtonChecked(index, !this.isChecked(index));
         }
+    }
 
-        const targetIndex = this._rangeTargetIndex(event.target);
+    handleButtonDblClick(event) {
+        const targetIndex = this.rangeTargetIndex(event.target);
         if (targetIndex === null) return;
 
         if (event.type === "click" && event.detail % 2 === 0 && this.lastClickTargetIndex === targetIndex) {
-            this._toggleItems(range(this.buttons.length), {updateIfDisabled: true});
+            this.toggleItems(range(this.buttons.length), {updateIfDisabled: true});
         }
 
         this.lastClickTargetIndex = targetIndex;
     }
 
-    /** @private */
-    _resetRangeSelection() {
-        this._removeRangeListeners();
+    resetRangeSelection() {
+        this.removeRangeListeners();
 
         if (this.rangeIndices) {
-            this._buttonsRemoveClass(this.rangeIndices, "active");
+            this.buttonsRemoveClass(this.rangeIndices, "active");
         }
 
         this.rangeIndices = null;
@@ -371,119 +372,107 @@ export default class SelectorBlock {
 
     /**
      * @param {PointerEvent} event
-     * @private
      */
-    _onRangePointerMove(event) {
+    onRangePointerMove(event) {
         if (!this.isRangeSelecting) return;
         const target = document.elementFromPoint(event.clientX, event.clientY);
 
-        const clickItemIndex = this._rangeTargetIndex(target);
+        const clickItemIndex = this.rangeTargetIndex(target);
         if (clickItemIndex === null || this.rangeStopIndex === clickItemIndex) return;
 
         this.rangeStartIndex ??= clickItemIndex;
         this.rangeStopIndex = clickItemIndex;
-        this._updateRangeSelection();
+        this.updateRangeSelection();
     }
 
     /**
      * @param {PointerEvent} event
-     * @private
      */
-    _onRangePointerDown(event) {
-        const clickItemIndex = this._rangeTargetIndex(event.target);
+    onRangePointerDown(event) {
+        const clickItemIndex = this.rangeTargetIndex(event.target);
         if (clickItemIndex !== null) {
             this.rangeStartIndex = clickItemIndex;
             this.rangeStopIndex = clickItemIndex;
-            this._updateRangeSelection();
+            this.updateRangeSelection();
         }
 
         this.isRangeSelecting = true;
-        this._addRangeListeners();
+        this.addRangeListeners();
     }
 
     /**
      * @param {PointerEvent} event
-     * @private
      */
-    _onRangePointerUpCancel(event) {
+    onRangePointerUpCancel(event) {
         if (!this.isRangeSelecting) return;
 
         if (event.type === "pointerup" && this.rangeIndices && this.rangeStartIndex !== this.rangeStopIndex) {
-            this._toggleItems(this.rangeIndices);
+            this.toggleItems(this.rangeIndices);
         }
 
-        this._resetRangeSelection();
+        this.resetRangeSelection();
     }
 
-    /** @private */
-    _updateRangeSelection() {
+    updateRangeSelection() {
         if (this.rangeIndices) {
-            this._buttonsRemoveClass(this.rangeIndices, "active");
+            this.buttonsRemoveClass(this.rangeIndices, "active");
         }
 
         if (this.rangeStartIndex !== null && this.rangeStopIndex !== null) {
-            this.rangeIndices = this._getRangeIndices(this.rangeStartIndex, this.rangeStopIndex);
-            this._buttonsAddClass(this.rangeIndices, "active");
+            this.rangeIndices = this.getRangeIndices(this.rangeStartIndex, this.rangeStopIndex);
+            this.buttonsAddClass(this.rangeIndices, "active");
         } else {
             this.rangeIndices = null;
         }
     }
 
     /**
-     * @param {number} startIndex
-     * @param {number} stopIndex
+     * @param {number} start
+     * @param {number} stop
      * @returns {number[]}
      */
-    _getRangeIndices(startIndex, stopIndex) {
-        if (stopIndex < startIndex) {
-            [startIndex, stopIndex] = [stopIndex, startIndex];
-        }
-        return range(startIndex, stopIndex + 1);
+    getRangeIndices(start, stop) {
+        return rangeBetween(start, stop);
     }
 
-    /** @private */
-    _addRangeListeners() {
-        this.node.addEventListener("pointermove", this._onRangePointerMove);
-        document.addEventListener("pointerup", this._onRangePointerUpCancel);
-        document.addEventListener("pointercancel", this._onRangePointerUpCancel);
+    addRangeListeners() {
+        this.node.addEventListener("pointermove", this.onRangePointerMove);
+        document.addEventListener("pointerup", this.onRangePointerUpCancel);
+        document.addEventListener("pointercancel", this.onRangePointerUpCancel);
     }
 
-    /** @private */
-    _removeRangeListeners() {
-        this.node.removeEventListener("pointermove", this._onRangePointerMove);
-        document.removeEventListener("pointerup", this._onRangePointerUpCancel);
-        document.removeEventListener("pointercancel", this._onRangePointerUpCancel);
+    removeRangeListeners() {
+        this.node.removeEventListener("pointermove", this.onRangePointerMove);
+        document.removeEventListener("pointerup", this.onRangePointerUpCancel);
+        document.removeEventListener("pointercancel", this.onRangePointerUpCancel);
     }
 
     /**
      * @param {number[]} indices
      * @param {string} className
-     * @private
      */
-    _buttonsRemoveClass(indices, className) {
-        DOMHelper.removeClass(this._buttonsFromIndices(indices), className);
+    buttonsRemoveClass(indices, className) {
+        DOMHelper.removeClass(this.buttonsFromIndices(indices), className);
     }
 
     /**
      * @param {number[]} indices
      * @param {string} className
-     * @private
      */
-    _buttonsAddClass(indices, className) {
-        DOMHelper.addClass(this._buttonsFromIndices(indices), className);
+    buttonsAddClass(indices, className) {
+        DOMHelper.addClass(this.buttonsFromIndices(indices), className);
     }
 
     /**
      * @param {number[]} indices
      * @returns {HTMLDivElement[]}
-     * @private
      */
-    _buttonsFromIndices(indices) {
+    buttonsFromIndices(indices) {
         return indices.map(index => this.buttons[index]);
     }
 
     teardown() {
-        this._removeListeners();
+        this.removeListeners();
         this.buttonWatcher.teardown();
         this.contentFitter.teardown();
         if (this.labelFitter) {

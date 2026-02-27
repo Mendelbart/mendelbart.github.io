@@ -21,6 +21,7 @@ $selectorBorderRadius: .25rem;
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
+  width: 100%;
 
   &:not(:first-child) {
     margin-top: .375rem;
@@ -44,7 +45,7 @@ $selectorBorderRadius: .25rem;
     --label-gap: .1rem;
     --symbol-size: 1.4;
 
-    &:not(.selector-block-grid) {
+    &.selector-block-flex {
       display: flex;
       flex-wrap: wrap;
       justify-content: center;
@@ -60,25 +61,16 @@ $selectorBorderRadius: .25rem;
     }
 
     &.selector-block-grid {
-      --gridTemplateColumns: repeat(var(--columns), minmax(var(--button-min-width), var(--button-max-width)));
       display: grid;
-      grid-template-columns: var(--gridTemplateColumns);
 
-      &.has-row-labels-start {
-        grid-template-columns: auto var(--gridTemplateColumns);
+      .selector-label-gap {
+        visibility: hidden;
       }
 
-      &.has-row-labels-end {
-        grid-template-columns: var(--gridTemplateColumns) auto;
-      }
-
-      &.has-row-labels-both {
-        grid-template-columns: auto var(--gridTemplateColumns) auto;
-      }
-
-      .block-label {
-        display: grid;
-        place-items: center;
+      .grid-label {
+        display: flex;
+        justify-content: center;
+        align-items: center;
         border-radius: $selectorBorderRadius;
         padding: .1rem .2rem;
         cursor: pointer;
@@ -87,17 +79,16 @@ $selectorBorderRadius: .25rem;
       }
 
       @media (hover: hover) {
-        .block-label:hover {
+        .grid-label:hover {
           background: var(--clr-selector-button-hover);
         }
       }
 
-      .block-label:active {
+      .grid-label:active {
         background: var(--clr-selector-button-active);
       }
 
       .selector-button[aria-disabled="true"] {
-        pointer-events: none;
         visibility: hidden;
       }
     }

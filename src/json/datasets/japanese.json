@@ -17,27 +17,25 @@
     "font": {"key": "sans", "weight": 600},
     "blocks": [
       {
-        "mode": "grid",
-        "indices": "0:44",
-        "gaps": "36,38,46:48",
-        "nColumns": 5,
-        "columnLabels": "aiueo",
+        "grid": true,
+        "indices": "1:45",
+        "dimensions": [10, 5],
+        "gaps": "(8|2,4);(10|2:4)",
         "rowLabels": "∅kstnhmyrw",
-        "rangeSelectionMode": "grid"
+        "columnLabels": "aiueo"
       },
       {
-        "mode": "grid",
-        "indices": "45:69",
-        "nColumns": 5,
-        "columnLabels": "aiueo",
+        "grid": true,
+        "indices": "46:70",
+        "dimensions": [5, 5],
         "rowLabels": "gzdbp",
-        "rangeSelectionMode": "grid"
+        "columnLabels": "aiueo"
       },
       {
-        "mode": "grid",
-        "indices": "rest",
-        "nColumns": 1,
-        "rowLabels": ["n"]
+        "grid": true,
+        "indices": "71",
+        "dimensions": [1, 1],
+        "rowLabels": "n"
       }
     ],
     "style": {"buttonMaxWidth": "4ch"},

@@ -1,51 +1,31 @@
 import {range, filterIndices} from "../helpers/array";
 
 
-export function transposeIndices(indices, n, m) {
-    if (indices.length !== n * m) {
-        throw new Error("Dimensions don't match.");
-    }
-    return transposedRange(n, m).map(i => indices[i]);
-}
-
-export function transposedRange(n, m) {
-    const result = new Array(n*m);
-    for (let i = 0; i < n; i++) {
-        for (let j = 0; j < m; j++) {
-            result[i * m + j] = j * n + i;
-        }
-    }
-    return result;
-}
-
 /**
  * @param {(string | number[])[]} subsets
  * @param {number} n
+ * @param {function(string): number} [parseIndex]
  * @returns {number[][]}
  */
-export function processIndexSubsets(subsets, n) {
+export function processIndexSubsets(subsets, n, parseIndex) {
     const result = [];
     const covered = new Array(n).fill(false);
 
     for (const [i, subset] of subsets.entries()) {
         if (subset === "rest") {
-            if (i !== subsets.length - 1) {
-                console.error("Can only have subset 'rest' at the end.");
-            }
+            if (i !== subsets.length - 1) console.error("Can only have subset 'rest' at the end.");
+
             result.push(filterIndices(covered, x => !x));
             break;
         }
         const indices = [];
 
-        for (const index of processIndices(subset)) {
+        for (const index of processIndices(subset, parseIndex)) {
             indices.push(index);
 
-            if (index === null) {
-                continue;
-            }
-            if (covered[index]) {
-                throw new Error(`Duplicate subset index ${index}.`);
-            }
+            if (index == null) continue;
+            if (covered[index]) throw new Error(`Duplicate subset index ${index}.`);
+
             covered[index] = true;
         }
         result.push(indices);
@@ -62,18 +42,19 @@ export function processIndexSubsets(subsets, n) {
 
 /**
  * @param {number | number[] | string} indices
- * @returns {(number|null)[]}
+ * @param {function(string): number} [parseIndex]
+ * @returns {number[]}
  */
-export function processIndices(indices) {
+export function processIndices(indices, parseIndex) {
     if (typeof indices === "string") {
-        return parseRanges(indices);
+        return parseRanges(indices, parseIndex);
     }
 
-    if (typeof indices === "number") {
+    if (Number.isInteger(indices)) {
         return [indices];
     }
 
-    if (!Array.isArray(indices)) {
+    if (!Array.isArray(indices) || indices.some(x => !Number.isInteger(x))) {
         throw new Error("Invalid indices datatype: need string, number or number[].")
     }
 
@@ -90,48 +71,54 @@ function containsDuplicates(a) {
 
 /**
  * @param {string} str
- * @returns {(number|null)[]}
+ * @param {function(string): number} [parseIndex]
+ * @returns {number[]}
  */
-export function parseRanges(str) {
-    return [].concat(...str.split(",").map(parseRange));
+export function parseRanges(str, parseIndex) {
+    return [].concat(...str.split(/,\s*/g).map(range => parseRange(range, parseIndex)));
 }
 
 /**
+ * Julia-like range syntax: `start:stop` or `start:step:stop` (inclusive).
+ * Optionally specify a function `parseIndex(string) => number` to parse the `start` and `stop`. Default is `parseInt`,
+ * which is always used for `step`.
+ *
  * @param {string} str
+ * @param {function(string): number} [parseIndex] - opt. Function to split
  * @returns {number[]}
+ *
+ * @example
+ * parseRange("2")
+ * // -> [2]
+ * parseRange("1:5")
+ * // -> [1, 2, 3, 4, 5]
+ * parseRange("6:2:-2")
+ * // -> [6, 4, 2]
+ * parseRange("a:z", c => c.charCodeAt(0))
+ * // -> [97, 98, ..., 121, 122]
  */
-export function parseRange(str) {
-    const vals = str.split(":").map(parseIntThrowNaN);
-    if (vals.length === 1) {
-        return vals;
-    }
-
-    if (vals.length === 0 || vals.length > 3) {
+export function parseRange(str, parseIndex = parseInt) {
+    const numStrs = str.split(":");
+    const nArgs = numStrs.length;
+    if (nArgs.length === 0 || nArgs.length > 3) {
         throw new Error("Invalid range, 2-3 numbers.");
     }
 
-    const start = vals[0];
-    const stop = vals[vals.length - 1];
-    const step = vals.length === 3 ? vals[1] : 1;
+    const vals = numStrs.map((x, i) => {
+        const index = nArgs === 3 && i === 1 ? parseInt(x) : parseIndex(x);
+        if (!Number.isInteger(index)) {
+            throw new Error(`Parsed non-integer index ${index}.`);
+        }
+        return index;
+    });
 
-    if (stop < start || step < 1) {
-        throw new Error("Invalid range, must have start <= stop and step >= 1.");
-    }
+    if (nArgs === 1) return vals;
 
-    return range(start, stop + 1, step);
-}
-
-/**
- * Parse int, throws Error if the value is NaN.
- * @param {string} str
- * @returns {number}
- */
-export function parseIntThrowNaN(str) {
-    const result = parseInt(str);
-    if (isNaN(result)) {
-        throw new Error("Not a number.");
-    }
-    return result;
+    return range(
+        vals[0],
+        vals[nArgs - 1] + 1,
+        nArgs === 3 ? vals[1] : 1
+    );
 }
 
 /**
@@ -152,4 +139,43 @@ export function invertSubsets(subsets, n) {
     }
 
     return ind;
+}
+
+
+/**
+ * @param {string} ranges
+ * @param {function(string): number} [parseIndex]
+ */
+export function parseMatrixRanges(ranges, parseIndex) {
+    if (!ranges || ranges.length === 0) {
+        return [];
+    }
+    return [].concat(...ranges.split(/;\s*/g).map(range => parseMatrixRange(range, parseIndex)));
+}
+
+/**
+ * Format: ({ROWS-RANGE}|{COLUMNS-RANGE})
+ * @param {string} range
+ * @param {function(string): number} [parseIndex]
+ */
+function parseMatrixRange(range, parseIndex) {
+    if (range.charAt(0) !== '(' || range.charAt(range.length - 1) !== ')') {
+        throw new Error(`Invalid matrix range syntax: Need enclosing parentheses.`);
+    }
+
+    const ranges = range.substring(1, range.length - 1).split('|');
+    if (ranges.length !== 2) throw new Error("Invalid matrix range syntax: Need (ROWS|COLUMNS)");
+
+    return matrixIndices(...ranges.map(range => parseRanges(range, parseIndex)));
+}
+
+export function matrixIndices(rows, columns) {
+    const keys = [];
+    for (const row of rows) {
+        for (const col of columns) {
+            keys.push([row, col]);
+        }
+    }
+
+    return keys;
 }

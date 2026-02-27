@@ -112,7 +112,19 @@
           "properties": {
             "blocks": {
               "type": "array",
-              "items": {"$ref": "#/$defs/selectorBlock"}
+              "items": {
+                "$ref": "#/$defs/selectorBlock",
+                "properties": {
+                  "indices": {
+                    "oneOf": [
+                      {"$ref": "#/$defs/indexRanges"},
+                      {"const": "rest"}
+                    ],
+                    "description": "Python-like ranges or \"rest\" (default)."
+                  }
+                },
+                "required": ["indices"]
+              }
             }
           },
           "required": ["blocks"]
@@ -290,6 +302,15 @@
               }
             }
           }
+        },
+        "setting": {
+          "type": "object",
+          "properties": {
+            "type": {
+              "enum": ["select", "buttonGroup"],
+              "default": "select"
+            }
+          }
         }
       },
       "required": ["data"],
@@ -407,23 +428,27 @@
     "selectorBlock": {
       "type": "object",
       "properties": {
-        "mode": {
-          "description": "\"flex\" or \"grid\" for a CSS flexbox or grid layout respectively.",
-          "enum": ["flex", "grid"]
-        },
-        "style": {"$ref": "#/$defs/blockStyle"}
+        "style": {"$ref": "#/$defs/blockStyle"},
+        "grid": {
+          "type": "boolean",
+          "default": false
+        }
       },
       "if": {
         "properties": {
-          "mode": {"const": "grid"}
+          "grid": {"const": true}
         }
       },
       "then": {
         "properties": {
-          "indices": {"$ref": "#/$defs/indicesWithGaps"},
-          "nColumns": {
-            "type": "integer",
-            "minimum": 1
+          "dimensions": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "minLength": 2,
+            "maxLength": 2
           },
           "columnLabels": {"$ref": "#/$defs/blockLabels"},
           "rowLabels": {"$ref": "#/$defs/blockLabels"},
@@ -435,34 +460,31 @@
             "enum": ["start", "end", "both"],
             "default": "start"
           },
-          "rangeSelectionMode": {
+          "rangeMode": {
             "enum": ["grid", "walkRows", "walkColumns"],
             "default": "grid",
             "description": "How elements are selected using range selection."
           },
-          "transpose": {
-            "type": "boolean",
-            "default": false,
-            "description": "If true, items are ordered in columns first, then rows."
-          }
+          "fillDirection": {
+            "enum": ["rows", "columns"],
+            "default": "rows",
+            "description": "How to fill the grid with items from the array."
+          },
+          "gaps": {"$ref": "#/$defs/matrixRanges"}
         },
-        "required": ["nColumns"]
+        "required": ["dimensions"]
       },
-      "else": {
-        "properties": {
-          "indices": {"$ref": "#/$defs/indicesWithoutGaps"}
-        }
-      }
+      "additionalProperties": false
     },
-    "indicesWithGaps": {
+    "indexRanges": {
       "type": "string",
-      "pattern": "^(rest|((gap\\d*|\\d+(:\\d+){0,2}),)*(gap\\d*|\\d+(:\\d+){0,2}))$",
-      "description": "\"rest\" or Python-like range syntax (inclusive ranges!) or gap{WIDTH=1}, separated by commas. E.g. \"0,gap2,1:9\""
+      "pattern": "^(\\d+(:\\d+){0,2}(,|$))+",
+      "description": "Julia-like range syntax, separated by commas. E.g. \"0:9:90, 2:8, 4\"."
     },
-    "indicesWithoutGaps": {
+    "matrixRanges": {
       "type": "string",
-      "pattern": "^(rest|(\\d+(:\\d+){0,2},)*(\\d+(:\\d+){0,2}))$",
-      "description": "\"rest\" or Python-like range syntax (inclusive ranges!), separated by commas. E.g. \"0:9:90,2:9:91\"."
+      "pattern": "^(\\((\\d+(:\\d+){0,2},)*(\\d+(:\\d+){0,2},?)\\|(\\d+(:\\d+){0,2},)*(\\d+(:\\d+){0,2},?)\\)(;|$))+$",
+      "description": "Comma-separated list of 'rectangle' ranges (ROWS|COLUMNS), where ROWS and COLUMNS are in range-syntax."
     },
     "blockLabels": {
       "description": "If string, split up into characters as labels. Use null for a gap instead of a label.",

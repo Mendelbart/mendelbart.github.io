@@ -4,10 +4,41 @@ from subprocess import run
 from os import listdir
 from os.path import join
 import re
+import warnings
 
 datasets_dir = "dist/json/datasets"
-source_fonts_dir = "fonts/ttf"
-subset_fonts_dir = "dist/assets/fonts"
+source_fonts_dir = "fonts/scripts"
+subset_fonts_dir = "dist/assets/fonts/scripts"
+
+def get_family(font_data, dataset_fonts, default):
+    family = default
+    if "key" in font_data:
+        family = dataset_fonts[font_data["key"]]["family"]
+
+    return family
+
+
+def contains_subsettable_fonts(fonts, subsettable_fonts):
+    for font_data in fonts.values():
+        if not "family" in font_data:
+            raise ValueError("No family specified in font entry.")
+
+        if font_data["family"] in subsettable_fonts:
+            return True
+
+    return False
+
+
+def get_default_font(fonts):
+    for key, font_data in fonts.items():
+        if "default" in font_data and font_data["default"]:
+            return font_data["family"]
+
+    if len(fonts) == 1:
+        return list(fonts.values())[0]["family"]
+    else:
+        raise ValueError("No default font specified.")
+
 
 def main():
     with open("src/json/fonts.json", 'r') as fontsJSON:
@@ -17,18 +48,12 @@ def main():
     charsets = {family: set() for family in fonts}
     stylesets = {family: set() for family in fonts}
 
-    def get_family(font_data, fonts, default):
-        family = default
-        if "key" in font_data:
-            family = fonts[font_data["key"]]["family"]
-
-        if family not in charsets:
-            raise ValueError(f'Unknown font family "{family}"')
-
-        return family
-
 
     def update_charset(family, chrs):
+        if family not in fonts:
+            warnings.warn(f"Family '{family}' not font in fonts.json.")
+            return
+
         if isinstance(chrs, list):
             chrs = "".join(chrs)
 
@@ -41,22 +66,10 @@ def main():
 
         print("Processing dataset", dataset["name"])
 
-        default_font = None
+        if not contains_subsettable_fonts(dataset["fonts"], fonts):
+            continue
 
-        for key, font_data in dataset["fonts"].items():
-            if not "family" in font_data:
-                raise ValueError("No family specified in font entry.")
-
-            if "default" in font_data and font_data["default"]:
-                default_font = font_data["family"]
-                break
-
-        if default_font is None:
-            if len(dataset["fonts"]) == 1:
-                default_font = list(dataset["fonts"].values())[0]["family"]
-            else:
-                raise ValueError("No default font specified.")
-
+        default_font = get_default_font(dataset["fonts"])
         dataset_chars = set()
 
         game_heading = dataset["metadata"]["gameHeading"]
@@ -76,16 +89,17 @@ def main():
 
 
         for font_data in dataset["fonts"].values():
-            if not "family" in font_data:
-                raise ValueError("No family specified in font entry.")
+            family = font_data["family"]
+            if family not in fonts:
+                continue
 
-            update_charset(font_data["family"], dataset_chars)
+            update_charset(family, dataset_chars)
 
             if "styleset" in font_data:
                 vals = re.split(r",\s*", font_data["styleset"])
 
                 for val in vals:
-                    stylesets[font_data["family"]].add(fonts[font_data["family"]]["styleset"][val])
+                    stylesets[family].add(fonts[family]["styleset"][val])
 
 
     for family, font in fonts.items():

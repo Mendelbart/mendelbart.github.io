@@ -1,6 +1,6 @@
 @font-face {
   font-family: "FontAwesome";
-  src: url("/kadmos/assets/fonts/fa-solid-900.woff2");
+  src: url("/kadmos/assets/fonts/icons/fa-solid-900.woff2");
   font-display: swap;
   font-style: normal;
   font-weight: 900;
@@ -35,6 +35,10 @@
 
 .fa-exit {
   --fa: "\f08b";
+}
+
+.fa-caret-down {
+  --fa: "\f0d7";
 }
 
 .icon-button {

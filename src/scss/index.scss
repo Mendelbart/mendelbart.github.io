@@ -260,6 +260,9 @@ select {
   &> select {
     width: 100%;
     appearance: none;
+    padding-inline-end: 1.75em;
+    text-overflow: ellipsis;
+    overflow-x: hidden;
   }
 
   &::after {
@@ -271,7 +274,7 @@ select {
     place-items: center;
     position: absolute;
     height: 100%;
-    right: .75rem;
+    right: .625em;
     top: 0;
     pointer-events: none;
   }
@@ -353,9 +356,25 @@ input[type="range"] {
   flex-direction: column;
   align-items: stretch;
   gap: .5rem;
+  overflow-x: hidden;
 
   &:empty {
     display: none;
+  }
+
+  .setting {
+    min-width: 0;
+    overflow: auto visible;
+  }
+
+  &.inline {
+    flex-direction: row;
+    flex-wrap: wrap;
+
+    .setting:has(> :is(.styled-select, .slider-container)) {
+      flex-grow: 1;
+      width: 7.5rem;
+    }
   }
 }
 

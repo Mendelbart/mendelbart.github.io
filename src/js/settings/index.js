@@ -355,7 +355,7 @@ export class ValueElement {
     }
 }
 
-DOMHelper.registerTemplate("buttonGroupContainer", DOMHelper.createElement("fieldset.button-group"));
+DOMHelper.registerTemplate("buttonGroupContainer", DOMHelper.createElement("fieldset.button-group.setting"));
 
 /** @implements Setting */
 export class ButtonGroup {
@@ -485,6 +485,15 @@ export class ButtonGroup {
     }
 
     get value() {
+        if (this.exclusive) {
+            for (const input of Object.values(this.inputs)) {
+                if (input.checked) {
+                    return input.value;
+                }
+            }
+            return null;
+        }
+
         return ObjectHelper.filterKeys(this.inputs, input => input.checked);
     }
 
