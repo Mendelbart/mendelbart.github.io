@@ -1,5 +1,5 @@
-import {DOMHelper, ObjectHelper, FontHelper, FunctionStack} from "../helpers";
-import {ItemDealer} from "./dealer.js";
+import {DOMHelper, ObjectHelper, FontHelper, FunctionSet} from "../helpers";
+import ItemDealer from "./dealer.js";
 import {Slider, SettingCollection, ValueElement} from "../settings";
 import {ItemProperty, ListProperty} from "../dataset/symbol.js";
 
@@ -14,7 +14,7 @@ DOMHelper.registerTemplates({
 </div>`
 });
 
-export class Game {
+export default class Game {
     /**
      * @param {Dataset} dataset
      * @param {QuizItem[]} items
@@ -28,13 +28,12 @@ export class Game {
         this.properties = properties;
         this.language = language;
         this.dealer = new ItemDealer(items);
-        this.onFinish = new FunctionStack();
+        this.onFinish = new FunctionSet();
         this.variant = variant;
 
         this.updateProgressBar();
 
         this.onInputKeydown = this.onInputKeydown.bind(this);
-        this._show = this._show.bind(this);
         this.loadAndUpdateSymbolFont = this.loadAndUpdateSymbolFont.bind(this);
     }
 
@@ -127,15 +126,15 @@ export class Game {
         document.querySelector("#game-symbols").style.setProperty("--symbol-weight", value.toString());
     }
 
-    loadAndUpdateSymbolFont(key = null) {
-        key ??= this.fontSettings.getValue("family");
+    loadAndUpdateSymbolFont(key) {
+        key ||= this.fontSettings.getValue("family");
         return FontHelper.loadFont(this.dataset.getFont(key, this.variant)).then(
             () => this.updateSymbolFontFamily(key)
         ).catch(err => console.error(err));
     }
 
     updateSymbolFontFamily(key) {
-        key ??= this.fontSettings.getValue("family");
+        key ||= this.fontSettings.getValue("family");
         document.querySelectorAll("#game-symbols .symbol-string").forEach(element => {
             this.setSymbolFont(element, key);
         });
@@ -148,10 +147,10 @@ export class Game {
         /**
          * @type {Slider}
          */
-        const weightRange = this.fontSettings.getSetting("weight");
+        const weightRange = this.fontSettings.get("weight");
 
-        if (data.variationSettings && data.variationSettings.wght) {
-            const [min, max] = data.variationSettings.wght.split(" ").map(x => parseInt(x, 10));
+        if (data.variationSettings?.wght) {
+            const [min, max] = data.variationSettings.wght.split(" ").map(x => parseInt(x));
             weightRange.setMin(min);
             weightRange.setMax(max);
             DOMHelper.show(weightRange.node);
@@ -171,8 +170,8 @@ export class Game {
 
         document.querySelector("#font-settings").replaceChildren(...this.fontSettings.nodeList());
 
-        this.fontSettings.addUpdateListener("weight", this.updateSymbolWeight);
-        this.fontSettings.addUpdateListener("family", () => DOMHelper.transition(this.loadAndUpdateSymbolFont));
+        this.fontSettings.addObserverTo("weight", this.updateSymbolWeight);
+        this.fontSettings.addObserverTo("family", () => DOMHelper.transition(this.loadAndUpdateSymbolFont));
 
         this.updateSymbolWeight(defaultWeight);
         return this.loadAndUpdateSymbolFont();
@@ -204,7 +203,7 @@ export class Game {
 
     finish() {
         setTimeout(() => this.cleanup(), 100);
-        this.onFinish.call(this);
+        this.onFinish.call();
     }
 
     /**
@@ -350,13 +349,8 @@ export class Game {
      * @param {"inputs"|"evals"} which
      */
     show(which) {
-        this.shown = which;
-        requestAnimationFrame(this._show);
-    }
-
-    _show() {
         DOMHelper.toggleShown(
-            this.shown === "inputs",
+            which === "inputs",
             [
                 document.getElementById("game-inputs"),
                 document.getElementById("item-submit-button")
@@ -368,12 +362,12 @@ export class Game {
         );
 
         DOMHelper.toggleShown(
-            this.shown === "inputs",
+            which === "inputs",
             null, document.querySelector('#symbol-current .symbol-label'),
             "visibility"
         );
 
-        if (this.shown === "inputs") {
+        if (which === "inputs") {
             document.querySelectorAll("#game-symbols .symbol-reference").forEach(el => {
                 el.remove();
             });

@@ -1,6 +1,7 @@
-import {DOMHelper, ArrayHelper, FunctionStack} from "../helpers";
+import {DOMHelper, ArrayHelper} from "../helpers";
 import {ElementFitter, SizeWatcher} from "../helpers/classes/ElementFitter";
 import {rangeBetween} from "../helpers/array";
+import Observable from "../helpers/classes/Observable";
 const range = ArrayHelper.range;
 
 const STYLE_PROPERTIES = {
@@ -11,11 +12,12 @@ const STYLE_PROPERTIES = {
     symbolMinWidth: "--symbol-min-width",
 };
 
-export default class SelectorBlock {
+export default class SelectorBlock extends Observable {
     /**
      * @param {any[]} items
      */
     constructor(items) {
+        super();
         /**
          * @readonly
          * @type {*[]}
@@ -25,7 +27,6 @@ export default class SelectorBlock {
         }
 
         this.items = items;
-        this.updateListeners = new FunctionStack();
 
         this.bindListeners();
         this.setupButtons();
@@ -82,7 +83,8 @@ export default class SelectorBlock {
         this.contentFitter = new ElementFitter({
             watcher: this.buttonWatcher,
             uniformFactor: 1.5,
-            dimension: "width"
+            dimension: "width",
+            scalingProperty: "font-size"
         });
         this.contentFitter.fit(this.buttons.map(button => button.querySelector(".selector-button-content")));
     }
@@ -90,7 +92,8 @@ export default class SelectorBlock {
     setupLabelFitter() {
         this.labelFitter = new ElementFitter({
             watcher: this.buttonWatcher,
-            dimension: "width"
+            dimension: "width",
+            scalingProperty: "font-size"
         });
         this.labelFitter.fit(this.buttons.map(button => button.querySelector(".selector-button-label")));
     }
@@ -146,8 +149,8 @@ export default class SelectorBlock {
         this.setupContentFitter();
     }
 
-    callUpdateListeners() {
-        this.updateListeners.call(this, this.checked);
+    observerArgs() {
+        return [this.checked];
     }
 
     /**
@@ -194,7 +197,7 @@ export default class SelectorBlock {
     setChecked(callback) {
         this.items.forEach((item, index) => this.setButtonChecked(
             index, callback(item, index), {
-                updateIfDisabled: true, callUpdateListeners: false
+                updateIfDisabled: true, callObservers: false
             })
         );
     }
@@ -237,9 +240,9 @@ export default class SelectorBlock {
      * @param {number} index
      * @param {boolean} checked
      * @param {boolean} [updateIfDisabled=true]
-     * @param {boolean} [callUpdateListeners=true]
+     * @param {boolean} [callObservers=true]
      */
-    setButtonChecked(index, checked, {updateIfDisabled = false, callUpdateListeners = true} = {}) {
+    setButtonChecked(index, checked, {updateIfDisabled = false, callObservers = true} = {}) {
         if (!updateIfDisabled && this.isDisabled(index)) {
             return;
         }
@@ -247,8 +250,8 @@ export default class SelectorBlock {
         DOMHelper.setARIA(this.buttons[index], "checked", checked);
         this.checked[index] = checked;
 
-        if (callUpdateListeners) {
-            this.callUpdateListeners();
+        if (callObservers) {
+            this.callObservers();
         }
     }
 
@@ -281,21 +284,21 @@ export default class SelectorBlock {
     /**
      * @param {(?number)[]} indices
      * @param {boolean} [updateIfDisabled=false]
-     * @param {boolean} [callUpdateListeners=true]
+     * @param {boolean} [callObservers=true]
      */
-    toggleItems(indices, {updateIfDisabled = false, callUpdateListeners = true} = {}) {
+    toggleItems(indices, {updateIfDisabled = false, callObservers = true} = {}) {
         if (!indices) return;
 
         const checked = !this.allChecked(indices);
         for (const index of indices) {
             this.setButtonChecked(index, checked, {
                 updateIfDisabled: updateIfDisabled,
-                callUpdateListeners: false
+                callObservers: false
             });
         }
 
-        if (callUpdateListeners) {
-            this.callUpdateListeners();
+        if (callObservers) {
+            this.callObservers();
         }
     }
 

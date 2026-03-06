@@ -560,6 +560,14 @@ function getScale(elementSize, containerSize, grow = false) {
 }
 
 
+/**
+ * @param {HTMLElement} element
+ * @param {number} scale
+ */
+export function scaleElement(element, scale) {
+    element.style.scale = scale === 1 ? "" : scale;
+}
+
 
 /**
  * @param {HTMLElement} container

@@ -6,6 +6,7 @@ import {range} from "../helpers/array";
 import {Selector, SelectorBlock, SelectorGridBlock, Matrix} from "../selector";
 import {parseMatrixRanges, processIndexSubsets} from "../selector/indices";
 
+
 DOMHelper.registerTemplate(
     "headingElement",
     `<div class="heading-element"><span class="heading-element-number"></span><span class="heading-element-symbol"></span></div>`
@@ -263,7 +264,7 @@ export class Dataset {
 
 
     // ============================= SETTINGS ============================
-    getGameSettings(checked) {
+    getGameSettings(checked = {}) {
         const settings = {};
         if (this.hasSetting("properties")) {
             settings.properties = this.propertySetting(checked.properties);
@@ -274,7 +275,7 @@ export class Dataset {
         return SettingCollection.createFrom(settings);
     }
 
-    getFilterSettings(checked) {
+    getSelectorSettings(checked = {}) {
         const settings = {};
         if (this.hasVariants()) {
             settings.variant = this.variantSetting(checked.variant);
@@ -389,67 +390,6 @@ export class Dataset {
         return selector;
     }
 
-    createSelector() {
-        const subsets = processIndexSubsets(
-            this.selectorData.blocks.map(block => block.indices),
-            this.items.length,
-            x => parseInt(x) - 1
-        );
-
-        return new Selector(this.items, subsets, (items, b) => {
-            const data = this.selectorData.blocks[b];
-            if (data.grid) {
-                const block = new SelectorGridBlock(items);
-
-                this.setupSelectorGrid(block, data);
-                if (data.rowLabels) this.setupGridLabels(block, "row", data.rowLabels, data.rowLabelPosition);
-                if (data.columnLabels) this.setupGridLabels(block, "column", data.columnLabels, data.columnLabelPosition);
-
-                if (data.rangeMode) block.setRangeMode(data.rangeMode);
-
-                return block;
-            } else {
-                return new SelectorBlock(items);
-            }
-        });
-    }
-
-    setupSelectorButtons(selector, variant) {
-        const lang = this.getLang(variant);
-        const dir = this.getDir();
-
-        selector.setupButtonContents(item => {
-            const content = DOMHelper.createElement("span.symbol-string");
-            content.append(...Object.values(item.getFormNodes()));
-            if (lang) content.lang = lang;
-            if (dir) content.dir = dir;
-            return content;
-        });
-
-        if (this.selectorData.label) {
-            selector.labelButtons(item => item.getSelectorLabel(this.selectorData.label));
-        }
-    }
-
-    getLang(variant = null) {
-        if (variant) {
-            return this.variants.data[variant].lang ?? variant;
-        } else {
-            return this.metadata.lang;
-        }
-    }
-
-    getDir() {
-        return this.metadata.dir;
-    }
-
-    applySelectorFont(selector, variant) {
-        const font = this.getSelectorDisplayFont(variant);
-        selector.updateButtonContents(content => {
-            FontHelper.setFont(content, font);
-        });
-    }
-
     /**
      * @param {SelectorGridBlock} block
      * @param {[number, number]} dimensions
@@ -477,37 +417,46 @@ export class Dataset {
         block.setGridLabels(type, labels, position);
     }
 
-    applySelectorStyles(selector) {
-        selector.node.dir = this.getDir();
+    createSelector() {
+        const subsets = processIndexSubsets(
+            this.selectorData.blocks.map(block => block.indices),
+            this.items.length,
+            x => parseInt(x) - 1
+        );
 
-        if (this.selectorData.style) {
-            selector.applyStyle(this.selectorData.style);
-        }
+        return new Selector(this.items, subsets, (items, b) => {
+            const data = this.selectorData.blocks[b];
+            if (data.grid) {
+                const block = new SelectorGridBlock(items);
 
-        this.selectorData.blocks.forEach((block, index) => {
-            if (block.style) selector.blocks[index].applyStyle(block.style);
+                this.setupSelectorGrid(block, data);
+                if (data.rowLabels) this.setupGridLabels(block, "row", data.rowLabels, data.rowLabelPosition);
+                if (data.columnLabels) this.setupGridLabels(block, "column", data.columnLabels, data.columnLabelPosition);
+
+                if (data.rangeMode) block.setRangeMode(data.rangeMode);
+
+                return block;
+            } else {
+                return new SelectorBlock(items);
+            }
         });
     }
 
-    /**
-     * @param {Selector} selector
-     * @param {string[]} [forms]
-     * @param {string} [variant]
-     */
-    applySettings(selector, {forms, variant}) {
-        const formKeys = this.getFormKeysFromSetting(forms);
-        selector.updateButtonContents(content => {
-            content.querySelectorAll(".symbol-form").forEach(elem => {
-                const shown = formKeys.includes(elem.dataset.form);
-                DOMHelper.toggleShown(shown, elem);
-            });
-        });
+    getSelectorBlockStyles() {
+        const baseStyle = this.selectorData.style ?? {};
+        return this.selectorData.blocks.map(block => Object.assign(baseStyle, block.style));
+    }
 
-        const variantIndices = this.getVariantItemIndices(variant);
-        selector.setDisabled(
-            (item, index) => !variantIndices.has(index) || item.getForms(formKeys).length === 0
-        );
-        this.applySelectorFont(selector, variant);
+    getLang(variant = null) {
+        if (variant) {
+            return this.variants.data[variant].lang ?? variant;
+        } else {
+            return this.metadata.lang;
+        }
+    }
+
+    getDir() {
+        return this.metadata.dir;
     }
 
     /**

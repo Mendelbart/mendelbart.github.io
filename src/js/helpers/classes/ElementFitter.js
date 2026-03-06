@@ -1,19 +1,20 @@
-import {FunctionStack} from "./FunctionStack";
+import Observable from "./Observable";
+import {scaleElement} from "../dom";
 
 
-export class SizeWatcher {
+export class SizeWatcher extends Observable {
     constructor() {
+        super();
         /**
          * @type {WeakMap<HTMLElement, ResizeObserverSize>}
          */
         this.sizes = new WeakMap();
 
         this.updateSize = this.updateSize.bind(this);
-        this.updateListeners = new FunctionStack();
 
-        this.observer = new ResizeObserver(entries => {
+        this.resizeObserver = new ResizeObserver(entries => {
             entries.forEach(this.updateSize);
-            this.updateListeners.call(this, entries.map(entry => entry.target));
+            this.observers.call(entries.map(entry => entry.target));
         });
     }
 
@@ -22,7 +23,7 @@ export class SizeWatcher {
      */
     watch(elements) {
         for (const element of elements) {
-            this.observer.observe(element);
+            this.resizeObserver.observe(element);
         }
     }
 
@@ -31,7 +32,7 @@ export class SizeWatcher {
      */
     unwatch(elements) {
         for (const element of elements) {
-            this.observer.unobserve(element);
+            this.resizeObserver.unobserve(element);
             if (this.sizes.has(element)) {
                 this.sizes.delete(element);
             }
@@ -53,8 +54,8 @@ export class SizeWatcher {
     }
 
     teardown() {
-        this.observer.disconnect();
-        this.updateListeners.clear();
+        super.teardown();
+        this.resizeObserver.disconnect();
     }
 }
 
@@ -72,7 +73,7 @@ export class ElementFitter {
     } = {}) {
         this.watcher = watcher ?? new SizeWatcher();
         this.updateParents = this.updateParents.bind(this);
-        this.watcher.updateListeners.push(this.updateParents.bind(this));
+        this.watcher.observers.push(this.updateParents.bind(this));
 
         this.dimension = dimension;
         this.uniformFactor = uniformFactor;
@@ -189,7 +190,7 @@ export class ElementFitter {
      */
     _applyScale(child, scale = null) {
         scale ??= this.scales.get(child);
-        child.style.scale = Math.min(scale, this.minScale * this.uniformFactor);
+        scaleElement(child, Math.min(scale, this.minScale * this.uniformFactor));
     }
 
     /**
@@ -213,7 +214,7 @@ export class ElementFitter {
 
     teardown() {
         this.scales.clear();
-        this.watcher.updateListeners.remove(this.updateParents);
+        this.watcher.observers.remove(this.updateParents);
     }
 }
 

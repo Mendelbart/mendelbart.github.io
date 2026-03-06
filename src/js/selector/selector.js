@@ -1,9 +1,10 @@
 import {invertSubsets, processIndexSubsets} from "./indices";
 import SelectorBlock from "./block";
 import {range, sum} from "../helpers/array";
-import {DOMHelper, FunctionStack} from "../helpers";
+import {DOMHelper} from "../helpers";
+import Observable from "../helpers/classes/Observable";
 
-export default class Selector {
+export default class Selector extends Observable {
     /**
      * @template T
      * @param {T[]} items
@@ -11,6 +12,7 @@ export default class Selector {
      * @param {?function(T[], number): SelectorBlock} [createBlockCallback] Default: `(items, subsetIndex) => new SelectorBlock(items)`
      */
     constructor(items, subsets, createBlockCallback = null) {
+        super();
         this.items = items;
         this.subsets = processIndexSubsets(subsets, items.length);
         this.subsetsInverse = invertSubsets(this.subsets, items.length);
@@ -21,13 +23,11 @@ export default class Selector {
             return createBlockCallback ? createBlockCallback(items, s) : new SelectorBlock(items);
         });
 
-        this.updateListeners = new FunctionStack();
-        this._callUpdateListeners = this._callUpdateListeners.bind(this);
-        this.blocks.forEach(block => block.updateListeners.push(this._callUpdateListeners));
+        this.blocks.forEach(block => block.observers.push(this.callObservers));
     }
 
-    _callUpdateListeners() {
-        this.updateListeners.call(this, this.getChecked());
+    observerArgs() {
+        return [this.getChecked()];
     }
 
     /**
@@ -84,7 +84,7 @@ export default class Selector {
     }
 
     /**
-     * @param {boolean[] | function(any, number): boolean} callback
+     * @param {function(any, number): boolean} callback
      */
     setChecked(callback) {
         this._itemCallback((b, f) => b.setChecked(f), callback);
@@ -92,7 +92,7 @@ export default class Selector {
 
 
     /**
-     * @param {boolean[] | function(any, number): boolean} callback
+     * @param {function(any, number): boolean} callback
      */
     setDisabled(callback) {
         this._itemCallback((b, f) => b.setDisabled(f), callback);

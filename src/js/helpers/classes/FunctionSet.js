@@ -1,11 +1,11 @@
 // CONVENIENCE CLASSES
-export class FunctionStack {
+export class FunctionSet {
     constructor() {
         /**
          * @type {Set<Function>}
          * @private
          */
-        this._funcs = new Set();
+        this.set = new Set();
     }
 
     /**
@@ -13,24 +13,26 @@ export class FunctionStack {
      */
     push(...funcs) {
         for (const func of funcs) {
-            this._funcs.add(func);
+            this.set.add(func);
         }
     }
 
     /**
-     * @param {Function} func
+     * @param {Function} funcs
      */
-    remove(func) {
-        this._funcs.delete(func);
+    remove(...funcs) {
+        for (const func of funcs) {
+            this.set.delete(func);
+        }
     }
 
     call(...args) {
-        for (const func of this._funcs) {
-            func.call(...args);
+        for (const func of this.set) {
+            func(...args);
         }
     }
 
     clear() {
-        this._funcs.clear();
+        this.set.clear();
     }
 }

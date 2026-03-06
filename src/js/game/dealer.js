@@ -1,6 +1,6 @@
 import {RandomNumberGenerator, ArrayHelper} from "../helpers";
 
-export class ItemDealer {
+export default class ItemDealer {
     _punishFactor = 2
     _manualPunish = 1
     _previousDampFactor = 0.5

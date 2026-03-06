@@ -35,6 +35,7 @@ html {
 }
 
 body {
+  position: relative;
   background-color: var(--clr-background);
   color: var(--clr-text);
   font-family: system-ui, sans-serif;
@@ -269,7 +270,6 @@ select {
     content: "\f0d7";
     font-family: FontAwesome;
     font-size: 1.125em;
-    color: var(--clr-text);
     display: grid;
     place-items: center;
     position: absolute;
@@ -298,7 +298,7 @@ input[type="range"] {
     background: white;
     box-shadow: 0 0 .2rem hsla(0, 0%, 50%, 1);
     border: none;
-    outline: none;
+    outline-color: transparent;
     cursor: pointer;
     height: 1rem;
     width: 1rem;
@@ -309,7 +309,7 @@ input[type="range"] {
     background: white;
     box-shadow: 0 0 .2rem hsla(0, 0%, 50%, 1);
     border: none;
-    outline: none;
+    outline-color: transparent;
     cursor: pointer;
   }
 
@@ -326,7 +326,7 @@ input[type="range"] {
   }
 
   &:focus {
-    outline: none;
+    outline-color: transparent;
   }
 }
 
@@ -515,33 +515,23 @@ input[type="range"] {
 }
 
 
-#page-settings-backdrop {
-  position: fixed;
-  inset: 0;
-  background: hsla(0, 0%, 50%, 0.16);
-  z-index: 1;
-}
-
-#page-settings-container {
-  position: fixed;
-  height: 100vh;
-  max-width: $bodyMaxWidth;
-  margin-inline: auto;
-  inset: 0;
-  display: grid;
-  place-items: center;
-  padding: 1rem 1.75rem;
-}
-
 #page-settings {
-  width: 100%;
-  max-height: 100%;
+  &::backdrop {
+    background: hsla(0, 0%, 50%, 0.16);
+  }
+
+  position: sticky;
+  inset: 50%;
+  transform: translate(-50%, -50%);
+
+  max-width: calc(100% - 3.5rem);
+  max-height: calc(100% - 2rem);
+  border: 1px solid var(--clr-border-soft);
   overflow: auto;
   background: var(--clr-background);
-  padding: .75rem .875rem 1rem;
+  padding: .625rem .75rem .75rem;
   box-shadow: 0 0 .25rem hsla(0, 0%, 50%, .125);
   border-radius: .5rem;
-  z-index: 2;
 
   .heading-with-buttons {
     padding-block-end: .4rem;
@@ -733,6 +723,7 @@ input[type="range"] {
 #symbol-current {
   --symbol-size: 6.25;
   padding: .4rem 1.25rem .2rem;
+  view-transition-name: game-main-symbol;
 
   &:has(+ .symbol-reference) {
     margin-inline: .5rem .25rem;
