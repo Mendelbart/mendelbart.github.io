@@ -1,13 +1,14 @@
 import {ItemProperty, QuizItem} from "./symbol.js";
-import {DOMHelper, ObjectHelper, FontHelper} from '../helpers';
+import {DOMUtils, ObjectUtils, FontUtils} from '../utils';
 import {SettingCollection, ButtonGroup, ValueElement} from "../settings";
 import DATASETS_METADATA from '../../json/datasets_meta.json';
-import {range} from "../helpers/array";
-import {Selector, SelectorBlock, SelectorGridBlock, Matrix} from "../selector";
+import {range} from "../utils/array";
+import {Selector, SelectorBlock, SelectorGridBlock} from "../selector";
+import Matrix from "../utils/classes/Matrix";
 import {parseMatrixRanges, processIndexSubsets} from "../selector/indices";
 
 
-DOMHelper.registerTemplate(
+DOMUtils.registerTemplate(
     "headingElement",
     `<div class="heading-element"><span class="heading-element-number"></span><span class="heading-element-symbol"></span></div>`
 );
@@ -187,9 +188,8 @@ export class Dataset {
                 variants = this.processItemVariants(row[1]);
             }
 
-            const itemProperties = ObjectHelper.fromKeysValues(
-                properties, row.splice(this.hasVariants() ? 2 : 1), false
-            );
+            const values = row.splice(this.hasVariants() ? 2 : 1);
+            const itemProperties = ObjectUtils.recordFromKeys(properties, (_, i) => values[i]);
 
             result[index] = new DatasetItem(symbolType, displayForms, itemProperties, variants);
         }
@@ -214,7 +214,7 @@ export class Dataset {
             variants = variants.substring(2);
         }
 
-        const included = ObjectHelper.map(this.variants.data, () => !adding);
+        const included = ObjectUtils.map(this.variants.data, () => !adding);
         for (const key of variants.split(",")) {
             if (key in this.variants.data) {
                 included[key] = adding;
@@ -225,7 +225,7 @@ export class Dataset {
             }
         }
 
-        return ObjectHelper.filterKeys(included, x => x);
+        return ObjectUtils.filterKeys(included, x => x);
     }
 
     /**
@@ -259,7 +259,7 @@ export class Dataset {
             throw new Error("Invalid display format: need array or object.");
         }
 
-        return ObjectHelper.onlyKeys(display, Object.keys(this.forms.data), true);
+        return ObjectUtils.onlyKeys(display, Object.keys(this.forms.data), true);
     }
 
 
@@ -288,17 +288,17 @@ export class Dataset {
 
     propertySetting(checked = null) {
         return ButtonGroup.from(
-            ObjectHelper.map(this.properties, p => p.label),
+            ObjectUtils.map(this.properties, p => p.label),
             {
                 label: "Properties",
-                checked: checked ?? ObjectHelper.map(this.properties, p => !!p.active)
+                checked: checked ?? ObjectUtils.map(this.properties, p => !!p.active)
             }
         );
     }
 
     languageSetting(checked = null) {
         return ButtonGroup.from(
-            ObjectHelper.onlyKeys(LANGUAGES, this.languages.keys),
+            ObjectUtils.onlyKeys(LANGUAGES, this.languages.keys),
             {
                 label: "Language",
                 checked: checked ?? this.languages.default,
@@ -308,7 +308,7 @@ export class Dataset {
     }
 
     ungroupedForms() {
-        return ObjectHelper.filter(this.forms.data, f => !("groupWith" in f));
+        return ObjectUtils.filter(this.forms.data, f => !("groupWith" in f));
     }
 
     formsSetting(checked = null) {
@@ -319,17 +319,17 @@ export class Dataset {
         const label = this.forms.label ?? (this.forms.exclusive ? "Form" : "Forms");
         const ungroupedForms = this.ungroupedForms();
         return ButtonGroup.from(
-            ObjectHelper.map(ungroupedForms, (p) => p.label),
+            ObjectUtils.map(ungroupedForms, (p) => p.label),
             {
                 label: label,
                 exclusive: this.forms.exclusive,
-                checked: checked ?? ObjectHelper.map(ungroupedForms, f => f.active ?? !this.forms.exclusive),
+                checked: checked ?? ObjectUtils.map(ungroupedForms, f => f.active ?? !this.forms.exclusive),
             },
         );
     }
 
     variantSetting(selected = null) {
-        const data = ObjectHelper.map(this.variants.data, (variant) => variant.label);
+        const data = ObjectUtils.map(this.variants.data, (variant) => variant.label);
         selected ||=  this.variants.default || Object.keys(this.variants.data)[0];
         const label = this.variants.setting?.label || "Variant";
 
@@ -376,20 +376,6 @@ export class Dataset {
 
 
     // ==================================== SELECTOR ================
-    /**
-     * @param {string} [variant]
-     * @returns {Selector}
-     */
-    getSelector(variant) {
-        const selector = this.createSelector();
-        this.setupSelectorButtons(selector, variant);
-        selector.finishSetup();
-        this.applySelectorFont(selector, variant);
-        this.applySelectorStyles(selector);
-
-        return selector;
-    }
-
     /**
      * @param {SelectorGridBlock} block
      * @param {[number, number]} dimensions
@@ -527,7 +513,7 @@ export class Dataset {
             font.key = this._defaultFontKey;
         }
 
-        return ObjectHelper.withoutKeys(
+        return ObjectUtils.withoutKeys(
             Object.assign({},
                 this.fonts[font.key],
                 this.getVariantFontModification(font.key, variant),
@@ -568,7 +554,7 @@ export class Dataset {
      */
     fontFamilySetting(checked = null) {
         const setting = ButtonGroup.from(
-            ObjectHelper.map(this.fonts, font => font.label ?? font.family),
+            ObjectUtils.map(this.fonts, font => font.label ?? font.family),
             {
                 label: "Font",
                 exclusive: true,
@@ -585,17 +571,17 @@ export class Dataset {
      * @param {DatasetItem[]} items
      * @param {string[]} forms
      * @param {string[]} properties
-     * @param {?string} [language]
+     * @param {string} [language]
      * @returns {QuizItem[]}
      */
-    getQuizItems(items, forms, properties, language = null) {
+    getQuizItems(items, forms, properties, language) {
         const result = [];
 
         for (const item of items) {
-            const displayStrings = item.getDisplayStrings(forms);
+            const availableForms = item.getForms(forms);
             const itemProperties = item.getItemProperties(properties, this.properties, language);
-            result.push(...Object.entries(displayStrings).map(
-                ([form, string]) => new QuizItem(item.type, string, itemProperties, form)
+            result.push(...availableForms.map(
+                form => new QuizItem(item.type, item.displayForms[form], itemProperties, form)
             ));
         }
 
@@ -631,20 +617,20 @@ export class Dataset {
                 item => item.getItemProperties(properties, propsData, language)
             );
 
-            return ObjectHelper.map(this.forms.data, (_, key) => this.items.map(
+            return ObjectUtils.map(this.forms.data, (_, key) => this.items.map(
                 (item, index) => new QuizItem(
-                    item.type, item.getFormsDisplayString([key]), itemsProperties[index], key
+                    item.type, item.combineForms([key]), itemsProperties[index], key
                 )
             ));
         } else {
             items = this.items.map(item => new QuizItem(
                 item.type,
-                item.getFormsDisplayString(Object.keys(this.forms.data)),
+                item.combineForms(Object.keys(this.forms.data)),
                 item.getItemProperties(properties, propsData, language),
                 "all"
             ));
 
-            return ObjectHelper.map(this.forms.data, () => items);
+            return ObjectUtils.map(this.forms.data, () => items);
         }
     }
 
@@ -655,14 +641,14 @@ export class Dataset {
     setupGameHeading(element, variant) {
         const gameHeading = this.metadata.gameHeading;
 
-        FontHelper.setFont(element, this.getFont(gameHeading.font, variant));
+        FontUtils.setFont(element, this.getFont(gameHeading.font, variant));
 
         if (this.name === "Atomic Elements") {
             const container = document.createElement("div");
             container.classList.add("element-heading-container");
             const els = [];
             for (const [no, symbol] of [[19, "K"], [85, "At"], [42, "Mo"], [16, "S"]]) {
-                const el = DOMHelper.getTemplate("headingElement");
+                const el = DOMUtils.getTemplate("headingElement");
                 el.querySelector(".heading-element-symbol").textContent = symbol;
                 el.querySelector(".heading-element-number").textContent = no;
                 els.push(el);
@@ -698,16 +684,16 @@ class DatasetItem {
      * @returns {Record<string,string>}
      */
     getDisplayStrings(forms) {
-        return ObjectHelper.onlyKeys(this.displayForms, forms);
+        return ObjectUtils.onlyKeys(this.displayForms, forms);
     }
 
     /**
      * @param {string[]} propertyKeys
      * @param {Record<string,*>} propsData
-     * @param {string?} [language]
+     * @param {string} [language]
      * @returns {Object<string,ItemProperty>}
      */
-    getItemProperties(propertyKeys, propsData, language = null) {
+    getItemProperties(propertyKeys, propsData, language) {
         const result = {};
         for (const key of propertyKeys) {
             if (!(key in this.properties)) {
@@ -727,36 +713,35 @@ class DatasetItem {
             }
         }
 
-        return ObjectHelper.map(result, (prop, key) => ItemProperty.fromData(prop, propsData[key]));
+        return ObjectUtils.map(result, (prop, key) => ItemProperty.fromData(prop, propsData[key]));
     }
 
     getFormNodes(forms = null) {
-        return ObjectHelper.mapKeyArrayToValues(this.getForms(forms), form => this.getFormNode(form))
+        return ObjectUtils.recordFromKeys(this.getForms(forms), form => this.getFormNode(form))
     }
 
     getFormNode(form) {
-        const elem = DOMHelper.createElement('span.symbol-form');
+        const elem = DOMUtils.createElement('span.symbol-form', this.displayForms[form]);
         elem.dataset.form = form;
-        elem.textContent = this.displayForms[form];
         return elem;
     }
 
     /**
-     * Returns the form keys that this letter possesses.
-     * @param {string[]} forms
+     * Returns the form keys that this letter possesses, optionally constrained to elements of the argument `forms`.
+     * @param {string[]} [forms]
      * @returns {string[]}
      */
-    getForms(forms = null) {
+    getForms(forms) {
         if (!forms) return Object.keys(this.displayForms);
 
-        return forms.filter(form => form in this.displayForms);
+        return forms.filter(form => this.displayForms[form]);
     }
 
     /**
      * @param {string[]} forms
      * @returns {string}
      */
-    getFormsDisplayString(forms) {
+    combineForms(forms) {
         return Object.values(this.getDisplayStrings(forms)).join("");
     }
 

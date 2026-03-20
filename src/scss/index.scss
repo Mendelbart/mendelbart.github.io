@@ -653,8 +653,10 @@ input[type="range"] {
 /*************** SYMBOLS, EVAL *******************/
 .symbol-string {
   font-size: calc(var(--font-scale, 1) * var(--symbol-size, 1) * 1rem);
-  line-height: calc(var(--font-scale, 1) * var(--symbol-size, 1) * var(--line-height, 1.1) * 1rem);
+  line-height: calc(var(--line-height, 1.1) * 1em);
   height: calc(var(--symbol-size, 1) * var(--line-height, 1.1) * 1rem);
+
+  font-kerning: none;
 }
 
 .symbol-container {
@@ -662,6 +664,11 @@ input[type="range"] {
   flex-direction: column;
   align-items: stretch;
   overflow: hidden;
+
+  //view-transition-class: text-container;
+  //@media (prefers-reduced-motion: no-preference) {
+  //  view-transition-name: match-element;
+  //}
 
   max-width: calc(var(--symbol-size) * 1.8rem);
   flex-shrink: 0;
@@ -683,6 +690,9 @@ input[type="range"] {
     overflow: visible hidden;
     display: flex;
     justify-content: center;
+
+    //view-transition-class: text-container;
+    //view-transition-name: match-element;
   }
 
   .symbol {
@@ -696,6 +706,9 @@ input[type="range"] {
 
   .symbol, .symbol-label {
     text-wrap: nowrap;
+
+    //view-transition-class: text;
+    //view-transition-name: match-element;
   }
 
   .symbol-label-container {
@@ -705,6 +718,9 @@ input[type="range"] {
     border-top: 1px solid var(--clr-border);
     font-size: 1rem;
     font-weight: 600;
+
+    //view-transition-class: text-container;
+    //view-transition-name: match-element;
 
     display: flex;
     justify-content: center;
@@ -723,7 +739,6 @@ input[type="range"] {
 #symbol-current {
   --symbol-size: 6.25;
   padding: .4rem 1.25rem .2rem;
-  view-transition-name: game-main-symbol;
 
   &:has(+ .symbol-reference) {
     margin-inline: .5rem .25rem;

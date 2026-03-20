@@ -85,9 +85,7 @@ export class ElementFitter {
         this.minScale = Infinity;
         this.maxScale = -Infinity;
 
-        /**
-         * @type {WeakMap<HTMLElement, Set<HTMLElement>>}
-         */
+        /** @type {WeakMap<HTMLElement, Set<HTMLElement>>} */
         this.childrenFromParent = new WeakMap();
     }
 
@@ -113,6 +111,24 @@ export class ElementFitter {
         }
 
         this.watcher.watch(children.map(child => child.parentElement));
+    }
+
+    /**
+     * @param {Iterable<HTMLElement>} children
+     */
+    unfit(children) {
+        for (const child of children) {
+            this.childrenFromParent.get(child.parentElement).delete(child);
+            this.scales.delete(child);
+        }
+    }
+
+    clearParent(parent, unwatch = true) {
+        if (this.childrenFromParent.has(parent)) {
+            this.unfit(this.childrenFromParent.get(parent));
+            this.childrenFromParent.delete(parent);
+        }
+        if (unwatch) this.watcher.unwatch(parent);
     }
 
     /**

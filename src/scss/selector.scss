@@ -134,16 +134,21 @@ $selectorBorderRadius: .25rem;
   }
 
   .symbol-string {
+    display: flex;
+    gap: 1px;
+
     min-width: var(--symbol-min-width);
-    text-align: center;
     padding-inline: .25em;
     font-weight: 600;
     transform-origin: center;
   }
-  //
-  //.symbol-form {
-  //  view-transition-name: match-element;
-  //}
+
+  .symbol-form {
+    //@media (prefers-reduced-motion: no-preference) {
+    //  view-transition-name: match-element;
+    //}
+    //view-transition-class: text;
+  }
 
   .selector-button-label {
     font-weight: 400;

@@ -1,8 +1,8 @@
-import {DOMHelper, ArrayHelper} from "../helpers";
-import {ElementFitter, SizeWatcher} from "../helpers/classes/ElementFitter";
-import {rangeBetween} from "../helpers/array";
-import Observable from "../helpers/classes/Observable";
-const range = ArrayHelper.range;
+import {DOMUtils, ArrayUtils} from "../utils";
+import {ElementFitter, SizeWatcher} from "../utils/classes/ElementFitter";
+import {rangeBetween} from "../utils/array";
+import Observable from "../utils/classes/Observable";
+const range = ArrayUtils.range;
 
 const STYLE_PROPERTIES = {
     buttonMinWidth: "--button-min-width",
@@ -40,7 +40,7 @@ export default class SelectorBlock extends Observable {
     }
 
     setupButtons() {
-        this.buttonIdPrefix = DOMHelper.uniqueIdPrefix("selectorButton");
+        this.buttonIdPrefix = DOMUtils.uniqueIdPrefix("selectorButton");
         /** @type {boolean[]} */
         this.checked = new Array(this.items.length).fill(true);
         /** @type {HTMLDivElement[]} */
@@ -52,9 +52,9 @@ export default class SelectorBlock extends Observable {
      * @returns {HTMLDivElement}
      */
     createButton(index) {
-        const button = DOMHelper.createElement("div.selector-button");
+        const button = DOMUtils.createElement("div.selector-button");
         const id = this.buttonIdPrefix + index.toString();
-        DOMHelper.setAttrs(button, {
+        DOMUtils.setAttrs(button, {
             id: id,
             role: "checkbox",
             tabindex: 0,
@@ -67,7 +67,7 @@ export default class SelectorBlock extends Observable {
     }
 
     setupNode() {
-        this.node = DOMHelper.createElement("div.selector-block.selector-block-flex");
+        this.node = DOMUtils.createElement("div.selector-block.selector-block-flex");
         this.node.append(...this.buttons);
     }
 
@@ -131,7 +131,7 @@ export default class SelectorBlock extends Observable {
         const button = this.buttons[index];
         let labelElement = button.querySelector(".selector-button-label");
         if (!labelElement) {
-            labelElement = DOMHelper.createElement("span.selector-button-label");
+            labelElement = DOMUtils.createElement("span.selector-button-label");
             button.append(labelElement);
         }
 
@@ -187,7 +187,7 @@ export default class SelectorBlock extends Observable {
      */
     setARIAProperty(property, callback) {
         for (const [index, button] of this.buttons.entries()) {
-            DOMHelper.setARIA(button, property, callback(this.items[index], index));
+            DOMUtils.setARIA(button, property, callback(this.items[index], index));
         }
     }
 
@@ -247,7 +247,7 @@ export default class SelectorBlock extends Observable {
             return;
         }
 
-        DOMHelper.setARIA(this.buttons[index], "checked", checked);
+        DOMUtils.setARIA(this.buttons[index], "checked", checked);
         this.checked[index] = checked;
 
         if (callObservers) {
@@ -269,7 +269,7 @@ export default class SelectorBlock extends Observable {
      * @returns {boolean}
      */
     isDisabled(index) {
-        return DOMHelper.getARIA(this.buttons[index], "disabled") === "true";
+        return DOMUtils.getARIA(this.buttons[index], "disabled") === "true";
     }
 
     /**
@@ -455,7 +455,7 @@ export default class SelectorBlock extends Observable {
      * @param {string} className
      */
     buttonsRemoveClass(indices, className) {
-        DOMHelper.removeClass(this.buttonsFromIndices(indices), className);
+        DOMUtils.removeClass(this.buttonsFromIndices(indices), className);
     }
 
     /**
@@ -463,7 +463,7 @@ export default class SelectorBlock extends Observable {
      * @param {string} className
      */
     buttonsAddClass(indices, className) {
-        DOMHelper.addClass(this.buttonsFromIndices(indices), className);
+        DOMUtils.addClass(this.buttonsFromIndices(indices), className);
     }
 
     /**

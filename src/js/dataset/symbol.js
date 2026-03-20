@@ -1,5 +1,6 @@
 import {levenshtein} from "../game/string-metrics.js";
-import {ArrayHelper, ObjectHelper} from "../helpers";
+import {ArrayUtils, ObjectUtils} from "../utils";
+import SubString from '../utils/classes/SubString';
 
 export class QuizItem {
     /**
@@ -220,7 +221,7 @@ export class ListProperty extends StringProperty {
          */
         this.values = this.constructor.getValues(displayString, maxDist, this.splitter, excludeFromList);
         if (alternatives) {
-            this.alternatives = ObjectHelper.map(alternatives, val => typeof val === "string" ? [val] : val);
+            this.alternatives = ObjectUtils.map(alternatives, val => typeof val === "string" ? [val] : val);
         } else {
             this.alternatives = {};
         }
@@ -274,7 +275,7 @@ export class ListProperty extends StringProperty {
 
         const grade = this.listMode === "best"
             ? Math.max(...valueScores)
-            : ArrayHelper.avg(guessScores);
+            : ArrayUtils.avg(guessScores);
 
         return [
             grade,
@@ -318,71 +319,3 @@ export class ListProperty extends StringProperty {
     }
 }
 
-
-class SubString {
-    /**
-     * @param {string|SubString} source
-     * @param {number} start
-     * @param {?number} [end]
-     * */
-    constructor(source, start = 0, end = null) {
-        if (source instanceof SubString) {
-            start += source.start;
-            if (end === null) {
-                end = source.end;
-            } else {
-                end += source.start;
-            }
-            source = source.source;
-        }
-
-        if (end === null) {
-            end = source.length;
-        }
-
-        this.source = source;
-        this.str = source.substring(start, end);
-        this.start = start;
-        this.end = end;
-    }
-
-    /**
-     * @param splitter
-     * @param {boolean} [includeEmpty]
-     * @returns {SubString[]}
-     */
-    split(splitter, includeEmpty = false) {
-        const result = [];
-        const matches = this.str.matchAll(splitter);
-
-        let i = 0;
-        for (const match of matches) {
-            if (!includeEmpty && i === match.index) {
-                continue;
-            }
-
-            result.push(new this.constructor(this, i, match.index));
-            i = match.index + match[0].length;
-        }
-
-        if (includeEmpty || i < this.end - this.start) {
-            result.push(new this.constructor(this, i));
-        }
-
-        return result;
-    }
-
-    /**
-     * @returns {SubString}
-     */
-    trim() {
-        const startTrim = this.str.match(/^\s*/)[0].length;
-        const endTrim = this.str.match(/\s*$/)[0].length;
-
-        if (startTrim === 0 && endTrim === 0) {
-            return this;
-        }
-
-        return new this.constructor(this.source, this.start + startTrim, this.end - endTrim);
-    }
-}

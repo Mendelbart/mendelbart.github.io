@@ -52,6 +52,38 @@ export function avg(arr) {
     return sum(arr) / arr.length;
 }
 
+/**
+ * @param {number[]} arr
+ * @returns {number}
+ */
+export function argmin(arr) {
+    let minimum = Infinity;
+    let minIndex = -1;
+    for (const [i, value] of arr.entries()) {
+        if (value < minimum) {
+            minimum = value;
+            minIndex = i;
+        }
+    }
+    return minIndex;
+}
+
+/**
+ * @param {number[]} arr
+ * @returns {number}
+ */
+export function argmax(arr) {
+    let maximum = Infinity;
+    let maxIndex = -1;
+    for (const [i, value] of arr.entries()) {
+        if (value > maximum) {
+            maximum = value;
+            maxIndex = i;
+        }
+    }
+    return maxIndex;
+}
+
 
 /**
  * @param {Array} a
@@ -122,4 +154,16 @@ export function full(length, callback) {
         arr[i] = callback(i, arr);
     }
     return arr;
+}
+
+
+/**
+ * @template K Key Type
+ * @template V Value Type
+ * @param {K[]} keys
+ * @param {function(K, number, K[]): V} callback
+ * @returns {Map<K,V>}
+ */
+export function mapFromKeys(keys, callback) {
+    return new Map(keys.map((val, i, a) => [val, callback(val, i, a)]));
 }

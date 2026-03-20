@@ -1,4 +1,4 @@
-import Observable from "../helpers/classes/Observable";
+import Observable from "../utils/classes/Observable";
 
 
 export default class SettingCollection extends Observable {

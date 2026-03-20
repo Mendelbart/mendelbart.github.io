@@ -1,8 +1,8 @@
 import {invertSubsets, processIndexSubsets} from "./indices";
-import SelectorBlock from "./block";
-import {range, sum} from "../helpers/array";
-import {DOMHelper} from "../helpers";
-import Observable from "../helpers/classes/Observable";
+import SelectorBlock from "./SelectorBlock";
+import {range, sum} from "../utils/array";
+import {DOMUtils} from "../utils";
+import Observable from "../utils/classes/Observable";
 
 export default class Selector extends Observable {
     /**
@@ -60,8 +60,7 @@ export default class Selector extends Observable {
     }
 
     _setupNode() {
-        this.node = DOMHelper.createElement("div.selector");
-        this.node.append(...this.blocks.map(block => block.node));
+        this.node = DOMUtils.createElement("div.selector", ...this.blocks.map(block => block.node));
     }
 
     finishSetup() {

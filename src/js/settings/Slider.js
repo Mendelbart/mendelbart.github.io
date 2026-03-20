@@ -1,7 +1,7 @@
-import {DOMHelper} from '../helpers';
+import {DOMUtils} from '../utils';
 import ValueElement from "./ValueElement";
 
-DOMHelper.registerTemplate("slider", `<div class="slider-container">
+DOMUtils.registerTemplate("slider", `<div class="slider-container">
     <span class="range-min"></span><span class="range-value"></span><span class="range-max"></span>
     <input type="range" class="form-range">
 </div>`);
@@ -35,7 +35,7 @@ export default class Slider extends ValueElement {
      * @returns {Slider}
      */
     static create(min, max, value = null) {
-        const node = DOMHelper.getTemplate("slider");
+        const node = DOMUtils.getTemplate("slider");
         const input = node.lastElementChild;
         input.min = min;
         input.max = max;

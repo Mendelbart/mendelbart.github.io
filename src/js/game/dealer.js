@@ -1,4 +1,5 @@
-import {RandomNumberGenerator, ArrayHelper} from "../helpers";
+import {ArrayUtils} from "../utils";
+import RandomNumberGenerator from "../utils/classes/RandomNumberGenerator";
 
 export default class ItemDealer {
     _punishFactor = 2
@@ -44,7 +45,7 @@ export default class ItemDealer {
 
     nextItem() {
         this.previousIndex = this.currentIndex;
-        this.currentIndex = this.rng.randIndexFromWeights(this.getWeights());
+        this.currentIndex = this.rng.randIndexWeighted(this.getWeights());
         return this.currentItem();
     }
 
@@ -60,7 +61,7 @@ export default class ItemDealer {
     }
 
     updateTotalTriesLeft() {
-        const val = ArrayHelper.sum(this.triesLeft)
+        const val = ArrayUtils.sum(this.triesLeft)
         if (val > this.totalTriesLeft) {
             this.maxTriesLeft += val - this.totalTriesLeft;
         }
@@ -144,7 +145,7 @@ export default class ItemDealer {
      * @returns {number}
      */
     absoluteScore() {
-        return ArrayHelper.sum(this.scores);
+        return ArrayUtils.sum(this.scores);
     }
 
     /**

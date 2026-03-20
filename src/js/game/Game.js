@@ -1,10 +1,10 @@
-import {DOMHelper, ObjectHelper, FontHelper, FunctionSet} from "../helpers";
+import {DOMUtils, ObjectUtils, FontUtils, FunctionSet} from "../utils";
 import ItemDealer from "./dealer.js";
 import {Slider, SettingCollection, ValueElement} from "../settings";
 import {ItemProperty, ListProperty} from "../dataset/symbol.js";
 
 
-DOMHelper.registerTemplates({
+DOMUtils.registerTemplates({
     eval: `<div class="item-eval">
     <span class="submitted"></span><span class="solution"></span>
 </div>`,
@@ -20,10 +20,10 @@ export default class Game {
      * @param {QuizItem[]} items
      * @param {string[]} properties
      * @param {string} language
-     * @param {?string} variant
+     * @param {string?} [variant]
      */
 
-    constructor(dataset, items, properties, language, variant = null) {
+    constructor(dataset, items, properties, language, variant) {
         this.dataset = dataset;
         this.properties = properties;
         this.language = language;
@@ -44,10 +44,10 @@ export default class Game {
     }
 
     /**
-     * @param {number?} defaultWeight
+     * @param {number} [defaultWeight]
      * @returns {Promise<void>}
      */
-    setup({defaultWeight = null} = {}) {
+    setup({defaultWeight} = {}) {
         this.setupSymbolContainer();
         this.setupInputs();
         this.setupEvals();
@@ -72,10 +72,10 @@ export default class Game {
     }
 
     setupInputs() {
-        this.inputs = ObjectHelper.mapKeyArrayToValues(this.properties, prop => {
+        this.inputs = ObjectUtils.recordFromKeys(this.properties, prop => {
             /** @type {HTMLInputElement} */
             const input = document.createElement("INPUT");
-            DOMHelper.setAttrs(input, {
+            DOMUtils.setAttrs(input, {
                 type: "text",
                 inputmode: this.getInputMode(this.dataset.properties[prop].type),
                 placeholder: this.dataset.properties[prop].label
@@ -116,7 +116,7 @@ export default class Game {
         const evalsContainer = document.getElementById("game-evals");
 
         for (const property of this.properties) {
-            const evalElement = DOMHelper.getTemplate("eval");
+            const evalElement = DOMUtils.getTemplate("eval");
             this.evals[property] = evalElement;
             evalsContainer.append(evalElement);
         }
@@ -128,7 +128,7 @@ export default class Game {
 
     loadAndUpdateSymbolFont(key) {
         key ||= this.fontSettings.getValue("family");
-        return FontHelper.loadFont(this.dataset.getFont(key, this.variant)).then(
+        return FontUtils.loadFont(this.dataset.getFont(key, this.variant)).then(
             () => this.updateSymbolFontFamily(key)
         ).catch(err => console.error(err));
     }
@@ -143,7 +143,7 @@ export default class Game {
 
     updateSymbolWeightRange(key) {
         const family = this.dataset.getFont(key, this.variant).family;
-        const data = FontHelper.getFontData(family);
+        const data = FontUtils.getFontData(family);
         /**
          * @type {Slider}
          */
@@ -153,14 +153,17 @@ export default class Game {
             const [min, max] = data.variationSettings.wght.split(" ").map(x => parseInt(x));
             weightRange.setMin(min);
             weightRange.setMax(max);
-            DOMHelper.show(weightRange.node);
+            DOMUtils.show(weightRange.node);
         } else {
-            DOMHelper.hide(weightRange.node);
+            DOMUtils.hide(weightRange.node);
         }
     }
 
-    setupFontSettings(defaultWeight) {
-        defaultWeight ??= 500;
+    /**
+     * @param {number} [defaultWeight]
+     * @returns {Promise<void>}
+     */
+    setupFontSettings(defaultWeight = 500) {
         const weightSlider = Slider.create(100, 900, defaultWeight);
         weightSlider.label("Weight");
         this.fontSettings = SettingCollection.createFrom({
@@ -171,14 +174,14 @@ export default class Game {
         document.querySelector("#font-settings").replaceChildren(...this.fontSettings.nodeList());
 
         this.fontSettings.addObserverTo("weight", this.updateSymbolWeight);
-        this.fontSettings.addObserverTo("family", () => DOMHelper.transition(this.loadAndUpdateSymbolFont));
+        this.fontSettings.addObserverTo("family", () => DOMUtils.transition(this.loadAndUpdateSymbolFont));
 
         this.updateSymbolWeight(defaultWeight);
         return this.loadAndUpdateSymbolFont();
     }
 
     setSymbolFont(element, key) {
-        FontHelper.setFont(element, this.dataset.getFont(key, this.variant));
+        FontUtils.setFont(element, this.dataset.getFont(key, this.variant));
     }
 
     /**
@@ -243,7 +246,7 @@ export default class Game {
 
             evalElement.querySelector(".submitted").replaceChildren(...guessNodes);
             evalElement.querySelector(".solution").replaceChildren(...solutionNodes);
-            DOMHelper.classIfElse(
+            DOMUtils.classIfElse(
                 property instanceof ListProperty && property.listMode === "best",
                 evalElement,
                 "best-mode"
@@ -308,7 +311,7 @@ export default class Game {
      * @returns {HTMLElement}
      */
     referenceItemNode(item, property) {
-        const container = DOMHelper.getTemplate("symbolContainer");
+        const container = DOMUtils.getTemplate("symbolContainer");
         container.classList.add("symbol-reference");
         container.querySelector('.symbol').classList.add("symbol-string");
 
@@ -335,8 +338,8 @@ export default class Game {
      * @param {HTMLElement} node
      */
     scaleItemNodeContents(node) {
-        DOMHelper.scaleToFit(node.querySelector('.symbol'));
-        DOMHelper.scaleToFit(node.querySelector('.symbol-label'));
+        DOMUtils.scaleToFit(node.querySelector('.symbol'));
+        DOMUtils.scaleToFit(node.querySelector('.symbol-label'));
     }
 
     clearInputs() {
@@ -349,7 +352,7 @@ export default class Game {
      * @param {"inputs"|"evals"} which
      */
     show(which) {
-        DOMHelper.toggleShown(
+        DOMUtils.toggleShown(
             which === "inputs",
             [
                 document.getElementById("game-inputs"),
@@ -361,7 +364,7 @@ export default class Game {
             ]
         );
 
-        DOMHelper.toggleShown(
+        DOMUtils.toggleShown(
             which === "inputs",
             null, document.querySelector('#symbol-current .symbol-label'),
             "visibility"

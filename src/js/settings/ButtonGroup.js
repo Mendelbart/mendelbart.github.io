@@ -1,7 +1,7 @@
-import {DOMHelper, ObjectHelper} from '../helpers';
-import Observable from "../helpers/classes/Observable";
+import {DOMUtils, ObjectUtils} from '../utils';
+import Observable from "../utils/classes/Observable";
 
-DOMHelper.registerTemplate("buttonGroupContainer", DOMHelper.createElement("fieldset.button-group.setting"));
+DOMUtils.registerTemplate("buttonGroupContainer", DOMUtils.createElement("fieldset.button-group.setting"));
 
 /** @implements Setting */
 export default class ButtonGroup extends Observable {
@@ -56,7 +56,7 @@ export default class ButtonGroup extends Observable {
         const type = exclusive ? "radio" : "checkbox";
         name ??= this.generateName();
 
-        const container = DOMHelper.getTemplate("buttonGroupContainer");
+        const container = DOMUtils.getTemplate("buttonGroupContainer");
 
         if (exclusive) {
             container.setAttribute("role", "radiogroup");
@@ -70,11 +70,11 @@ export default class ButtonGroup extends Observable {
             }
         }
 
-        checked = ObjectHelper.subsetToBoolRecord(checked ?? "none", values);
-        disabled = ObjectHelper.subsetToBoolRecord(disabled ?? "none", values);
+        checked = ObjectUtils.subsetToBoolRecord(checked ?? "none", values);
+        disabled = ObjectUtils.subsetToBoolRecord(disabled ?? "none", values);
 
         for (const [value, displayName] of Object.entries(data)) {
-            const [input, label] = DOMHelper.button(type, value, displayName);
+            const [input, label] = DOMUtils.button(type, value, displayName);
 
             input.name = exclusive ? name : `${name}_${value}`;
             input.disabled = disabled[value];
@@ -136,7 +136,7 @@ export default class ButtonGroup extends Observable {
             return null;
         }
 
-        return ObjectHelper.filterKeys(this.inputs, input => input.checked);
+        return ObjectUtils.filterKeys(this.inputs, input => input.checked);
     }
 
     /**
@@ -146,7 +146,7 @@ export default class ButtonGroup extends Observable {
         if (this.exclusive && typeof checked === "string") {
             this.inputs[checked].checked = true;
         } else {
-            checked = ObjectHelper.subsetToBoolRecord(checked, Object.keys(this.inputs));
+            checked = ObjectUtils.subsetToBoolRecord(checked, Object.keys(this.inputs));
             for (const [key, input] of Object.entries(this.inputs)) {
                 input.checked = checked[key];
             }

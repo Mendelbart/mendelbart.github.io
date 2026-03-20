@@ -1,25 +1,25 @@
 import {arraysEqual} from "./array.js";
 
 /**
- * @template {any} V
- * @template {any} W
- * @param {Object<string,V>} obj
- * @param {function(V,string,number): W} fn
- * @returns {Object<string,W>}
+ * @template V
+ * @template W
+ * @param {Record<string, V>} obj
+ * @param {function(V, string, number): W} callback
+ * @returns {Record<string, W>}
  */
-export function map(obj, fn) {
+export function map(obj, callback) {
     return Object.fromEntries(
         Object.entries(obj).map(
-            ([k, v], i) => [k, fn(v, k, i)]
+            ([k, v], i) => [k, callback(v, k, i)]
         )
     );
 }
 
 /**
  * @template V
- * @param {Object<string,V>} obj
+ * @param {Record<string,V>} obj
  * @param {function(V,string,number): boolean} fn
- * @returns {Object<string,V>}
+ * @returns {Record<string,V>}
  */
 export function filter(obj, fn) {
     return Object.fromEntries(
@@ -31,7 +31,7 @@ export function filter(obj, fn) {
 
 /**
  * @template V
- * @param {Object<string,V>} obj
+ * @param {Record<string, V>} obj
  * @param {function(V,string,number): boolean} fn
  * @returns {string[]}
  */
@@ -42,9 +42,10 @@ export function filterKeys(obj, fn) {
 }
 
 /**
- * @param {Object} object
- * @param {Array|string} keys
- * @returns {Object}
+ * @template T
+ * @param {Record<string, T>} object
+ * @param {string[]|string} keys
+ * @returns {Record<string, T>}
  */
 export function withoutKeys(object, keys) {
     if (typeof keys === "string") {
@@ -59,23 +60,11 @@ export function withoutKeys(object, keys) {
 }
 
 /**
- * @param {Object} object
- * @param {Array} keys
- * @param {boolean} [appendObject]
- * @returns {Array}
- */
-export function extractKeys(object, keys, appendObject = true) {
-    const arr = keys.map((key) => object[key] ?? null);
-    if (appendObject)
-        arr.push(withoutKeys(object, keys));
-    return arr;
-}
-
-/**
- * @param {Object} object
- * @param {Iterable} keys
+ * @template T
+ * @param {Record<string, T>} object
+ * @param {Iterable<string>} keys
  * @param {boolean} warnOtherKeys
- * @returns {Object}
+ * @returns {Record<string, T>}
  */
 export function onlyKeys(object, keys, warnOtherKeys = false) {
     const keySet = new Set(keys);
@@ -104,26 +93,11 @@ export function mapKeys(object, callback) {
 /**
  * @template V
  * @param {string[]} keys
- * @param {function(string): V} callback
+ * @param {function(string, number, string[]): V} callback
  * @returns {Record<string, V>} Object with {key: callback(key)} entries
  */
-export function mapKeyArrayToValues(keys, callback) {
-    return Object.fromEntries(keys.map(key => [key, callback(key)]));
-}
-
-/**
- * @template T
- * @param {string[]} keys
- * @param {T[]} values
- * @param {boolean} warnLessValues
- * @returns {Record<string, T>}
- */
-export function fromKeysValues(keys, values, warnLessValues = true) {
-    if (warnLessValues && keys.length > values.length) {
-        console.warn("More keys than values.");
-    }
-
-    return Object.fromEntries(values.map((v, i) => [keys[i], v]))
+export function recordFromKeys(keys, callback) {
+    return Object.fromEntries(keys.map((key, index, arr) => [key, callback(key, index, arr)]));
 }
 
 /**
@@ -161,4 +135,3 @@ export function subsetToBoolRecord(subset, keys) {
     }
     return Object.fromEntries(keys.map(key => [key, !!subset[key]]));
 }
-

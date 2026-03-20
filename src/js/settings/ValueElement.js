@@ -1,3 +1,6 @@
+import Observable from "../utils/classes/Observable";
+import {DOMUtils} from "../utils";
+
 /**
  * @interface Setting
  * @extends Observable
@@ -19,9 +22,6 @@
  * @name Setting#remove
  */
 
-import Observable from "../helpers/classes/Observable";
-import {DOMHelper} from "../helpers";
-
 /** @implements Setting */
 export default class ValueElement extends Observable {
     static idCount = 0;
@@ -30,8 +30,6 @@ export default class ValueElement extends Observable {
     node
     /** @type {HTMLSelectElement | HTMLTextAreaElement | HTMLInputElement} */
     valueNode
-    /** @type {FunctionSet} */
-    updateListeners
 
     /**
      * @param {HTMLElement} node
@@ -49,7 +47,7 @@ export default class ValueElement extends Observable {
             }
         }
 
-        this.node = DOMHelper.createElement("div.setting.labeled-value-element");
+        this.node = DOMUtils.createElement("div.setting.labeled-value-element");
         this.node.append(node);
         this.valueNode = valueNode;
 
@@ -66,7 +64,7 @@ export default class ValueElement extends Observable {
         const input = document.createElement("INPUT");
         input.type = type;
         if (attrs) {
-            DOMHelper.setAttrs(input, attrs);
+            DOMUtils.setAttrs(input, attrs);
         }
         const ve = new this(input);
 
@@ -82,9 +80,9 @@ export default class ValueElement extends Observable {
      */
     static createSelect(data, options = {}) {
         const select = document.createElement("select");
-        DOMHelper.setOptions(select, data, options);
+        DOMUtils.setOptions(select, data, options);
 
-        const container = DOMHelper.createElement("div.styled-select");
+        const container = DOMUtils.createElement("div.styled-select");
         container.append(select);
 
         const ve = new this(container);

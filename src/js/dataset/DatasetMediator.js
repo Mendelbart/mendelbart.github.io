@@ -1,5 +1,5 @@
-import {FontHelper, DOMHelper} from '../helpers';
-import Observable from "../helpers/classes/Observable";
+import {FontUtils, DOMUtils} from '../utils';
+import Observable from "../utils/classes/Observable";
 import {Game} from "../game";
 
 
@@ -36,7 +36,7 @@ export default class DatasetMediator extends Observable {
         const dir = this.dataset.getDir();
 
         this.selector.setupButtonContents(item => {
-            const content = DOMHelper.createElement("span.symbol-string");
+            const content = DOMUtils.createElement("span.symbol-string");
             content.append(...Object.values(item.getFormNodes()));
             if (dir) content.dir = dir;
             return content;
@@ -48,7 +48,7 @@ export default class DatasetMediator extends Observable {
     }
 
     setupObservers() {
-        this.selectorSettings.observers.push(({forms, variant}, changed) => DOMHelper.transition(
+        this.selectorSettings.observers.push(({forms, variant}, changed) => DOMUtils.transition(
             () => { this.applySettings(forms, variant, changed); },
             ["selector-forms"]
         ));
@@ -73,7 +73,7 @@ export default class DatasetMediator extends Observable {
     updateSelectorFont(variant) {
         const font = this.dataset.getSelectorDisplayFont(variant);
         this.selector.updateButtonContents(content => {
-            FontHelper.setFont(content, font);
+            FontUtils.setFont(content, font);
         });
     }
 
@@ -129,7 +129,7 @@ export default class DatasetMediator extends Observable {
             this.selector.updateButtonContents(content => {
                 content.querySelectorAll(".symbol-form").forEach(elem => {
                     const shown = formKeys.includes(elem.dataset.form);
-                    DOMHelper.toggleShown(shown, elem);
+                    DOMUtils.toggleShown(shown, elem);
                 });
             });
         }

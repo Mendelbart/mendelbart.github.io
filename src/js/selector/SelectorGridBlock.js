@@ -1,8 +1,8 @@
-import SelectorBlock from "./block";
-import {DOMHelper} from '../helpers';
-import Matrix from './matrix';
-import {rangeBetween, sum} from "../helpers/array";
-import {label} from "../helpers/dom";
+import SelectorBlock from "./SelectorBlock";
+import {DOMUtils} from '../utils';
+import Matrix from '../utils/classes/Matrix';
+import {rangeBetween, sum} from "../utils/array";
+import {label} from "../utils/dom";
 import {matrixIndices} from "./indices";
 
 
@@ -13,7 +13,7 @@ export default class SelectorGridBlock extends SelectorBlock {
      * @private
      */
     createGap(type) {
-        return DOMHelper.createElement(`span.selector-${type}-gap`);
+        return DOMUtils.createElement(`span.selector-${type}-gap`);
     }
 
     /**
@@ -60,7 +60,7 @@ export default class SelectorGridBlock extends SelectorBlock {
     }
 
     setupNode() {
-        this.node = DOMHelper.createElement("div.selector-block.selector-block-grid");
+        this.node = DOMUtils.createElement("div.selector-block.selector-block-grid");
         this.node.append(...this.elements.values());
         this.setGridTemplateColumns();
     }
@@ -111,7 +111,7 @@ export default class SelectorGridBlock extends SelectorBlock {
      * @returns {HTMLElement}
      */
     createGridLabel(type, content, index) {
-        const element = DOMHelper.createElement(`span.grid-label.grid-${type}-label`);
+        const element = DOMUtils.createElement(`span.grid-label.grid-${type}-label`);
         element.setAttribute("tabindex", 0);
         element.textContent = content;
         element.dataset[type] = index.toString();

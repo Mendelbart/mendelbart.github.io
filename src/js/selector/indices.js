@@ -1,5 +1,4 @@
-import {range, filterIndices} from "../helpers/array";
-
+import {range, filterIndices} from "../utils/array";
 
 /**
  * @param {(string | number[])[]} subsets

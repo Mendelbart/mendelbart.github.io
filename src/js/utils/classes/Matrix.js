@@ -1,4 +1,4 @@
-import {full} from "../helpers/array";
+import {full} from "../array";
 
 
 /** Representation of a nxm matrix, stored in row-major order. */

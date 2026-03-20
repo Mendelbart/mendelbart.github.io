@@ -1,18 +1,18 @@
-import {DOMHelper} from "./helpers";
+import {DOMUtils} from "./utils";
 import {setup} from "./context.js";
 
 // --------------- GAME SETUP -----------------
 (function () {
     readDarkLightMode();
 
-    DOMHelper.transition(setup);
+    DOMUtils.transition(setup);
 
     document.querySelectorAll(".ribbon").forEach((element) => {
         setupRibbon(element, element.classList.contains("ribbon-closable"));
     });
 
     document.querySelectorAll(".pages-container").forEach((element) => {
-        DOMHelper.setupPages(element);
+        DOMUtils.setupPages(element);
     });
 })();
 
@@ -47,14 +47,14 @@ function setupRibbon(container, closable = false) {
         }
     }
 
-    DOMHelper.hide(contents.querySelectorAll(".ribbon-content"));
+    DOMUtils.hide(contents.querySelectorAll(".ribbon-content"));
     if (!openId && !closable) {
         openId = inputs[0].dataset.contentId;
         inputs[0].checked = true;
     }
 
     if (openId) {
-        DOMHelper.show([document.getElementById(openId), contents]);
+        DOMUtils.show([document.getElementById(openId), contents]);
     } else if (closable) {
         container.classList.add("contents-hidden");
     }
@@ -66,7 +66,7 @@ function setupRibbon(container, closable = false) {
  * @param {Event} event
  */
 function ribbonButtonsChangeListener(event) {
-    DOMHelper.transition(() => {
+    DOMUtils.transition(() => {
         const input = event.target;
         const container = input.closest(".ribbon");
         const contents = container.querySelector('.ribbon-contents');
@@ -74,16 +74,16 @@ function ribbonButtonsChangeListener(event) {
         if (input.checked) {
             const previousOpenId = container.dataset.openId;
             if (!container.classList.contains("contents-hidden") && previousOpenId) {
-                DOMHelper.hide(document.getElementById(previousOpenId));
+                DOMUtils.hide(document.getElementById(previousOpenId));
                 container.querySelector(`.ribbon-buttons input[data-content-id="${previousOpenId}"]`).checked = false;
             }
 
             container.dataset.openId = input.dataset.contentId;
-            DOMHelper.show([document.getElementById(input.dataset.contentId), contents]);
+            DOMUtils.show([document.getElementById(input.dataset.contentId), contents]);
             container.classList.remove("contents-hidden");
         } else if (container.dataset.closable === "true") {
             container.classList.add("contents-hidden")
-            DOMHelper.hide(contents);
+            DOMUtils.hide(contents);
             container.dataset.openId = "";
         } else {
             input.checked = true;

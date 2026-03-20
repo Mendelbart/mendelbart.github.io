@@ -125,18 +125,21 @@ export function htmlToElement(html) {
 
 /**
  * @param {string} str of the format tag#id.class1.class2 etc
+ * @param {string | Node} children
  * @returns {HTMLElement}
  */
-export function createElement(str) {
+export function createElement(str, ...children) {
     const [tagId, ...classes] = str.split(".");
     const [tag, id] = tagId.split("#");
     const element = document.createElement(tag);
 
-    if (id) {
-        element.id = id;
+    if (id) element.id = id;
+    element.classList.add(...classes);
+
+    for (const child of children) {
+        element.append(child);
     }
 
-    element.classList.add(...classes);
     return element;
 }
 
@@ -660,3 +663,8 @@ export function getARIA(element, attribute) {
     return element.getAttribute("aria-" + attribute);
 }
 
+export function span(content) {
+    const node = document.createElement("span");
+    node.textContent = content;
+    return node;
+}
