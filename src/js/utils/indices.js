@@ -1,71 +1,63 @@
-import {range, filterIndices} from "../helpers/array";
-
+import {range, filterIndices} from "./array";
 
 /**
- * @param {(string | number[])[]} subsets
+ * @param {(number[] | null)[]} subsets
  * @param {number} n
- * @param {function(string): number} [parseIndex]
  * @returns {number[][]}
  */
-export function processIndexSubsets(subsets, n, parseIndex) {
-    const result = [];
+export function completeIndexSubsets(subsets, n) {
     const covered = new Array(n).fill(false);
+    let emptyIndex;
 
-    for (const [i, subset] of subsets.entries()) {
-        if (subset === "rest") {
-            if (i !== subsets.length - 1) console.error("Can only have subset 'rest' at the end.");
-
-            result.push(filterIndices(covered, x => !x));
-            break;
+    for (const [index, subset] of subsets.entries()) {
+        if (subset) {
+            for (const i of subset) {
+                if (covered[i]) console.warn(`Index ${i} covered multiple times.`)
+                covered[i] = true;
+            }
+        } else {
+            if (emptyIndex != null) {
+                console.warn("Multiple empty subsets.");
+            } else {
+                emptyIndex = index;
+            }
         }
-        const indices = [];
-
-        for (const index of processIndices(subset, parseIndex)) {
-            indices.push(index);
-
-            if (index == null) continue;
-            if (covered[index]) throw new Error(`Duplicate subset index ${index}.`);
-
-            covered[index] = true;
-        }
-        result.push(indices);
     }
 
-    const uncovered = filterIndices(subsets, x => !x);
-    if (uncovered.length !== 0) {
-        throw new Error(`Not all indices were covered: missing ${uncovered}.`);
+    const uncovered = filterIndices(covered, x => !x);
+    if (emptyIndex != null) {
+        subsets[emptyIndex] = uncovered;
+    } else if (uncovered.length > 0) {
+        console.warn("Subsets have uncovered indices.");
+        console.log("Uncovered:", uncovered);
     }
 
-    return result;
+    return subsets;
 }
-
 
 /**
- * @param {number | number[] | string} indices
- * @param {function(string): number} [parseIndex]
- * @returns {number[]}
+ * @param {number[][]} subsets
+ * @param {number} n
+ * @returns {boolean}
  */
-export function processIndices(indices, parseIndex) {
-    if (typeof indices === "string") {
-        return parseRanges(indices, parseIndex);
+export function verifyIndexSubsets(subsets, n) {
+    const covered = new Array(n).fill(false);
+
+    for (const subset of subsets) {
+        for (const i of subset) {
+            if (covered[i]) return false;
+            covered[i] = true;
+        }
     }
 
-    if (Number.isInteger(indices)) {
-        return [indices];
-    }
-
-    if (!Array.isArray(indices) || indices.some(x => !Number.isInteger(x))) {
-        throw new Error("Invalid indices datatype: need string, number or number[].")
-    }
-
-    if (containsDuplicates(indices)) {
-        console.warn("Indices contain duplicates.");
-    }
-
-    return indices;
+    return covered.every(x => x);
 }
 
-function containsDuplicates(a) {
+/**
+ * @param {any[]} a
+ * @returns {boolean}
+ */
+export function containsDuplicates(a) {
     return new Set(a).size !== a.length;
 }
 
@@ -75,7 +67,8 @@ function containsDuplicates(a) {
  * @returns {number[]}
  */
 export function parseRanges(str, parseIndex) {
-    return [].concat(...str.split(/,\s*/g).map(range => parseRange(range, parseIndex)));
+    if (typeof str !== "string") str = str.toString();
+    return [].concat(...str.split(",").map(range => parseRange(range.trim(), parseIndex)));
 }
 
 /**
@@ -84,7 +77,7 @@ export function parseRanges(str, parseIndex) {
  * which is always used for `step`.
  *
  * @param {string} str
- * @param {function(string): number} [parseIndex] - opt. Function to split
+ * @param {function(string): number} [parseIndex] - opt. function to parse an index
  * @returns {number[]}
  *
  * @example
@@ -147,10 +140,9 @@ export function invertSubsets(subsets, n) {
  * @param {function(string): number} [parseIndex]
  */
 export function parseMatrixRanges(ranges, parseIndex) {
-    if (!ranges || ranges.length === 0) {
-        return [];
-    }
-    return [].concat(...ranges.split(/;\s*/g).map(range => parseMatrixRange(range, parseIndex)));
+    if (!ranges) return [];
+
+    return [].concat(...ranges.split(";").map(range => parseMatrixRange(range.trim(), parseIndex)));
 }
 
 /**

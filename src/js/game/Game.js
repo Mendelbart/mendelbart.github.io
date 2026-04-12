@@ -1,10 +1,11 @@
-import {DOMHelper, ObjectHelper, FontHelper, FunctionStack} from "../helpers";
-import {ItemDealer} from "./dealer.js";
-import {Slider, SettingCollection, ValueElement} from "../settings";
-import {ItemProperty, ListProperty} from "../dataset/symbol.js";
+import {DOMUtils, FunctionSet} from "../utils";
+import {SettingCollection, ValueElement} from "../settings";
+import {passes} from "../quiz/answer";
+import {avg} from "../utils/array";
+import {CardFactory} from "../quiz/card";
 
 
-DOMHelper.registerTemplates({
+DOMUtils.registerTemplates({
     eval: `<div class="item-eval">
     <span class="submitted"></span><span class="solution"></span>
 </div>`,
@@ -14,28 +15,29 @@ DOMHelper.registerTemplates({
 </div>`
 });
 
-export class Game {
+export default class Game {
     /**
-     * @param {Dataset} dataset
-     * @param {QuizItem[]} items
-     * @param {string[]} properties
-     * @param {string} language
-     * @param {?string} variant
+     * @param {QuizDealer} dealer
+     * @param {CardFactory | function(Card, QuizItem): void} cardFactory
      */
+    constructor(dealer, cardFactory) {
+        this.dealer = dealer;
+        this.cardFactory = new CardFactory(cardFactory, card => {
+            card.node.classList.add("game-main-card");
+            this._setupCard(card);
+        });
+        this.onFinish = new FunctionSet();
 
-    constructor(dataset, items, properties, language, variant = null) {
-        this.dataset = dataset;
-        this.properties = properties;
-        this.language = language;
-        this.dealer = new ItemDealer(items);
-        this.onFinish = new FunctionStack();
-        this.variant = variant;
-
+        this.cardDisplayMeta = {};
+        this.keepKeyboardOpen = false;
         this.updateProgressBar();
 
-        this.onInputKeydown = this.onInputKeydown.bind(this);
-        this._show = this._show.bind(this);
-        this.loadAndUpdateSymbolFont = this.loadAndUpdateSymbolFont.bind(this);
+        /** @type {Card} */
+        this.mainCard = this.cardFactory.createCard();
+        document.getElementById("game-main-card-container").replaceChildren(this.mainCard.node);
+        document.getElementById("item-next-button").textContent = "Next";
+
+        this.onInputKeypress = this.onInputKeypress.bind(this);
     }
 
     static genericSettings() {
@@ -45,214 +47,175 @@ export class Game {
     }
 
     /**
-     * @param {number?} defaultWeight
-     * @returns {Promise<void>}
+     * @returns {Card[]}
      */
-    setup({defaultWeight = null} = {}) {
-        this.setupSymbolContainer();
-        this.setupInputs();
-        this.setupEvals();
-        document.getElementById("item-next-button").textContent = "Next";
-
-        return this.setupFontSettings(defaultWeight);
+    allCards() {
+        return [this.mainCard];
     }
 
-    getInputMode(propType) {
-        if (propType === "real" || propType === "integer") {
-            return "numeric"
-        }
+    /**
+     * @param {SettingCollection} settings
+     * @param {function(Card, Record<string, *>, string?): void} applySettings
+     */
+    setupCardSettings(settings, applySettings) {
+        this.cardSettings = settings;
+        this.applyCardSettingsCallback = applySettings;
 
-        return "text";
-    }
-
-    setupSymbolContainer() {
-        const symbol = document.querySelector("#symbol-current .symbol");
-        symbol.classList.add("symbol-string");
-        symbol.setAttribute("lang", this.dataset.metadata.lang);
-        symbol.setAttribute("dir", this.dataset.metadata.dir);
-    }
-
-    setupInputs() {
-        this.inputs = ObjectHelper.mapKeyArrayToValues(this.properties, prop => {
-            /** @type {HTMLInputElement} */
-            const input = document.createElement("INPUT");
-            DOMHelper.setAttrs(input, {
-                type: "text",
-                inputmode: this.getInputMode(this.dataset.properties[prop].type),
-                placeholder: this.dataset.properties[prop].label
-            });
-            if (this.language && this.language !== "default") {
-                input.setAttribute("lang", this.language);
+        this.cardSettings.observers.push((values, updatedKey) => {
+            for (const card of this.allCards()) {
+                this.applyCardSettingsCallback(card, values, updatedKey);
             }
-            return input;
         });
 
-        const gameInputs = document.getElementById("game-inputs");
-        gameInputs.replaceChildren(...Object.values(this.inputs));
-        gameInputs.addEventListener("keydown", this.onInputKeydown);
+        document.getElementById("font-settings").replaceChildren(...this.cardSettings.nodeList());
+
+        for (const card of this.allCards()) {
+            this.applyCardSettings(card);
+        }
+    }
+
+    applyCardSettings(card) {
+        if (this.cardSettings) this.applyCardSettingsCallback(card, this.cardSettings.getValues());
+    }
+
+    setCardDisplayMeta(data) {
+        for (const key of ["lang", "dir"]) {
+            if (data[key]) {
+                this.cardDisplayMeta[key] = data[key];
+            } else {
+                delete this.cardDisplayMeta[key];
+            }
+        }
+        for (const card of this.allCards()) {
+            this.applyCardDisplayMeta(card);
+        }
+    }
+
+    /**
+     * @param {Card} card
+     */
+    applyCardDisplayMeta(card) {
+        if (this.cardDisplayMeta) {
+            const {lang, dir} = this.cardDisplayMeta;
+            if (lang) card.displayNode.lang = lang;
+            if (dir) card.displayNode.dir = dir;
+        }
+    }
+
+    /**
+     * @param {Card} card
+     * @private
+     */
+    _setupCard(card) {
+        this.applyCardDisplayMeta(card);
+        this.applyCardSettings(card);
+    }
+
+    /**
+     * @param {{key, label, inputMode?}[]} data
+     * @param {{lang}} [generalConfig]
+     */
+    setupAnswerInputs(data, generalConfig = {}) {
+        const inputsContainer = document.getElementById('game-inputs');
+        inputsContainer.replaceChildren();
+        const evalsContainer = document.getElementById('game-evals');
+        evalsContainer.replaceChildren();
+        /** @type {Record<string, HTMLInputElement>} */
+        this.inputs = {};
+        /** @type {Record<string, HTMLElement>} */
+        this.evals = {};
+        const {lang} = generalConfig;
+
+        for (const {key, label, inputMode} of data) {
+            const input = this.inputs[key] = document.createElement('input');
+            input.type = "text";
+            input.placeholder = label;
+            if (inputMode) input.inputMode = inputMode;
+            if (lang) input.lang = lang;
+            input.addEventListener("keypress", this.onInputKeypress)
+            inputsContainer.appendChild(input);
+
+            this.evals[key] = DOMUtils.getTemplate("eval");
+            evalsContainer.appendChild(this.evals[key]);
+        }
     }
 
     /**
      * @param {KeyboardEvent} event
      */
-    onInputKeydown(event) {
+    onInputKeypress(event) {
         /** @type HTMLInputElement */
-        const input = event.target.closest("INPUT");
+        const input = event.target.closest("input");
         if (!input) return;
 
         if (event.key === "Enter") {
             if (input.nextElementSibling) {
                 input.nextElementSibling.focus();
             } else {
-                document.getElementById("item-submit-button").focus();
+                if (this.shown === "inputs") {
+                    this.submitRound();
+                } else {
+                    this.newRound();
+                }
             }
-        } else if (event.key === "Backspace" && event.target.value === "" && input.previousElementSibling) {
+        } else if (event.key === "Backspace" && event.target.default === "" && input.previousElementSibling) {
             input.previousElementSibling.focus();
             event.preventDefault();
         }
     }
 
-    setupEvals() {
-        this.evals = {};
-        const evalsContainer = document.getElementById("game-evals");
-
-        for (const property of this.properties) {
-            const evalElement = DOMHelper.getTemplate("eval");
-            this.evals[property] = evalElement;
-            evalsContainer.append(evalElement);
-        }
-    }
-
-    updateSymbolWeight(value) {
-        document.querySelector("#game-symbols").style.setProperty("--symbol-weight", value.toString());
-    }
-
-    loadAndUpdateSymbolFont(key = null) {
-        key ??= this.fontSettings.getValue("family");
-        return FontHelper.loadFont(this.dataset.getFont(key, this.variant)).then(
-            () => this.updateSymbolFontFamily(key)
-        ).catch(err => console.error(err));
-    }
-
-    updateSymbolFontFamily(key) {
-        key ??= this.fontSettings.getValue("family");
-        document.querySelectorAll("#game-symbols .symbol-string").forEach(element => {
-            this.setSymbolFont(element, key);
-        });
-        this.updateSymbolWeightRange(key);
-    }
-
-    updateSymbolWeightRange(key) {
-        const family = this.dataset.getFont(key, this.variant).family;
-        const data = FontHelper.getFontData(family);
-        /**
-         * @type {Slider}
-         */
-        const weightRange = this.fontSettings.getSetting("weight");
-
-        if (data.variationSettings && data.variationSettings.wght) {
-            const [min, max] = data.variationSettings.wght.split(" ").map(x => parseInt(x, 10));
-            weightRange.setMin(min);
-            weightRange.setMax(max);
-            DOMHelper.show(weightRange.node);
-        } else {
-            DOMHelper.hide(weightRange.node);
-        }
-    }
-
-    setupFontSettings(defaultWeight) {
-        defaultWeight ??= 500;
-        const weightSlider = Slider.create(100, 900, defaultWeight);
-        weightSlider.label("Weight");
-        this.fontSettings = SettingCollection.createFrom({
-            family: this.dataset.fontFamilySetting(),
-            weight: weightSlider
-        });
-
-        document.querySelector("#font-settings").replaceChildren(...this.fontSettings.nodeList());
-
-        this.fontSettings.addUpdateListener("weight", this.updateSymbolWeight);
-        this.fontSettings.addUpdateListener("family", () => DOMHelper.transition(this.loadAndUpdateSymbolFont));
-
-        this.updateSymbolWeight(defaultWeight);
-        return this.loadAndUpdateSymbolFont();
-    }
-
-    setSymbolFont(element, key) {
-        FontHelper.setFont(element, this.dataset.getFont(key, this.variant));
-    }
-
-    /**
-     * @param {Record<string,QuizItem[]>} referenceItems
-     */
-    setReferenceItems(referenceItems) {
-        this.referenceItems = referenceItems;
-    }
-
     seed(seed) {
-        this.dealer.seed(seed);
+        this.dealer.rng.seed(seed);
     }
 
     cleanup() {
-        this.clearItemDisplay();
+        this.mainCard.clear();
         this.updateProgressBar(0);
 
-        document.getElementById("game-inputs").removeEventListener("keydown", this.onInputKeydown);
+        document.getElementById("game-inputs").removeEventListener("keydown", this.onInputKeypress);
         document.getElementById("game-inputs").replaceChildren();
         document.getElementById("game-evals").replaceChildren();
     }
 
     finish() {
         setTimeout(() => this.cleanup(), 100);
-        this.onFinish.call(this);
-    }
-
-    /**
-     * @returns {QuizItem}
-     */
-    currentItem() {
-        return this.dealer.currentItem();
+        this.onFinish.call();
     }
 
     submitRound() {
-        let score = 0;
-        const item = this.currentItem();
+        const item = this.dealer.currentItem;
+        const grades = {};
+        let hasReferenceCards = false;
 
-        for (const [propertyKey, input] of Object.entries(this.inputs)) {
-            const evalElement = this.evals[propertyKey];
-            const property = item.properties[propertyKey];
-            const [grade, guessNodes, solutionNodes] = property.grade(input.value);
+        for (const [key, input] of Object.entries(this.inputs)) {
+            const guess = input.value;
+            const evalElement = this.evals[key];
+            const [grade, markedGuess, markedSolution] = item.answers[key].mark(guess);
 
-            score += grade;
+            grades[key] = grade;
+            evalElement.querySelector(".submitted").replaceChildren(markedGuess);
+            evalElement.querySelector(".solution").replaceChildren(markedSolution);
 
-            if (!ItemProperty.passes(grade)) {
-                const referenceItems = this.getReferenceItems(item.form, propertyKey, input.value);
-                if (referenceItems.length > 0) {
-                    const referenceNodes = this.referenceItemsNodes(referenceItems, propertyKey);
-                    document.getElementById("game-symbols").append(...referenceNodes);
-                    this.updateSymbolFontFamily(this.fontSettings.getValue("family"));
+            DOMUtils.toggleShown(guess.length > 0, evalElement.querySelector(".submitted"));
 
-                    for (const node of referenceNodes) {
-                        this.scaleItemNodeContents(node);
-                    }
+            if (!passes(grade)) {
+                const referenceItems = this.getReferenceItems(key, guess);
+                if (referenceItems.length > 0) hasReferenceCards = true;
 
-                    for (const item of referenceItems) {
-                        this.dealer.punish(this.dealer.getItemIndex(item), 1 / referenceItems.length);
-                    }
-                }
+                const referenceCards = this.referenceCards(referenceItems, key);
+                document.getElementById("game-reference-cards").append(...referenceCards.map(card => card.node));
+
+                // // doesn't make sense, cause the referenceItems are not the same as the game items.
+                // for (const item of referenceItems) {
+                //     this.dealer.punish(item);
+                // }
             }
-
-            evalElement.querySelector(".submitted").replaceChildren(...guessNodes);
-            evalElement.querySelector(".solution").replaceChildren(...solutionNodes);
-            DOMHelper.classIfElse(
-                property instanceof ListProperty && property.listMode === "best",
-                evalElement,
-                "best-mode"
-            );
         }
 
-        score /= this.properties.length;
-        this.dealer.enterScore(score);
+        if (hasReferenceCards) DOMUtils.show(document.getElementById("game-reference-cards"));
+
+        const score = avg(Object.values(grades));
+        this.dealer.submitScore(score);
 
         this.updateProgressBar();
         if (this.dealer.isEmpty()) {
@@ -260,84 +223,48 @@ export class Game {
         }
         this.show("evals");
 
-        if (window.scrollY > 0) {
-            window.scrollTo({top: 0, behavior: "smooth"});
-        }
-    }
-
-    /**
-     * @param {string} form
-     * @param {string} property
-     * @param {string} guess
-     * @returns {QuizItem[]}
-     */
-    getReferenceItems(form, property, guess) {
-        if (!this.referenceItems) {
-            return [];
-        }
-
-        let record = [];
-
-        for (const [index, item] of this.referenceItems[form].entries()) {
-            const grade = item.properties[property].grade(guess)[0];
-            if (ItemProperty.passes(grade)) {
-                record.push([index, grade]);
-            }
-        }
-
-        record.sort(([i1, g1], [i2, g2]) => (g2 - g1) || (i1 - i2));
-
-        if (record.length > 0 && record[0][1] === 1) {
-            record = record.filter(([_, grade]) => grade === 1);
-        }
-
-        return record.map(([index, _]) => this.referenceItems[form][index]);
+        if (window.scrollY > 0) window.scrollTo({top: 0, behavior: "smooth"});
     }
 
     /**
      * @param {QuizItem[]} items
-     * @param {string} property
-     * @returns {HTMLElement[]}
+     * @param {CardFactory | function(Card, QuizItem, string): void} factory
      */
-    referenceItemsNodes(items, property) {
-        return items.map(item => this.referenceItemNode(item, property));
+    setReferenceItems(items, factory) {
+        this.referenceItems = items;
+        this.referenceCardFactory = new CardFactory(factory, card => {
+            card.node.classList.add("game-reference-card");
+            this._setupCard(card);
+        });
     }
 
     /**
-     * @param {QuizItem} item
      * @param {string} property
-     * @returns {HTMLElement}
+     * @param {string} guess
+     * @returns {QuizItem[]}
      */
-    referenceItemNode(item, property) {
-        const container = DOMHelper.getTemplate("symbolContainer");
-        container.classList.add("symbol-reference");
-        container.querySelector('.symbol').classList.add("symbol-string");
+    getReferenceItems(property, guess) {
+        if (!this.referenceItems) return [];
 
-        this.updateItemNode(container, item, property, false);
-        return container;
-    }
+        let grades = this.referenceItems
+            .map((item, index) => [index, item.grade(property, guess)])
+            .filter(([_, grade]) => passes(grade));
+        grades.sort(([i1, g1], [i2, g2]) => (g2 - g1) || (i1 - i2));
 
-    /**
-     * @param {HTMLElement} node
-     * @param {QuizItem} item
-     * @param {?string} property
-     * @param {boolean} scale
-     */
-    updateItemNode(node, item, property = null, scale = true) {
-        property ??= this.properties[0];
-        node.querySelector('.symbol').textContent = item.displayString;
-        node.querySelector('.symbol-label').textContent = item.properties[property].displayString;
-        if (scale) {
-            this.scaleItemNodeContents(node);
+        if (grades.length > 0 && grades[0][1] === 1) {
+            grades = grades.filter(([_, grade]) => grade === 1);
         }
+
+        return grades.map(([index, _]) => this.referenceItems[index]);
     }
 
     /**
-     * @param {HTMLElement} node
+     * @param {QuizItem[]} referenceItems
+     * @param {string} property
+     * @returns {Card[]}
      */
-    scaleItemNodeContents(node) {
-        DOMHelper.scaleToFit(node.querySelector('.symbol'));
-        DOMHelper.scaleToFit(node.querySelector('.symbol-label'));
+    referenceCards(referenceItems, property) {
+        return referenceItems.map(item => this.referenceCardFactory.createCard(item, property));
     }
 
     clearInputs() {
@@ -350,40 +277,44 @@ export class Game {
      * @param {"inputs"|"evals"} which
      */
     show(which) {
-        this.shown = which;
-        requestAnimationFrame(this._show);
-    }
-
-    _show() {
-        DOMHelper.toggleShown(
-            this.shown === "inputs",
-            [
-                document.getElementById("game-inputs"),
-                document.getElementById("item-submit-button")
-            ],
-            [
-                document.getElementById("game-evals"),
-                document.getElementById("item-next-button")
-            ]
+        DOMUtils.toggleShown(
+            which === "inputs",
+            document.getElementById("item-submit-button"),
+            document.getElementById("item-next-button")
         );
 
-        DOMHelper.toggleShown(
-            this.shown === "inputs",
-            null, document.querySelector('#symbol-current .symbol-label'),
-            "visibility"
-        );
+        const evals = document.getElementById("game-evals");
+        const inputs= document.getElementById("game-inputs");
 
-        if (this.shown === "inputs") {
-            document.querySelectorAll("#game-symbols .symbol-reference").forEach(el => {
-                el.remove();
-            });
+        if (which === "inputs") {
+            this.mainCard.hideLabels();
+            const referenceContainer = document.getElementById("game-reference-cards");
+            referenceContainer.replaceChildren();
+            DOMUtils.hide(referenceContainer);
+
+            DOMUtils.hide(evals);
+            DOMUtils.show(inputs, "visibility");
+
             this.focus();
         } else {
-            document.getElementById("item-next-button").focus();
+            this.mainCard.showLabels();
+
+            DOMUtils.show(evals);
+            if (this.keepKeyboardOpen) {
+                inputs.lastElementChild.focus();
+            } else {
+                DOMUtils.hide(inputs, "visibility");
+                document.getElementById("item-next-button").focus();
+            }
         }
+
+        this.shown = which;
     }
 
-    updateProgressBar(value = null) {
+    /**
+     * @param {number} [value]
+     */
+    updateProgressBar(value) {
         value ??= this.dealer.progress();
         document.getElementById("progress-bar").style.setProperty("--progress", value);
     }
@@ -395,25 +326,20 @@ export class Game {
         }
 
         this.dealer.nextItem();
-        this.displayItem(this.currentItem());
+        this.displayItem(this.dealer.currentItem);
 
         this.clearInputs();
         this.show("inputs");
     }
 
     focus() {
-        this.inputs[this.properties[0]].focus({preventScroll: true});
+        document.querySelector("#game-inputs input").focus({preventScroll: true});
     }
 
     /**
      * @param {QuizItem} item
      */
     displayItem(item) {
-        this.updateItemNode(document.getElementById('symbol-current'), item);
-    }
-
-    clearItemDisplay() {
-        document.querySelector("#symbol-current .symbol").textContent = "";
-        document.querySelector('#symbol-current .symbol-label').textContent = "";
+        this.cardFactory.display(this.mainCard, item);
     }
 }

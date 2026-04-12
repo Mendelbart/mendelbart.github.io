@@ -32,7 +32,6 @@ $selectorBorderRadius: .25rem;
     align-self: center;
     max-width: 100%;
     user-select: none;
-    padding: 0 1rem;
 
     --clr-grp-button-text: hsl(0, 0%, 62%);
     --clr-grp-button-checked: hsla(0, 0%, 100%, .1);
@@ -133,22 +132,25 @@ $selectorBorderRadius: .25rem;
     }
   }
 
-  .symbol-string {
+  .letter-combination {
+    gap: 1px;
+
     min-width: var(--symbol-min-width);
-    text-align: center;
     padding-inline: .25em;
     font-weight: 600;
     transform-origin: center;
   }
-  //
-  //.symbol-form {
-  //  view-transition-name: match-element;
-  //}
+
+  .letter {
+    //@media (prefers-reduced-motion: no-preference) {
+    //  view-transition-name: match-element;
+    //}
+    //view-transition-class: text;
+  }
 
   .selector-button-label {
     font-weight: 400;
     font-size: .8rem;
-    text-overflow: ellipsis;
     padding-inline: .3em;
     pointer-events: none;
   }

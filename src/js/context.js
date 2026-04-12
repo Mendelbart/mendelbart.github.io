@@ -1,27 +1,25 @@
 import {SettingCollection, Slider, ButtonGroup} from "./settings";
-import {Game} from "./game/Game.js";
+import Game from "./game/Game";
 import {Dataset, DEFAULT_DATASET, TERMS} from "./dataset/Dataset.js";
 import DATASETS_METADATA from '../json/datasets_meta.json';
-import {DOMHelper, Base64Helper, ObjectHelper} from "./helpers";
-import * as FontHelper from "./helpers/font";
+import {DOMUtils, ObjectUtils} from "./utils";
+import {encodeBase64BoolArray, decodeBase64BoolArray} from "./utils/base64";
+import * as FontUtils from "./utils/font";
+import DatasetMediator from "./dataset/DatasetMediator";
 
 
-/** @type {?Game} */
-let GAME = null;
+/** @type {Game} */
+let GAME;
 
-/** @type {?Dataset} */
-let DATASET = null;
+/** @type {Dataset} */
+let DATASET;
+/** @type {DatasetMediator} */
+let DSM;
 
-let SELECTOR_SETTINGS = new SettingCollection();
-let DATASET_GAME_SETTINGS = new SettingCollection();
-let GENERIC_GAME_SETTINGS = new SettingCollection();
+const GENERIC_GAME_SETTINGS = Game.genericSettings();
 
-/** @type {?Selector} */
-let SELECTOR = null;
-
-/** @type {?SettingCollection} */
-let PAGE_SETTINGS = null;
-
+/** @type {SettingCollection} */
+let PAGE_SETTINGS;
 
 
 /******************** SETUP ***********************/
@@ -30,41 +28,35 @@ export function setup() {
     setupButtonListeners();
     setupPageSettings();
 
-    GENERIC_GAME_SETTINGS.replaceSelf(Game.genericSettings());
     document.getElementById("generic-game-settings").append(...GENERIC_GAME_SETTINGS.nodeList());
 
-    window.addEventListener("popstate", () => DOMHelper.transition(readFromSearchParams));
+    window.addEventListener("popstate", () => DOMUtils.transition(readFromSearchParams));
 
     setupDatasetSelect();
     readFromSearchParams(false);
 }
 
 function setupButtonListeners() {
-    document.getElementById("start-game-button").addEventListener("click", () => DOMHelper.transition(startGame));
-    document.getElementById("stop-game-button").addEventListener("click", () => {
-        GAME.finish();
-    });
+    document.getElementById("start-game-button").addEventListener("click", () => DOMUtils.transition(startGame));
+    document.getElementById("stop-game-button").addEventListener("click", () => GAME.finish());
     document.getElementById("item-submit-button").addEventListener("click", () => {
-        DOMHelper.transition(() => {
-            GAME.submitRound();
-        }, ["game"]);
+        DOMUtils.transition(() => GAME.submitRound(), ["game"]);
     });
     document.getElementById("item-next-button").addEventListener("click", () => {
-        DOMHelper.transition(() => {
-            GAME.newRound();
-        }, ["game"]);
+        DOMUtils.transition(() => GAME.newRound(), ["game"]);
     });
 }
 
 function setupDatasetSelect() {
     const select = document.getElementById("datasetSelect");
-    DOMHelper.setOptions(
-        select, ObjectHelper.map(DATASETS_METADATA, data => data.name)
+    DOMUtils.setOptions(
+        select, ObjectUtils.map(DATASETS_METADATA, data => data.name)
     );
 
     select.addEventListener("change", (e) => {
-        const key = e.target.value;
-        Dataset.fetch(key).then(dataset => DOMHelper.transition(() => selectDataset(dataset))).catch(console.error);
+        Dataset.fetch(e.target.value).then(
+            dataset => DOMUtils.transition(() => selectDataset(dataset))
+        ).catch(err => console.error(err));
     });
 }
 
@@ -74,10 +66,11 @@ function setupDatasetSelect() {
  */
 function setPlaying(playing) {
     if (!playing) {
-        DOMHelper.showPage(document.getElementById('game-filters'));
+        DOMUtils.showPage(document.getElementById('game-filters'));
+        GAME?.cleanup();
     }
 
-    DOMHelper.toggleShown(playing,
+    DOMUtils.toggleShown(playing,
         [
             document.getElementById('game-container'),
             document.getElementById('stop-game-button'),
@@ -94,27 +87,38 @@ function setPlaying(playing) {
 
 function setupPageSettings() {
     PAGE_SETTINGS = SettingCollection.createFrom({
-        accentColor: getAccentHueSetting(),
-        colorMode: getPageLightDarkModeSetting()
+        accentHue: getAccentHueSetting(),
+        colorMode: getPageLightDarkModeSetting(),
+        keepKeyboardOpen: getKeepKeyboardOpenSetting()
+    });
+
+    PAGE_SETTINGS.observers.push(values => {
+        for (const [key, value] of Object.entries(values)) {
+            window.localStorage.setItem(key, value);
+        }
     });
 
     document.querySelector("#page-settings .settings").replaceChildren(...PAGE_SETTINGS.nodeList());
 
+    document.getElementById("page-settings").addEventListener("cancel", (event) => {
+        event.preventDefault();
+        DOMUtils.transition(hidePageSettings, ["page-settings", "ease-out"]);
+    });
     document.getElementById("open-settings-button").addEventListener("click", () => {
-        DOMHelper.transition(showPageSettings, ["page-settings", "ease-in"]);
+        DOMUtils.transition(showPageSettings, ["page-settings", "ease-in"]);
     });
     document.getElementById("close-settings-button").addEventListener("click", () => {
-        DOMHelper.transition(hidePageSettings, ["page-settings", "ease-out"]);
+        document.getElementById("page-settings").requestClose();
     });
 }
 
 function showPageSettings() {
-    DOMHelper.show(document.getElementById("page-settings-container"));
+    document.getElementById("page-settings").showModal();
     document.documentElement.style.overflowY = "hidden";
 }
 
 function hidePageSettings() {
-    DOMHelper.hide(document.getElementById("page-settings-container"));
+    document.getElementById("page-settings").close();
     document.documentElement.style.removeProperty("overflow-y");
 }
 
@@ -124,14 +128,13 @@ function getAccentHueSetting() {
     setAccentHue(hue);
     const slider = Slider.create(0, 360, hue);
     slider.label("Accent Hue");
-    slider.updateListeners.push(hue => setAccentHue(hue));
+    slider.observers.push(hue => setAccentHue(hue));
     slider.node.id = "accentHueSlider";
     return slider;
 }
 
 function setAccentHue(hue) {
     document.documentElement.style.setProperty("--accent-hue", hue);
-    window.localStorage.setItem("accentHue", hue);
 }
 
 
@@ -157,27 +160,38 @@ function getPageLightDarkModeSetting() {
         setLightDarkMode(mode);
     });
 
-    colorModeSetting.updateListeners.push(mode => DOMHelper.transition(
-        () => setLightDarkMode(mode, {updateLocalStorage: true})
-    ));
+    colorModeSetting.observers.push(mode => DOMUtils.transition(() => setLightDarkMode(mode)));
 
     return colorModeSetting;
 }
 
 /**
  * @param {"dark" | "light"} mode
- * @param {boolean} [updateLocalStorage=false]
  */
-function setLightDarkMode(mode, {updateLocalStorage = false} = {}) {
+function setLightDarkMode(mode) {
     if (mode !== "dark" && mode !== "light") {
         throw new Error(`Invalid color mode ${mode}, use dark or light.`);
     }
 
-    DOMHelper.classIfElse(mode === "dark", document.documentElement, "dark-mode", "light-mode");
+    DOMUtils.classIfElse(mode === "dark", document.documentElement, "dark-mode", "light-mode");
+}
 
-    if (updateLocalStorage) {
-        window.localStorage.setItem("colorMode", mode);
-    }
+function getKeepKeyboardOpenSetting() {
+    const bg = ButtonGroup.from(
+        {"true": "On", "false": "Off"},
+        {
+            label: "Keep Keyboard Open",
+            exclusive: true,
+            checked: window.localStorage.getItem("keepKeyboardOpen") ?? "false"
+        }
+    );
+
+    bg.observers.push((value) => {
+        console.log(value);
+        if (GAME) GAME.keepKeyboardOpen = value === "true";
+    });
+
+    return bg;
 }
 
 
@@ -189,25 +203,25 @@ function setLightDarkMode(mode, {updateLocalStorage = false} = {}) {
  */
 function selectDataset(dataset) {
     DATASET = dataset;
-    DOMHelper.setSearchParams({dataset: dataset.key});
+    DOMUtils.setSearchParams({dataset: dataset.key});
     updateDocumentTitle();
 
     const cachedSettings = getCachedSettings();
     const gameHeading = DATASET.metadata.gameHeading;
 
-    return FontHelper.loadFonts([
+    return FontUtils.loadFonts([
         DATASET.getFont(gameHeading.font),
         DATASET.getSelectorDisplayFont()
     ]).then(() => {
         setupTerms();
 
-        DOMHelper.showPage(document.getElementById('game-filters'));
+        DOMUtils.showPage(document.getElementById('game-filters'));
 
-        setupSettingsCollections(cachedSettings);
-        DATASET.setupGameHeading(document.querySelector("#game-heading h1"), SELECTOR_SETTINGS.getDefault("variant"));
-
-        setupSelector(cachedSettings);
-    });
+        setupDSM();
+        DSM.setSettings(cachedSettings);
+        checkPagesNextButton();
+        DATASET.setupGameHeading(document.querySelector("#game-heading h1"), DSM.selectorSettings.getDefault("variant"));
+    }).catch(err => console.error(err));
 }
 
 function updateDocumentTitle() {
@@ -223,103 +237,47 @@ function setupTerms() {
     }
 }
 
-function setupSelector(settings = {}) {
-    if (SELECTOR) {
-        SELECTOR.teardown();
-        SELECTOR.node.remove();
-    }
+function setupDSM() {
+    DSM?.teardown();
 
-    SELECTOR = DATASET.getSelector();
-    document.getElementById('dataset-filter-settings').append(SELECTOR.node);
+    DSM = new DatasetMediator(DATASET);
 
-    if (settings.checked) {
-        SELECTOR.setChecked((_, index) => settings.checked[index]);
-    }
-    DATASET.applySettings(SELECTOR, SELECTOR_SETTINGS.getValues());
+    DSM.selector.observers.push(checkPagesNextButton);
+    DSM.observers.push(saveSettings);
 
-    SELECTOR.updateListeners.push(
-        checkPagesNextButton,
-        saveSettings
-    );
+    document.getElementById('dataset-filter-settings').replaceChildren(...DSM.selectorSettings.nodeList(), DSM.selector.node);
+    document.getElementById("dataset-game-settings").replaceChildren(...DSM.gameSettings.nodeList());
 
-    checkPagesNextButton();
-}
-
-function setupSettingsCollections(settings) {
-    SELECTOR_SETTINGS.replaceSelf(DATASET.getFilterSettings(settings));
-    DATASET_GAME_SETTINGS.replaceSelf(DATASET.getGameSettings(settings));
-
-    SELECTOR_SETTINGS.addUpdateListener(saveSettings);
-    DATASET_GAME_SETTINGS.addUpdateListener(saveSettings);
-
-    SELECTOR_SETTINGS.addUpdateListener(() => DOMHelper.transition(() => {
-        DATASET.applySettings(SELECTOR, SELECTOR_SETTINGS.getValues());
-    }));
-
-    if (DATASET.hasVariants()) {
-        SELECTOR_SETTINGS.addUpdateListener("variant", value => {
+    if (DSM.selectorSettings.has("variant")) {
+        DSM.selectorSettings.addObserverTo("variant", value => {
             DATASET.setupGameHeading(document.querySelector("#game-heading h1"), value);
         });
     }
-
-    document.getElementById("dataset-filter-settings").replaceChildren(...SELECTOR_SETTINGS.nodeList());
-    document.getElementById("dataset-game-settings").replaceChildren(...DATASET_GAME_SETTINGS.nodeList());
-}
-
-function getActiveForms() {
-    if (!DATASET.hasSetting("forms")) {
-        return Object.keys(DATASET.forms.data);
-    }
-    return DATASET.getFormKeysFromSetting(SELECTOR_SETTINGS.getValue("forms"));
-}
-
-function getActiveProperties() {
-    return DATASET_GAME_SETTINGS.getDefault("properties", Object.keys(DATASET.properties));
 }
 
 function checkPagesNextButton() {
-    document.querySelector('#game-settings-pages .pages-next-button').disabled = SELECTOR.checkedCount() === 0;
+    document.querySelector('#game-settings-pages .pages-next-button').disabled = DSM.checkedCount() === 0;
 }
 
 
 /***************************************** GAME *******************************/
 function startGame() {
-    if (GAME) {
-        GAME.cleanup();
-    }
+    GAME?.cleanup();
 
-    saveSettings();
+    saveSettings(DSM.getSettingsValues());
 
-    const properties = getActiveProperties();
-    const language = DATASET_GAME_SETTINGS.getDefault("language", null);
-    const items = DATASET.getQuizItems(
-        SELECTOR.getCheckedItems(),
-        getActiveForms(),
-        properties,
-        language
-    );
-    const referenceItems = DATASET.getReferenceItems(properties, language);
-    const variant = DATASET.hasVariants() ? SELECTOR_SETTINGS.getValue("variant") : null;
-
-    GAME = new Game(DATASET, items, properties, language, variant);
+    GAME = DSM.getGame();
 
     const seed = GENERIC_GAME_SETTINGS.getValue("seed");
-    if (seed) {
-        GAME.seed(seed);
-    }
+    if (seed) GAME.seed(seed);
 
-    GAME.setReferenceItems(referenceItems);
-    GAME.onFinish.push(() => {
-        setPlaying(false);
-    });
+    GAME.keepKeyboardOpen = PAGE_SETTINGS.getValue("keepKeyboardOpen") === "true";
 
-    GAME.setup({defaultWeight: DATASET.gameConfig.defaultWeight}).then(() => {
-        setPlaying(true);
-        GAME.newRound();
-        GAME.focus();
-    }).catch(err => console.error(err));
+    GAME.onFinish.push(() => setPlaying(false));
+
+    setPlaying(true);
+    GAME.newRound();
 }
-
 
 
 /************************** STORAGE ***************************/
@@ -350,16 +308,14 @@ function localStorageSettingsKey(datasetKey) {
     return "settings_" + (datasetKey || DATASET.key);
 }
 
-function saveSettings() {
-    DOMHelper.setSearchParams({dataset: DATASET.key});
+function saveSettings(values) {
+    DOMUtils.setSearchParams({dataset: DATASET.key});
 
-    const data = Object.assign(
-        {checked: Base64Helper.encodeBase64BoolArray(SELECTOR.getChecked({includeDisabled: true}))},
-        SELECTOR_SETTINGS.getValues(),
-        DATASET_GAME_SETTINGS.getValues()
-    );
+    if (values.checked) {
+        values.checked = encodeBase64BoolArray(values.checked);
+    }
 
-    window.localStorage.setItem(localStorageSettingsKey(), JSON.stringify(data));
+    window.localStorage.setItem(localStorageSettingsKey(), JSON.stringify(values));
 }
 
 /**
@@ -372,7 +328,7 @@ function getCachedSettings() {
     try {
         const settings = JSON.parse(settingsJSON);
         if (typeof settings.checked === "string") {
-            settings.checked = Base64Helper.decodeBase64BoolArray(settings.checked);
+            settings.checked = decodeBase64BoolArray(settings.checked);
         }
         return settings;
     } catch (e) {

@@ -52,17 +52,15 @@
         <div id="game-container" style="display:none">
             <div id="progress-bar"></div>
 
-            <div id="game-symbols-container">
-                <div id="game-symbols">
-                    <div id="symbol-current" class="symbol-container">
-                        <div class="symbol-display-container"><span class="symbol"></span></div>
-                        <div class="symbol-label-container"><span class="symbol-label"></span></div>
-                    </div>
-                </div>
+            <div id="game-cards">
+                <div id="game-main-card-container"></div>
+                <div id="game-reference-cards" style="display: none"></div>
             </div>
 
-            <div id="game-inputs"></div>
-            <div id="game-evals"></div>
+            <div id="game-inputs-evals-container">
+                <div id="game-inputs"></div>
+                <div id="game-evals"></div>
+            </div>
 
             <div id="game-footer">
                 <button id="item-submit-button" class="button-accent">Submit</button>
@@ -80,15 +78,12 @@
             </div>
         </div>
 
-        <div id="page-settings-container" style="display: none">
-            <div id="page-settings-backdrop"></div>
-            <div id="page-settings">
-                <div class="heading-with-buttons">
-                    <h2>Settings</h2>
-                    <button id="close-settings-button" class="icon-button"><i class="fa fa-xmark"></i></button>
-                </div>
-                <div class="settings"></div>
+        <dialog id="page-settings" closedby="any">
+            <div class="heading-with-buttons">
+                <h2>Settings</h2>
+                <button id="close-settings-button" class="icon-button"><i class="fa fa-xmark"></i></button>
             </div>
-        </div>
+            <div class="settings"></div>
+        </dialog>
     </body>
 </html>

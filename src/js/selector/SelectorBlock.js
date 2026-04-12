@@ -1,7 +1,5 @@
-import {DOMHelper, ArrayHelper, FunctionStack} from "../helpers";
-import {ElementFitter, SizeWatcher} from "../helpers/classes/ElementFitter";
-import {rangeBetween} from "../helpers/array";
-const range = ArrayHelper.range;
+import {DOMUtils, ElementFitter, SizeWatcher, Observable} from "../utils";
+import {rangeBetween, range} from "../utils/array";
 
 const STYLE_PROPERTIES = {
     buttonMinWidth: "--button-min-width",
@@ -11,11 +9,12 @@ const STYLE_PROPERTIES = {
     symbolMinWidth: "--symbol-min-width",
 };
 
-export default class SelectorBlock {
+export default class SelectorBlock extends Observable {
     /**
      * @param {any[]} items
      */
     constructor(items) {
+        super();
         /**
          * @readonly
          * @type {*[]}
@@ -25,7 +24,6 @@ export default class SelectorBlock {
         }
 
         this.items = items;
-        this.updateListeners = new FunctionStack();
 
         this.bindListeners();
         this.setupButtons();
@@ -39,7 +37,7 @@ export default class SelectorBlock {
     }
 
     setupButtons() {
-        this.buttonIdPrefix = DOMHelper.uniqueIdPrefix("selectorButton");
+        this.buttonIdPrefix = DOMUtils.uniqueIdPrefix("selectorButton");
         /** @type {boolean[]} */
         this.checked = new Array(this.items.length).fill(true);
         /** @type {HTMLDivElement[]} */
@@ -51,9 +49,9 @@ export default class SelectorBlock {
      * @returns {HTMLDivElement}
      */
     createButton(index) {
-        const button = DOMHelper.createElement("div.selector-button");
+        const button = DOMUtils.createElement("div.selector-button");
         const id = this.buttonIdPrefix + index.toString();
-        DOMHelper.setAttrs(button, {
+        DOMUtils.setAttrs(button, {
             id: id,
             role: "checkbox",
             tabindex: 0,
@@ -66,13 +64,13 @@ export default class SelectorBlock {
     }
 
     setupNode() {
-        this.node = DOMHelper.createElement("div.selector-block.selector-block-flex");
+        this.node = DOMUtils.createElement("div.selector-block.selector-block-flex");
         this.node.append(...this.buttons);
     }
 
     setupButtonWatcher() {
         this.buttonWatcher = new SizeWatcher();
-        this.buttonWatcher.watch(this.buttons);
+        this.buttonWatcher.watchAll(this.buttons);
     }
 
     setupContentFitter() {
@@ -82,17 +80,19 @@ export default class SelectorBlock {
         this.contentFitter = new ElementFitter({
             watcher: this.buttonWatcher,
             uniformFactor: 1.5,
-            dimension: "width"
+            dimension: "width",
+            scalingProperty: "font-size"
         });
-        this.contentFitter.fit(this.buttons.map(button => button.querySelector(".selector-button-content")));
+        this.contentFitter.fitAll(this.buttons.map(button => button.querySelector(".selector-button-content")));
     }
 
     setupLabelFitter() {
         this.labelFitter = new ElementFitter({
             watcher: this.buttonWatcher,
-            dimension: "width"
+            dimension: "width",
+            scalingProperty: "font-size"
         });
-        this.labelFitter.fit(this.buttons.map(button => button.querySelector(".selector-button-label")));
+        this.labelFitter.fitAll(this.buttons.map(button => button.querySelector(".selector-button-label")));
     }
 
     /**
@@ -128,7 +128,7 @@ export default class SelectorBlock {
         const button = this.buttons[index];
         let labelElement = button.querySelector(".selector-button-label");
         if (!labelElement) {
-            labelElement = DOMHelper.createElement("span.selector-button-label");
+            labelElement = DOMUtils.createElement("span.selector-button-label");
             button.append(labelElement);
         }
 
@@ -146,8 +146,8 @@ export default class SelectorBlock {
         this.setupContentFitter();
     }
 
-    callUpdateListeners() {
-        this.updateListeners.call(this, this.checked);
+    observerArgs() {
+        return [this.checked];
     }
 
     /**
@@ -184,7 +184,7 @@ export default class SelectorBlock {
      */
     setARIAProperty(property, callback) {
         for (const [index, button] of this.buttons.entries()) {
-            DOMHelper.setARIA(button, property, callback(this.items[index], index));
+            DOMUtils.setARIA(button, property, callback(this.items[index], index));
         }
     }
 
@@ -194,7 +194,7 @@ export default class SelectorBlock {
     setChecked(callback) {
         this.items.forEach((item, index) => this.setButtonChecked(
             index, callback(item, index), {
-                updateIfDisabled: true, callUpdateListeners: false
+                updateIfDisabled: true, callObservers: false
             })
         );
     }
@@ -237,19 +237,15 @@ export default class SelectorBlock {
      * @param {number} index
      * @param {boolean} checked
      * @param {boolean} [updateIfDisabled=true]
-     * @param {boolean} [callUpdateListeners=true]
+     * @param {boolean} [callObservers=true]
      */
-    setButtonChecked(index, checked, {updateIfDisabled = false, callUpdateListeners = true} = {}) {
-        if (!updateIfDisabled && this.isDisabled(index)) {
-            return;
-        }
+    setButtonChecked(index, checked, {updateIfDisabled = false, callObservers = true} = {}) {
+        if (!updateIfDisabled && this.isDisabled(index)) return;
 
-        DOMHelper.setARIA(this.buttons[index], "checked", checked);
+        DOMUtils.setARIA(this.buttons[index], "checked", checked);
         this.checked[index] = checked;
 
-        if (callUpdateListeners) {
-            this.callUpdateListeners();
-        }
+        if (callObservers) this.callObservers();
     }
 
     /**
@@ -266,7 +262,7 @@ export default class SelectorBlock {
      * @returns {boolean}
      */
     isDisabled(index) {
-        return DOMHelper.getARIA(this.buttons[index], "disabled") === "true";
+        return DOMUtils.getARIA(this.buttons[index], "disabled") === "true";
     }
 
     /**
@@ -281,21 +277,21 @@ export default class SelectorBlock {
     /**
      * @param {(?number)[]} indices
      * @param {boolean} [updateIfDisabled=false]
-     * @param {boolean} [callUpdateListeners=true]
+     * @param {boolean} [callObservers=true]
      */
-    toggleItems(indices, {updateIfDisabled = false, callUpdateListeners = true} = {}) {
+    toggleItems(indices, {updateIfDisabled = false, callObservers = true} = {}) {
         if (!indices) return;
 
         const checked = !this.allChecked(indices);
         for (const index of indices) {
             this.setButtonChecked(index, checked, {
                 updateIfDisabled: updateIfDisabled,
-                callUpdateListeners: false
+                callObservers: false
             });
         }
 
-        if (callUpdateListeners) {
-            this.callUpdateListeners();
+        if (callObservers) {
+            this.callObservers();
         }
     }
 
@@ -452,7 +448,7 @@ export default class SelectorBlock {
      * @param {string} className
      */
     buttonsRemoveClass(indices, className) {
-        DOMHelper.removeClass(this.buttonsFromIndices(indices), className);
+        DOMUtils.removeClass(this.buttonsFromIndices(indices), className);
     }
 
     /**
@@ -460,7 +456,7 @@ export default class SelectorBlock {
      * @param {string} className
      */
     buttonsAddClass(indices, className) {
-        DOMHelper.addClass(this.buttonsFromIndices(indices), className);
+        DOMUtils.addClass(this.buttonsFromIndices(indices), className);
     }
 
     /**

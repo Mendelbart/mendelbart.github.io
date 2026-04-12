@@ -1,18 +1,20 @@
-import {invertSubsets, processIndexSubsets} from "./indices";
-import SelectorBlock from "./block";
-import {range, sum} from "../helpers/array";
-import {DOMHelper, FunctionStack} from "../helpers";
+import {invertSubsets, verifyIndexSubsets} from "../utils/indices";
+import SelectorBlock from "./SelectorBlock";
+import {range, sum} from "../utils/array";
+import {DOMUtils, Observable} from "../utils";
 
-export default class Selector {
+export default class Selector extends Observable {
     /**
      * @template T
      * @param {T[]} items
-     * @param {(string | number[])[]} subsets
-     * @param {?function(T[], number): SelectorBlock} [createBlockCallback] Default: `(items, subsetIndex) => new SelectorBlock(items)`
+     * @param {number[][]} subsets
+     * @param {function(T[], number): SelectorBlock} [createBlockCallback] Default: `(items, subsetIndex) => new SelectorBlock(items)`
      */
-    constructor(items, subsets, createBlockCallback = null) {
+    constructor(items, subsets, createBlockCallback) {
+        super();
+        if (!verifyIndexSubsets(subsets, items.length)) throw new Error("Invalid index subsets.");
         this.items = items;
-        this.subsets = processIndexSubsets(subsets, items.length);
+        this.subsets = subsets;
         this.subsetsInverse = invertSubsets(this.subsets, items.length);
 
         /** @type {SelectorBlock[]} */
@@ -21,13 +23,11 @@ export default class Selector {
             return createBlockCallback ? createBlockCallback(items, s) : new SelectorBlock(items);
         });
 
-        this.updateListeners = new FunctionStack();
-        this._callUpdateListeners = this._callUpdateListeners.bind(this);
-        this.blocks.forEach(block => block.updateListeners.push(this._callUpdateListeners));
+        this.blocks.forEach(block => block.observers.push(this.callObservers));
     }
 
-    _callUpdateListeners() {
-        this.updateListeners.call(this, this.getChecked());
+    observerArgs() {
+        return [this.getChecked()];
     }
 
     /**
@@ -60,8 +60,7 @@ export default class Selector {
     }
 
     _setupNode() {
-        this.node = DOMHelper.createElement("div.selector");
-        this.node.append(...this.blocks.map(block => block.node));
+        this.node = DOMUtils.createElement("div.selector", ...this.blocks.map(block => block.node));
     }
 
     finishSetup() {
@@ -84,7 +83,7 @@ export default class Selector {
     }
 
     /**
-     * @param {boolean[] | function(any, number): boolean} callback
+     * @param {function(any, number): boolean} callback
      */
     setChecked(callback) {
         this._itemCallback((b, f) => b.setChecked(f), callback);
@@ -92,7 +91,7 @@ export default class Selector {
 
 
     /**
-     * @param {boolean[] | function(any, number): boolean} callback
+     * @param {function(any, number): boolean} callback
      */
     setDisabled(callback) {
         this._itemCallback((b, f) => b.setDisabled(f), callback);

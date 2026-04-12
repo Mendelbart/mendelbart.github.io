@@ -11,14 +11,19 @@
     "serif": {"family": "Noto Serif Japanese", "label": "Serif"}
   },
   "properties": {
-    "roman": {"type": "list", "label": "Transliteration", "maxDist": 0}
+    "roman": {
+      "label": "Transliteration",
+      "config": {
+        "type": "string"
+      }
+    }
   },
   "selector": {
     "font": {"key": "sans", "weight": 600},
     "blocks": [
       {
         "grid": true,
-        "indices": "1:45",
+        "letters": "1:45",
         "dimensions": [10, 5],
         "gaps": "(8|2,4);(10|2:4)",
         "rowLabels": "∅kstnhmyrw",
@@ -26,14 +31,14 @@
       },
       {
         "grid": true,
-        "indices": "46:70",
+        "letters": "46:70",
         "dimensions": [5, 5],
         "rowLabels": "gzdbp",
         "columnLabels": "aiueo"
       },
       {
         "grid": true,
-        "indices": "71",
+        "letters": "71",
         "dimensions": [1, 1],
         "rowLabels": "n"
       }

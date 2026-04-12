@@ -14,7 +14,19 @@
     "sans": {"family": "Noto Sans", "label": "Sans"}
   },
   "properties": {
-    "name": {"type": "list", "label": "Name", "maxDist": 1, "active": true}
+    "name": {
+      "label": "Name",
+      "config": {
+        "type": "list",
+        "items": {
+          "type": "string",
+          "properties": {
+            "maxDist": 1
+          }
+        }
+      },
+      "active": true
+    }
   },
   "selector": {
     "font": "serif",
@@ -30,32 +42,32 @@
     }
   },
   "items": {
-    "properties": ["name", "name_de"],
+    "properties": ["name", "name>lang:de"],
     "data": [
-      ["Αα", "alpha", "Alpha"],
-      ["Ββ", "beta", "Beta"],
-      ["Γγ", "gamma", "Gamma"],
-      ["Δδ", "delta", "Delta"],
-      ["Εε", "epsilon", "Epsilon"],
-      ["Zζ", "zeta", "Zeta"],
-      ["Ηη", "eta", "Eta"],
-      ["Θθ", "theta", "Theta"],
-      ["Ιι", "iota", "Iota/Jota"],
-      ["Κκ", "kappa", "Kappa"],
-      ["Λλ", "lambda", "Lambda"],
-      ["Μμ", "mu", "My/Mü"],
-      ["Νν", "nu", "Ny/Nü"],
-      ["Ξξ", "xi", "Xi"],
-      ["Οο", "omicron", "Omikron"],
-      ["Ππ", "pi", "Pi"],
-      ["Ρρ", "rho", "Rho"],
-      ["Σσς", "sigma", "Sigma"],
-      ["Ττ", "tau", "Tau"],
-      ["Υυ", "upsilon", "Ypsilon"],
-      ["Φφ", "phi", "Phi"],
-      ["Χχ", "chi", "Chi"],
-      ["Ψψ", "psi", "Psi"],
-      ["Ωω", "omega", "Omega"]
+      ["Αα", ["alpha", "Alpha"]],
+      ["Ββ", ["beta", "Beta"]],
+      ["Γγ", ["gamma", "Gamma"]],
+      ["Δδ", ["delta", "Delta"]],
+      ["Εε", ["epsilon", "Epsilon"]],
+      ["Zζ", ["zeta", "Zeta"]],
+      ["Ηη", ["eta", "Eta"]],
+      ["Θθ", ["theta", "Theta"]],
+      ["Ιι", ["iota", "Iota/Jota"]],
+      ["Κκ", ["kappa", "Kappa"]],
+      ["Λλ", ["lambda", "Lambda"]],
+      ["Μμ", ["mu", "My/Mü"]],
+      ["Νν", ["nu", "Ny/Nü"]],
+      ["Ξξ", ["xi", "Xi"]],
+      ["Οο", ["omicron", "Omikron"]],
+      ["Ππ", ["pi", "Pi"]],
+      ["Ρρ", ["rho", "Rho"]],
+      ["Σσς", ["sigma", "Sigma"]],
+      ["Ττ", ["tau", "Tau"]],
+      ["Υυ", ["upsilon", "Ypsilon"]],
+      ["Φφ", ["phi", "Phi"]],
+      ["Χχ", ["chi", "Chi"]],
+      ["Ψψ", ["psi", "Psi"]],
+      ["Ωω", ["omega", "Omega"]]
     ]
   }
 }

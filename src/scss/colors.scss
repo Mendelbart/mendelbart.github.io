@@ -9,7 +9,7 @@
   --clr-surface: hsl(0, 0%, 95%);
   --clr-surface-border: var(--clr-border-soft);
   --clr-symbol-bg: #f2f5f8;
-  --clr-input: hsla(0, 0%, 50%, 0.04);
+  --clr-input: hsla(0, 0%, 97%);
   --clr-range: hsl(0, 0%, 0%, 0.08);
   --clr-surface-standout: hsl(0, 0%, 95%);
 
@@ -75,8 +75,8 @@
   --clr-surface: hsl(0, 0%, 15%);
   --clr-surface-border: var(--clr-surface);
   --clr-symbol-bg: hsl(210, 9.1%, 12.9%);
-  --clr-input: hsla(0, 0%, 100%, 0.07);
-  --clr-range: var(--clr-input);
+  --clr-input: var(--clr-surface);
+  --clr-range: hsla(0, 0%, 100%, .12);
   --clr-surface-standout: var(--clr-surface);
 
   --clr-border: hsl(0, 0%, 40%);

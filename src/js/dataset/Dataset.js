@@ -1,12 +1,20 @@
-import {ItemProperty, QuizItem} from "./symbol.js";
-import {DOMHelper, ObjectHelper, FontHelper} from '../helpers';
+import {DOMUtils, ObjectUtils, FontUtils, Matrix, ParametricValue} from '../utils';
 import {SettingCollection, ButtonGroup, ValueElement} from "../settings";
 import DATASETS_METADATA from '../../json/datasets_meta.json';
-import {range} from "../helpers/array";
-import {Selector, SelectorBlock, SelectorGridBlock, Matrix} from "../selector";
-import {parseMatrixRanges, processIndexSubsets} from "../selector/indices";
+import {range} from "../utils/array";
+import {Selector, SelectorBlock, SelectorGridBlock} from "../selector";
+import {
+    completeIndexSubsets,
+    containsDuplicates,
+    parseMatrixRanges,
+    parseRanges
+} from "../utils/indices";
+import {DefaultListSplitter, QuizAnswerFactory} from "../quiz/answer";
+import QuizItem from '../quiz/QuizItem';
+import {LetterCombination, StringLetter} from "./letter";
 
-DOMHelper.registerTemplate(
+
+DOMUtils.registerTemplate(
     "headingElement",
     `<div class="heading-element"><span class="heading-element-number"></span><span class="heading-element-symbol"></span></div>`
 );
@@ -89,14 +97,20 @@ export class Dataset {
         this.processFonts(data.fonts);
         this.gameConfig = data.game ?? {};
         this.forms = this.processForms(data.forms);
-        this.properties = data.properties;
-        this.selectorData = this.processSelectorData(data.selector);
-        this.variants = this.processVariants(data.variants);
+        this.properties = this.processProperties(data.properties);
 
         this.languages = data.languages ?? DEFAULT_LANGUAGES;
         this.languages.default ??= this.languages.keys[0];
 
+        this.variants = data.variants;
+
         this.items = this.processItems(data.items);
+        /** @type {Record<string, Map<*, number>>} */
+        this.itemIndexMaps = {};
+
+        this.processVariantIndices();
+
+        this.selectorData = this.processSelectorData(data.selector);
     }
 
     /**
@@ -105,13 +119,10 @@ export class Dataset {
      */
     static fetch(key) {
         if (!(key in DATASETS_METADATA)) {
-            console.error(`Invalid dataset key "${key}".`);
-            return null;
+            throw new Error(`Invalid dataset key "${key}".`);
         }
 
-        if (key in this._cache) {
-            return Promise.resolve(this._cache[key]);
-        }
+        if (key in this._cache) return Promise.resolve(this._cache[key]);
 
         return fetch(DATASETS_ROOT + DATASETS_METADATA[key].file)
             .then(response => response.json())
@@ -127,11 +138,13 @@ export class Dataset {
     // ============================= INITIAL PROCESSING ============================
     processSelectorData(selectorData) {
         selectorData ??= {};
-        if (!selectorData.blocks) {
-            selectorData.block ??= {};
-            selectorData.block.indices = "rest";
-            selectorData.blocks = [selectorData.block];
-            delete selectorData.block;
+        selectorData.blocks ??= [selectorData.block ?? {}];
+        delete selectorData.block;
+
+        for (const block of selectorData.blocks) {
+            if (block.letters) {
+                block.indices = this.getLetterIndices(block.letters, selectorData.defaultLetterKey);
+            }
         }
 
         return selectorData;
@@ -154,102 +167,90 @@ export class Dataset {
         return forms;
     }
 
-    processVariants(variants) {
-        if (!variants || !variants.data) {
-            return null;
+    processProperties(properties) {
+        for (const data of Object.values(properties)) {
+            data.factory = QuizAnswerFactory(data.config);
         }
+        return properties;
+    }
 
-        for (const [key, value] of Object.entries(variants.data)) {
-            if (typeof value === "string") {
-                variants.data[key] = {label: value};
+    processVariantIndices() {
+        if (!this.variants) return;
+
+        for (const [key, value] of Object.entries(this.variants.data)) {
+            if (this.variants.useKeyAsLang) value.lang ??= key;
+
+            if (value.letters) {
+                value.indices = this.getLetterIndices(value.letters, this.variants.defaultLetterKey);
+                value.includesItem = new Array(this.items.length).fill(false);
+                for (const index of value.indices) {
+                    value.includesItem[index] = true;
+                }
+            } else {
+                value.indices = range(this.items.length);
+                value.includesItem = new Array(this.items.length).fill(true);
             }
-            variants.data[key].lang ??= key;
         }
-
-        return variants;
     }
 
     /**
      * @param {string[]} properties
      * @param {any[][]} data
-     * @param {"string"} [symbolType="string"]
      * @returns {DatasetItem[]}
      */
-    processItems({properties, data, symbolType = "string"}) {
-        const result = new Array(data.length);
+    processItems({properties, data}) {
+        const propParams = properties.map(key => {
+            const [prop, params] = processPropKey(key);
+            if (!(prop in this.properties)) throw new Error("Unknown property " + prop);
+            return [prop, params];
+        });
 
-        for (let [index, row] of data.entries()) {
-            const displayForms = this.processDisplayForms(row[0]);
+        return data.map(([forms, propValues]) => new DatasetItem(
+            this.processLetterForms(forms),
+            this.processItemProperties(propParams, propValues)
+        ));
+    }
 
-            let variants;
-            if (this.hasVariants()) {
-                variants = this.processItemVariants(row[1]);
-            }
+    /**
+     * @param {[string, Record<string, string[]>][]} propParams
+     * @param {(string|Record<string, *>)[]} values
+     * @returns {Record<string, ParametricValue>}
+     */
+    processItemProperties(propParams, values) {
+        const paramKeys = [];
+        if (this.hasVariants()) paramKeys.push("variant");
+        if (this.hasSetting("language")) paramKeys.push("language");
 
-            const itemProperties = ObjectHelper.fromKeysValues(
-                properties, row.splice(this.hasVariants() ? 2 : 1), false
-            );
+        const result = ObjectUtils.map(this.properties, () => new ParametricValue(paramKeys));
 
-            result[index] = new DatasetItem(symbolType, displayForms, itemProperties, variants);
+        if (typeof values === "string") values = [values];
+
+        for (const [index, [prop, params]] of propParams.entries()) {
+            if (index >= values.length) break;
+            extendPropertyValue(result[prop], params, values[index]);
         }
 
         return result;
     }
 
     /**
-     * @param {string[] | string} variants
-     * @returns {string[]}
-     */
-    processItemVariants(variants) {
-        if (!variants || variants === "*") {
-            return Object.keys(this.variants.data);
-        }
-        if (Array.isArray(variants)) {
-            return variants;
-        }
-
-        const adding = variants.substring(0,2) !== "*-";
-        if (!adding) {
-            variants = variants.substring(2);
-        }
-
-        const included = ObjectHelper.map(this.variants.data, () => !adding);
-        for (const key of variants.split(",")) {
-            if (key in this.variants.data) {
-                included[key] = adding;
-            } else if (this.variants.groups && key in this.variants.groups) {
-                for (const variantKey of this.variants.groups[key]) {
-                    included[variantKey] = adding;
-                }
-            }
-        }
-
-        return ObjectHelper.filterKeys(included, x => x);
-    }
-
-    /**
      * @param {string|string[]|Record<string,string>} display
-     * @returns {Record<string,string>}
+     * @returns {Record<string, string>}
      */
-    processDisplayForms(display) {
+    processLetterForms(display) {
         if (Object.keys(this.forms.data).length === 1) {
-            if (Array.isArray(display)) {
-                display = display[0];
-            }
+            if (Array.isArray(display)) display = display[0];
+
             return Object.fromEntries([[Object.keys(this.forms.data)[0], display]]);
         }
 
-        if (typeof display === "string") {
-            display = display.split("");
-        }
+        if (typeof display === "string") display = display.split("");
 
         if (Array.isArray(display)) {
             const forms = {};
             const formKeys = Object.keys(this.forms.data);
             for (const [index, value] of display.entries()) {
-                if (value) {
-                    forms[formKeys[index]] = value;
-                }
+                if (value) forms[formKeys[index]] = value;
             }
             return forms;
         }
@@ -258,12 +259,12 @@ export class Dataset {
             throw new Error("Invalid display format: need array or object.");
         }
 
-        return ObjectHelper.onlyKeys(display, Object.keys(this.forms.data), true);
+        return ObjectUtils.onlyKeys(display, Object.keys(this.forms.data), true);
     }
 
 
     // ============================= SETTINGS ============================
-    getGameSettings(checked) {
+    getGameSettings(checked = {}) {
         const settings = {};
         if (this.hasSetting("properties")) {
             settings.properties = this.propertySetting(checked.properties);
@@ -274,7 +275,7 @@ export class Dataset {
         return SettingCollection.createFrom(settings);
     }
 
-    getFilterSettings(checked) {
+    getSelectorSettings(checked = {}) {
         const settings = {};
         if (this.hasVariants()) {
             settings.variant = this.variantSetting(checked.variant);
@@ -285,19 +286,27 @@ export class Dataset {
         return SettingCollection.createFrom(settings);
     }
 
-    propertySetting(checked = null) {
+    /**
+     * @param {Record<string, boolean>} [checked]
+     * @returns {ButtonGroup}
+     */
+    propertySetting(checked) {
         return ButtonGroup.from(
-            ObjectHelper.map(this.properties, p => p.label),
+            ObjectUtils.map(this.properties, p => p.label),
             {
                 label: "Properties",
-                checked: checked ?? ObjectHelper.map(this.properties, p => !!p.active)
+                checked: checked ?? ObjectUtils.map(this.properties, p => !!p.active)
             }
         );
     }
 
-    languageSetting(checked = null) {
+    /**
+     * @param {string} [checked]
+     * @returns {ButtonGroup}
+     */
+    languageSetting(checked) {
         return ButtonGroup.from(
-            ObjectHelper.onlyKeys(LANGUAGES, this.languages.keys),
+            ObjectUtils.onlyKeys(LANGUAGES, this.languages.keys, true),
             {
                 label: "Language",
                 checked: checked ?? this.languages.default,
@@ -307,10 +316,14 @@ export class Dataset {
     }
 
     ungroupedForms() {
-        return ObjectHelper.filter(this.forms.data, f => !("groupWith" in f));
+        return ObjectUtils.filter(this.forms.data, f => !("groupWith" in f));
     }
 
-    formsSetting(checked = null) {
+    /**
+     * @param {string[]} [checked]
+     * @returns {ButtonGroup|null}
+     */
+    formsSetting(checked) {
         if (!this.hasSetting("forms")) {
             return null;
         }
@@ -318,17 +331,21 @@ export class Dataset {
         const label = this.forms.label ?? (this.forms.exclusive ? "Form" : "Forms");
         const ungroupedForms = this.ungroupedForms();
         return ButtonGroup.from(
-            ObjectHelper.map(ungroupedForms, (p) => p.label),
+            ObjectUtils.map(ungroupedForms, (p) => p.label),
             {
                 label: label,
                 exclusive: this.forms.exclusive,
-                checked: checked ?? ObjectHelper.map(ungroupedForms, f => f.active ?? !this.forms.exclusive),
+                checked: checked ?? ObjectUtils.map(ungroupedForms, f => f.active ?? !this.forms.exclusive),
             },
         );
     }
 
-    variantSetting(selected = null) {
-        const data = ObjectHelper.map(this.variants.data, (variant) => variant.label);
+    /**
+     * @param {string} [selected]
+     * @returns {Setting}
+     */
+    variantSetting(selected) {
+        const data = ObjectUtils.map(this.variants.data, (variant) => variant.label);
         selected ||=  this.variants.default || Object.keys(this.variants.data)[0];
         const label = this.variants.setting?.label || "Variant";
 
@@ -370,86 +387,11 @@ export class Dataset {
     }
 
     hasVariants() {
-        return !!this.variants;
+        return !!this.variants?.data;
     }
 
 
     // ==================================== SELECTOR ================
-    /**
-     * @param {string} [variant]
-     * @returns {Selector}
-     */
-    getSelector(variant) {
-        const selector = this.createSelector();
-        this.setupSelectorButtons(selector, variant);
-        selector.finishSetup();
-        this.applySelectorFont(selector, variant);
-        this.applySelectorStyles(selector);
-
-        return selector;
-    }
-
-    createSelector() {
-        const subsets = processIndexSubsets(
-            this.selectorData.blocks.map(block => block.indices),
-            this.items.length,
-            x => parseInt(x) - 1
-        );
-
-        return new Selector(this.items, subsets, (items, b) => {
-            const data = this.selectorData.blocks[b];
-            if (data.grid) {
-                const block = new SelectorGridBlock(items);
-
-                this.setupSelectorGrid(block, data);
-                if (data.rowLabels) this.setupGridLabels(block, "row", data.rowLabels, data.rowLabelPosition);
-                if (data.columnLabels) this.setupGridLabels(block, "column", data.columnLabels, data.columnLabelPosition);
-
-                if (data.rangeMode) block.setRangeMode(data.rangeMode);
-
-                return block;
-            } else {
-                return new SelectorBlock(items);
-            }
-        });
-    }
-
-    setupSelectorButtons(selector, variant) {
-        const lang = this.getLang(variant);
-        const dir = this.getDir();
-
-        selector.setupButtonContents(item => {
-            const content = DOMHelper.createElement("span.symbol-string");
-            content.append(...Object.values(item.getFormNodes()));
-            if (lang) content.lang = lang;
-            if (dir) content.dir = dir;
-            return content;
-        });
-
-        if (this.selectorData.label) {
-            selector.labelButtons(item => item.getSelectorLabel(this.selectorData.label));
-        }
-    }
-
-    getLang(variant = null) {
-        if (variant) {
-            return this.variants.data[variant].lang ?? variant;
-        } else {
-            return this.metadata.lang;
-        }
-    }
-
-    getDir() {
-        return this.metadata.dir;
-    }
-
-    applySelectorFont(selector, variant) {
-        const font = this.getSelectorDisplayFont(variant);
-        selector.updateButtonContents(content => {
-            FontHelper.setFont(content, font);
-        });
-    }
-
     /**
      * @param {SelectorGridBlock} block
      * @param {[number, number]} dimensions
@@ -477,61 +419,168 @@ export class Dataset {
         block.setGridLabels(type, labels, position);
     }
 
-    applySelectorStyles(selector) {
-        selector.node.dir = this.getDir();
-
-        if (this.selectorData.style) {
-            selector.applyStyle(this.selectorData.style);
-        }
-
-        this.selectorData.blocks.forEach((block, index) => {
-            if (block.style) selector.blocks[index].applyStyle(block.style);
-        });
-    }
-
     /**
-     * @param {Selector} selector
-     * @param {string[]} [forms]
-     * @param {string} [variant]
+     * @returns {Selector}
      */
-    applySettings(selector, {forms, variant}) {
-        const formKeys = this.getFormKeysFromSetting(forms);
-        selector.updateButtonContents(content => {
-            content.querySelectorAll(".symbol-form").forEach(elem => {
-                const shown = formKeys.includes(elem.dataset.form);
-                DOMHelper.toggleShown(shown, elem);
-            });
-        });
+    createSelector() {
+        const subsets = completeIndexSubsets(this.selectorData.blocks.map(block => block.indices), this.items.length);
 
-        const variantIndices = this.getVariantItemIndices(variant);
-        selector.setDisabled(
-            (item, index) => !variantIndices.has(index) || item.getForms(formKeys).length === 0
-        );
-        this.applySelectorFont(selector, variant);
-    }
+        return new Selector(this.items, subsets, (items, b) => {
+            const data = this.selectorData.blocks[b];
+            if (data.grid) {
+                const block = new SelectorGridBlock(items);
 
-    /**
-     * @param [variant]
-     * @returns {Set<number>}
-     */
-    getVariantItemIndices(variant) {
-        if (!variant) return new Set(range(this.items.length));
+                this.setupSelectorGrid(block, data);
+                if (data.rowLabels) this.setupGridLabels(block, "row", data.rowLabels, data.rowLabelPosition);
+                if (data.columnLabels) this.setupGridLabels(block, "column", data.columnLabels, data.columnLabelPosition);
 
-        const indices = new Set();
-        this.items.forEach((item, index) => {
-            if (item.variants.has(variant)) {
-                indices.add(index);
+                if (data.rangeMode) block.setRangeMode(data.rangeMode);
+
+                return block;
+            } else {
+                return new SelectorBlock(items);
             }
         });
+    }
 
-        return indices;
+    getSelectorBlockStyles() {
+        const baseStyle = this.selectorData.style ?? {};
+        return this.selectorData.blocks.map(block => Object.assign(baseStyle, block.style));
+    }
+
+    /**
+     * @param {string} [variant]
+     * @returns {string | undefined}
+     */
+    getLang(variant) {
+        if (variant) {
+            if ("lang" in this.variants.data[variant]) return this.variants.data[variant].lang;
+            if (this.variants.useKeyAsLang) return variant;
+        }
+
+        return this.metadata.lang;
+    }
+
+    getDir() {
+        return this.metadata.dir;
+    }
+
+    /**
+     * @param {string | Record<string,string>} which
+     * @param {string} [defaultKey]
+     * @returns {number[]}
+     */
+    getLetterIndices(which, defaultKey = "i1") {
+        let result;
+        if (typeof which === "string") {
+            result = parseRanges(which, x => this.getLetterIndex(defaultKey, x));
+        } else {
+            result = Object.entries(which)
+                .map(([key, ranges]) => parseRanges(
+                    ranges, x => this.getLetterIndex(key, x)
+                ))
+                .flat();
+        }
+
+        if (containsDuplicates(result)) {
+            console.warn("Indices contain duplicates");
+            return Array.from(new Set(result));
+        }
+
+        return result;
+    }
+
+    /**
+     * @param {string} key
+     * @param {string | number} value
+     * @returns {number}
+     */
+    getLetterIndex(key, value) {
+        if (key === "i0" || key === "i1") {
+            value = parseInt(value);
+            return key === "i1" ? value - 1 : value;
+        }
+
+        let mapKey;
+
+        if (key.substring(0, 5) === "prop:") {
+            let [prop, params] = processPropKey(key.substring(5));
+            params = toSingleParams(params);
+            mapKey = "prop:" + createSinglePropKey(prop, params);
+            this.itemIndexMaps[mapKey] ??= this.createPropertyIndexMap(prop, params);
+        } else if (key === "form" || key.substring(0, 5) === "form:") {
+            const formKey = key === "form" ? Object.keys(this.forms.data)[0] : key.substring(5);
+            mapKey = "form:" + formKey;
+            this.itemIndexMaps[mapKey] ??= this.createFormIndexMap(formKey);
+        } else {
+            throw new Error(`Invalid key ${key}.`);
+        }
+
+        if (!this.itemIndexMaps[mapKey].has(value)) {
+            console.log(this.itemIndexMaps[mapKey]);
+            throw new Error(`Couldn't find value ${value} with key ${mapKey}.`);
+        }
+
+        return this.itemIndexMaps[mapKey].get(value);
+    }
+
+    /**
+     * @param {string} property
+     * @param {Record<string, string>} params
+     * @returns {Map<string|number, number>}
+     */
+    createPropertyIndexMap(property, params) {
+        const splitter = this.getPropertySplitter(property);
+        return new Map(this.items.map((item, index) => [
+            item.getProperty({
+                property: property,
+                splitter: splitter,
+                params: params
+            }),
+            index
+        ]));
+    }
+
+    /**
+     * @param {string} formKey
+     * @returns {Map<string, number>}
+     */
+    createFormIndexMap(formKey) {
+        return new Map(this.items.map(
+            (item, index) => [item.forms[formKey], index]
+        ));
+    }
+
+    /**
+     * @param property
+     * @returns {RegExp | null}
+     */
+    getPropertySplitter(property) {
+        let config = this.properties[property].config;
+        let regex = "";
+        while (config.type === "list") {
+            const splitter = config.properties?.splitter ?? DefaultListSplitter;
+            if (regex.length > 0) regex += "|";
+            regex += splitter;
+            config = config.items;
+        }
+        return regex ? new RegExp(regex, "g") : null;
+    }
+
+    /**
+     * @param {number} index
+     * @param {string} [variant]
+     * @return
+     */
+    isItemIncluded(index, variant) {
+        return !variant || this.variants.data[variant].includesItem[index];
     }
 
     /**
      * @param {string[] | string} [value]
      * @returns {string[]}
      */
-    getFormKeysFromSetting(value) {
+    getFormKeysFromGrouped(value) {
         if (!value) return Object.keys(this.forms.data);
 
         if (typeof value === "string") {
@@ -555,30 +604,23 @@ export class Dataset {
 
     // ============================= FONTS ====================================
     /**
-     * @param {Record<string, *>} font
-     * @param {?string} [variant]
+     * @param {string | Record<string, *>} font
+     * @param {string} [variant]
      * @returns {Record<string, *>}
      */
-    getFont(font, variant = null) {
-        if (!font) {
-            return this.defaultFont();
-        }
-
-        if (typeof font === "string") {
-            font = {key: font};
-        }
-
+    getFont(font = {}, variant) {
+        if (typeof font === "string") font = {key: font};
         if ("family" in font) {
-            console.warn(`Found family property "${font.family}" in font: Will be overwritten!`);
+            console.warn(`Found family property "${font.family}" in font: Will be overwritten! Use 'key' property to reference dataset fonts instead.`);
         }
 
-        font.key ??= this._defaultFontKey;
+        font.key ??= this.defaultFontKey;
         if (!(font.key in this.fonts)) {
             console.error(`Unknown font key "${font.key}".`);
-            font.key = this._defaultFontKey;
+            font.key = this.defaultFontKey;
         }
 
-        return ObjectHelper.withoutKeys(
+        return ObjectUtils.withoutKeys(
             Object.assign({},
                 this.fonts[font.key],
                 this.getVariantFontModification(font.key, variant),
@@ -588,6 +630,11 @@ export class Dataset {
         );
     }
 
+    /**
+     * @param {string} key
+     * @param {string} [variant]
+     * @returns {Record<string, *>}
+     */
     getVariantFontModification(key, variant) {
         if (variant) {
             const fonts = this.variants.data[variant].fonts;
@@ -596,7 +643,7 @@ export class Dataset {
             }
         }
 
-        return null;
+        return {};
     }
 
     getSelectorDisplayFont(variant) {
@@ -606,24 +653,20 @@ export class Dataset {
     processFonts(fonts) {
         this.fonts = fonts;
         const defaultEntry = Object.entries(fonts).find(([_, font]) => font.default);
-        this._defaultFontKey = defaultEntry ? defaultEntry[0] : Object.keys(fonts)[0];
-    }
-
-    defaultFont() {
-        return this.fonts[this._defaultFontKey];
+        this.defaultFontKey = defaultEntry ? defaultEntry[0] : Object.keys(fonts)[0];
     }
 
     /**
-     * @param checked
+     * @param {string} [checked]
      * @returns {ButtonGroup}
      */
-    fontFamilySetting(checked = null) {
+    fontFamilySetting(checked) {
         const setting = ButtonGroup.from(
-            ObjectHelper.map(this.fonts, font => font.label ?? font.family),
+            ObjectUtils.map(this.fonts, font => font.label ?? font.family),
             {
                 label: "Font",
                 exclusive: true,
-                checked: checked ?? this._defaultFontKey
+                checked: checked ?? this.defaultFontKey
             }
         );
         setting.node.classList.add("font-family-setting");
@@ -632,71 +675,48 @@ export class Dataset {
 
 
     // =================================== QUIZ ITEMS ===================================
+    getAnswerFactories() {
+        return ObjectUtils.map(this.properties, p => p.factory);
+    }
+
     /**
      * @param {DatasetItem[]} items
      * @param {string[]} forms
      * @param {string[]} properties
-     * @param {?string} [language]
+     * @param {Record<string, string>} [params]
      * @returns {QuizItem[]}
      */
-    getQuizItems(items, forms, properties, language = null) {
+    getQuizItems(items, forms, properties, params) {
         const result = [];
+        const factories = this.getAnswerFactories();
 
         for (const item of items) {
-            const displayStrings = item.getDisplayStrings(forms);
-            const itemProperties = item.getItemProperties(properties, this.properties, language);
-            result.push(...Object.entries(displayStrings).map(
-                ([form, string]) => new QuizItem(item.type, string, itemProperties, form)
+            const availableForms = item.getAvailableForms(forms);
+            const answers = item.getQuizAnswers(properties, factories, params);
+            result.push(availableForms.map(
+                form => new QuizItem(item.getForm(form), answers)
             ));
         }
 
-        return result;
-    }
-
-
-    referencePropsData() {
-        const propsData = Object.assign({}, this.properties);
-        for (const [property, propData] of Object.entries(propsData)) {
-            if ("referenceMaxDist" in propData) {
-                const newPropData = Object.assign({}, propData);
-                newPropData.maxDist = propData.referenceMaxDist;
-                propsData[property] = newPropData;
-            }
-        }
-
-        return propsData;
+        return result.flat();
     }
 
 
     /**
      * @param {string[]} properties
-     * @param {?string} [language]
-     * @returns {Record<string,QuizItem[]>}
+     * @param {string[]} forms
+     * @param {Record<string, string>} [params]
+     * @returns {QuizItem[]}
      */
-    getReferenceItems(properties, language = null) {
-        let items;
-        const propsData = this.referencePropsData();
+    getReferenceItems(properties, forms, params) {
+        const factories = this.getAnswerFactories();
 
-        if (this.forms.exclusive) {
-            const itemsProperties = this.items.map(
-                item => item.getItemProperties(properties, propsData, language)
-            );
+        if (!this.forms.exclusive) forms = Object.keys(this.forms.data);
 
-            return ObjectHelper.map(this.forms.data, (_, key) => this.items.map(
-                (item, index) => new QuizItem(
-                    item.type, item.getFormsDisplayString([key]), itemsProperties[index], key
-                )
-            ));
-        } else {
-            items = this.items.map(item => new QuizItem(
-                item.type,
-                item.getFormsDisplayString(Object.keys(this.forms.data)),
-                item.getItemProperties(properties, propsData, language),
-                "all"
-            ));
-
-            return ObjectHelper.map(this.forms.data, () => items);
-        }
+        return this.items.map(item => new QuizItem(
+            item.combineForms(forms),
+            item.getQuizAnswers(properties, factories, params)
+        ));
     }
 
     /**
@@ -706,14 +726,14 @@ export class Dataset {
     setupGameHeading(element, variant) {
         const gameHeading = this.metadata.gameHeading;
 
-        FontHelper.setFont(element, this.getFont(gameHeading.font, variant));
+        FontUtils.setFont(element, this.getFont(gameHeading.font, variant));
 
         if (this.name === "Atomic Elements") {
             const container = document.createElement("div");
             container.classList.add("element-heading-container");
             const els = [];
             for (const [no, symbol] of [[19, "K"], [85, "At"], [42, "Mo"], [16, "S"]]) {
-                const el = DOMHelper.getTemplate("headingElement");
+                const el = DOMUtils.getTemplate("headingElement");
                 el.querySelector(".heading-element-symbol").textContent = symbol;
                 el.querySelector(".heading-element-number").textContent = no;
                 els.push(el);
@@ -732,83 +752,56 @@ export class Dataset {
 
 class DatasetItem {
     /**
-     * @param {"string"} type
-     * @param {Record<string,string>} displayForms
-     * @param {Record<string,*>} properties
-     * @param {string[]?} variants
+     * @param {Record<string, string>} forms
+     * @param {Record<string, ParametricValue>} properties
      */
-    constructor(type, displayForms, properties, variants = null) {
-        this.type = type;
-        this.displayForms = displayForms;
+    constructor(forms, properties) {
+        this.forms = forms;
         this.properties = properties;
-        this.variants = new Set(variants);
     }
 
     /**
-     * @param forms
-     * @returns {Record<string,string>}
+     * @param {string[]} properties
+     * @param {Record<string, function>} factories
+     * @param {Record<string, string>} [params]
+     * @returns {Object<string,QuizAnswer>}
      */
-    getDisplayStrings(forms) {
-        return ObjectHelper.onlyKeys(this.displayForms, forms);
+    getQuizAnswers(properties, factories, params) {
+        return ObjectUtils.fromKeys(properties, prop => factories[prop](this.properties[prop].get(params)));
     }
 
     /**
-     * @param {string[]} propertyKeys
-     * @param {Record<string,*>} propsData
-     * @param {string?} [language]
-     * @returns {Object<string,ItemProperty>}
-     */
-    getItemProperties(propertyKeys, propsData, language = null) {
-        const result = {};
-        for (const key of propertyKeys) {
-            if (!(key in this.properties)) {
-                console.error(`Missing property key "${key}".`);
-                continue;
-            }
-
-            result[key] = this.properties[key];
-        }
-
-        if (language) {
-            for (const key of propertyKeys) {
-                const langKey = key + "_" + language;
-                if (this.properties[langKey]) {
-                    result[key] = this.properties[langKey];
-                }
-            }
-        }
-
-        return ObjectHelper.map(result, (prop, key) => ItemProperty.fromData(prop, propsData[key]));
-    }
-
-    getFormNodes(forms = null) {
-        return ObjectHelper.mapKeyArrayToValues(this.getForms(forms), form => this.getFormNode(form))
-    }
-
-    getFormNode(form) {
-        const elem = DOMHelper.createElement('span.symbol-form');
-        elem.dataset.form = form;
-        elem.textContent = this.displayForms[form];
-        return elem;
-    }
-
-    /**
-     * Returns the form keys that this letter possesses.
+     * Returns the form keys that this letter possesses, optionally constrained to elements of the argument `forms`.
      * @param {string[]} forms
      * @returns {string[]}
      */
-    getForms(forms = null) {
-        if (!forms) return Object.keys(this.displayForms);
+    getAvailableForms(forms) {
+        return forms.filter(form => this.forms[form]);
+    }
 
-        return forms.filter(form => form in this.displayForms);
+    /**
+     * @param {string} form
+     * @returns {StringLetter}
+     */
+    getForm(form) {
+        return new StringLetter(this.forms[form], {form: form});
+    }
+
+    /**
+     * @param {string} form
+     * @returns {boolean}
+     */
+    hasForm(form) {
+        return form in this.forms;
     }
 
     /**
      * @param {string[]} forms
-     * @returns {string}
+     * @returns {LetterCombination}
      */
-    getFormsDisplayString(forms) {
-        return Object.values(this.getDisplayStrings(forms)).join("");
+    combineForms(forms) {
+        const letters = forms.filter(form => this.hasForm(form)).map(form => this.getForm(form));
+        return new LetterCombination(letters);
     }
 
     /**
@@ -817,20 +810,128 @@ class DatasetItem {
      * @param forms
      */
     countQuizItems(forms) {
-        return forms.reduce((acc, form) => form in this.displayForms ? acc + 1 : acc, 0);
+        return forms.reduce((acc, form) => form in this.forms ? acc + 1 : acc, 0);
     }
 
     /**
-     * @param {?string} [property]
-     * @param {boolean} [splitFirst]
-     * @param {string} [splitter]
-     * @returns {string}
+     * @param {string} property
+     * @param {string | RegExp} [splitter]
+     * @param {Record<string, string>} [params]
+     * @returns {string | number}
      */
-    getSelectorLabel({property = null, splitFirst = true, splitter = "[,;/]"} = {}) {
-        const str = this.properties[property];
-        if (splitFirst) {
-            return str.split(new RegExp(`\s*(${splitter})\s*`))[0];
-        }
-        return str;
+    getProperty({
+        property,
+        splitter,
+        params = {}
+    } = {}) {
+        let value = this.properties[property].get(params);
+        if (splitter) value = value.split(new RegExp(splitter, "g"))[0].trim();
+        return value;
     }
+}
+
+
+/**
+ * @param {string} prop
+ * @param {Record<string, string>} params
+ * @returns {string}
+ */
+function createSinglePropKey(prop, params) {
+    let propKey = prop;
+    for (const key of ["variant", "language"]) {
+        if (key in params) propKey += `>${key}:${params[key]}`;
+    }
+    return propKey;
+}
+
+/**
+ * @param {string} key
+ * @returns {[string, Record<string, string[]>]}
+ */
+function processPropKey(key) {
+    const [prop, paramsStr] = key.split(">", 2);
+    return [prop, parsePropParams(paramsStr)];
+}
+
+/**
+ * @param {string} paramsStr
+ * @param {Record<string, string[]>} [baseParams]
+ * @returns {Record<string, string[]>}
+ */
+function parsePropParams(paramsStr, baseParams) {
+    const params = Object.assign({}, baseParams);
+    if (!paramsStr) return params;
+
+    for (const str of paramsStr.split(">")) {
+        const [key, value] = str.split(":");
+        extendPropParams(params, key, value);
+    }
+
+    return params;
+}
+
+
+const propKeyRegistry = {
+    variant: ["v", "var", "variant"],
+    language: ["l", "lang", "langauge"]
+}
+const propKeyDict = {};
+for (const [k, vs] of Object.entries(propKeyRegistry)) {
+    for (const v of vs) {
+        propKeyDict[v] = k;
+    }
+}
+
+/**
+ * @param {Record<string, string[] | string>} params
+ * @param {string} key
+ * @param {string} value
+ */
+function extendPropParams(params, key, value) {
+    if (!propKeyDict[key]) throw new Error("Invalid property key " + key);
+
+    key = propKeyDict[key];
+    if (key in params) throw new Error(`${key} already set.`);
+
+    if (key === "variant" && "language" in params) {
+        console.warn("Setting variant after language.");
+    }
+
+    params[key] = value.split(",");
+}
+
+
+/**
+ * @param {ParametricValue} propVal
+ * @param {Record<string, string | string[]>} params
+ * @param {any} value
+ */
+function extendPropertyValue(propVal, params, value) {
+    const isSingleValue = typeof value === "string" || typeof value === "number";
+
+    if (isSingleValue) {
+        propVal.set(params, value);
+    } else {
+        for (const [paramsStr, val] of Object.entries(value)) {
+            extendPropertyValue(propVal, parsePropParams(paramsStr, params), val);
+        }
+    }
+}
+
+/**
+ * @param {Record<string, string[]>} params
+ * @returns {Record<string, string>}
+ */
+function toSingleParams(params) {
+    const result = {};
+    for (const [key, value] of Object.entries(params)) {
+        if (value.length > 1) {
+            throw new Error(`Can only parse index for one ${key} value.`);
+        }
+
+        if (value.length === 1) {
+            result[key] = value[0];
+        }
+    }
+    return result;
 }

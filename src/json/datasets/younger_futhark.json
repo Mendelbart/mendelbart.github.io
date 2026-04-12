@@ -22,13 +22,35 @@
     "style": {"buttonMinWidth": "4ch", "buttonMaxWidth": "7ch", "labelGap": "0.15rem"}
   },
   "properties": {
-    "name": {"type": "list", "maxDist": 1, "label": "Name", "active": true,
-      "substitutions": {
-        "ð": "th",
-        "ʀ": "r"
-      }
+    "name": {
+      "label": "Name",
+      "config": {
+        "type": "list",
+        "items": {
+          "type": "string",
+          "properties": {
+            "maxDist": 1,
+            "substitutions": {
+              "ð": "th",
+              "ʀ": "r"
+            }
+          }
+        }
+      },
+      "active": true
     },
-    "meaning": {"type": "list", "maxDist": 1, "label": "Meaning", "active":  false}
+    "meaning": {
+      "label": "Meaning",
+      "config": {
+        "type": "list",
+        "items": {
+          "type": "string",
+          "properties": {
+            "maxDist": 1
+          }
+        }
+      }
+    }
   },
   "variants": {
     "data": {
@@ -38,7 +60,9 @@
           "junicode": {"styleset": "Younger-futhark"}
         }
       },
-      "shorttwig": "Short-twig"
+      "shorttwig": {
+        "label": "Short-twig"
+      }
     },
     "setting": {
       "type": "buttonGroup"
@@ -47,22 +71,22 @@
   "items": {
     "properties": ["name", "meaning"],
     "data": [
-      ["f", "*", "fé", "wealth"],
-      ["u", "*", "úr", "drizzle, rain"],
-      ["þ", "*", "þurs", "thurs"],
-      ["ą", "*", "áss/óss", "god"],
-      ["r", "*", "reið", "ride"],
-      ["k", "*", "kaun", "ulcer"],
-      ["h", "*", "hagall", "hail"],
-      ["n", "*", "nauðʀ", "need"],
-      ["i", "*", "íss", "ice"],
-      ["a", "*", "ár", "plenty"],
-      ["s", "*", "sól", "Sun"],
-      ["t", "*", "Týʀ", "Týr (deity)"],
-      ["b", "*", "bjǫrk/bjarkan", "birch"],
-      ["m", "*", "maðʀ", "man, human"],
-      ["l", "*", "lǫgʀ", "sea"],
-      ["ʀ", "*", "ýʀ", "yew"]
+      ["f", ["fé", "wealth"]],
+      ["u", ["úr", "drizzle, rain"]],
+      ["þ", ["þurs", "thurs"]],
+      ["ą", ["áss/óss", "god"]],
+      ["r", ["reið", "ride"]],
+      ["k", ["kaun", "ulcer"]],
+      ["h", ["hagall", "hail"]],
+      ["n", ["nauðʀ", "need"]],
+      ["i", ["íss", "ice"]],
+      ["a", ["ár", "plenty"]],
+      ["s", ["sól", "Sun"]],
+      ["t", ["Týʀ", "Týr (deity)"]],
+      ["b", ["bjǫrk/bjarkan", "birch"]],
+      ["m", ["maðʀ", "man, human"]],
+      ["l", ["lǫgʀ", "sea"]],
+      ["ʀ", ["ýʀ", "yew"]]
     ]
   }
 }
