@@ -1,4 +1,4 @@
-import {FunctionSet} from "./FunctionSet";
+import FunctionSet from "./FunctionSet";
 
 export default class Observable {
     constructor() {

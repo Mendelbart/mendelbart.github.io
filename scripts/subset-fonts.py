@@ -62,6 +62,7 @@ def main():
 
     for filename in listdir(datasets_dir):
         with open(join(datasets_dir, filename), "r") as datasetJSON:
+            print(datasetJSON)
             dataset = json.load(datasetJSON)
 
         print("Processing dataset", dataset["name"])

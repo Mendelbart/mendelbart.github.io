@@ -1,5 +1,4 @@
-import {DOMUtils, ObjectUtils} from '../utils';
-import Observable from "../utils/classes/Observable";
+import {DOMUtils, ObjectUtils, Observable} from '../utils';
 
 DOMUtils.registerTemplate("buttonGroupContainer", DOMUtils.createElement("fieldset.button-group.setting"));
 
@@ -33,20 +32,20 @@ export default class ButtonGroup extends Observable {
     /**
      * @param {Record<string,string> | string[]} data
      * @param {boolean} [exclusive=false]
-     * @param {?string} [name]
-     * @param {?string|string[]|Record<string,boolean>} [checked]
-     * @param {?string|string[]|Record<string,boolean>} [disabled]
+     * @param {string} [name]
+     * @param {string|string[]|Record<string,boolean>} [checked]
+     * @param {string|string[]|Record<string,boolean>} [disabled]
      * @param {boolean} [decheckable=false]
-     * @param {?string} [label]
+     * @param {string} [label]
      * @returns {ButtonGroup}
      */
     static from(data, {
         exclusive = false,
-        name= null,
-        checked = null,
-        disabled = null,
+        name,
+        checked,
+        disabled,
         decheckable = false,
-        label = null
+        label
     } = {}) {
         if (Array.isArray(data)) {
             data = Object.fromEntries(data.map(x => [x, x]));
@@ -61,13 +60,9 @@ export default class ButtonGroup extends Observable {
         if (exclusive) {
             container.setAttribute("role", "radiogroup");
 
-            if (typeof checked === "string") {
-                checked = [checked];
-            }
+            if (typeof checked === "string") checked = [checked];
 
-            if (!decheckable && !checked) {
-                checked = [values[0]];
-            }
+            if (!decheckable && !checked) checked = [values[0]];
         }
 
         checked = ObjectUtils.subsetToBoolRecord(checked ?? "none", values);
@@ -92,9 +87,7 @@ export default class ButtonGroup extends Observable {
         }
 
         const group = new this(container, exclusive, decheckable);
-        if (label) {
-            group.label(label);
-        }
+        if (label) group.label(label);
 
         return group;
     }
@@ -144,11 +137,16 @@ export default class ButtonGroup extends Observable {
      */
     set value(checked) {
         if (this.exclusive && typeof checked === "string") {
+            if (!this.inputs[checked]) {
+                console.log(this);
+                throw new Error(`Unknown input key ${checked}.`);
+            }
+
             this.inputs[checked].checked = true;
         } else {
             checked = ObjectUtils.subsetToBoolRecord(checked, Object.keys(this.inputs));
             for (const [key, input] of Object.entries(this.inputs)) {
-                input.checked = checked[key];
+                input.checked = checked[key] ?? false;
             }
         }
     }
@@ -172,7 +170,6 @@ export default class ButtonGroup extends Observable {
     }
 
     remove() {
-        this.node.addEventListener("change", this._onChange);
         this.node.remove();
     }
 }

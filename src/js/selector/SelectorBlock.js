@@ -1,8 +1,5 @@
-import {DOMUtils, ArrayUtils} from "../utils";
-import {ElementFitter, SizeWatcher} from "../utils/classes/ElementFitter";
-import {rangeBetween} from "../utils/array";
-import Observable from "../utils/classes/Observable";
-const range = ArrayUtils.range;
+import {DOMUtils, ElementFitter, SizeWatcher, Observable} from "../utils";
+import {rangeBetween, range} from "../utils/array";
 
 const STYLE_PROPERTIES = {
     buttonMinWidth: "--button-min-width",
@@ -73,7 +70,7 @@ export default class SelectorBlock extends Observable {
 
     setupButtonWatcher() {
         this.buttonWatcher = new SizeWatcher();
-        this.buttonWatcher.watch(this.buttons);
+        this.buttonWatcher.watchAll(this.buttons);
     }
 
     setupContentFitter() {
@@ -86,7 +83,7 @@ export default class SelectorBlock extends Observable {
             dimension: "width",
             scalingProperty: "font-size"
         });
-        this.contentFitter.fit(this.buttons.map(button => button.querySelector(".selector-button-content")));
+        this.contentFitter.fitAll(this.buttons.map(button => button.querySelector(".selector-button-content")));
     }
 
     setupLabelFitter() {
@@ -95,7 +92,7 @@ export default class SelectorBlock extends Observable {
             dimension: "width",
             scalingProperty: "font-size"
         });
-        this.labelFitter.fit(this.buttons.map(button => button.querySelector(".selector-button-label")));
+        this.labelFitter.fitAll(this.buttons.map(button => button.querySelector(".selector-button-label")));
     }
 
     /**
@@ -243,16 +240,12 @@ export default class SelectorBlock extends Observable {
      * @param {boolean} [callObservers=true]
      */
     setButtonChecked(index, checked, {updateIfDisabled = false, callObservers = true} = {}) {
-        if (!updateIfDisabled && this.isDisabled(index)) {
-            return;
-        }
+        if (!updateIfDisabled && this.isDisabled(index)) return;
 
         DOMUtils.setARIA(this.buttons[index], "checked", checked);
         this.checked[index] = checked;
 
-        if (callObservers) {
-            this.callObservers();
-        }
+        if (callObservers) this.callObservers();
     }
 
     /**

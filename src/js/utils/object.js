@@ -96,7 +96,7 @@ export function mapKeys(object, callback) {
  * @param {function(string, number, string[]): V} callback
  * @returns {Record<string, V>} Object with {key: callback(key)} entries
  */
-export function recordFromKeys(keys, callback) {
+export function fromKeys(keys, callback) {
     return Object.fromEntries(keys.map((key, index, arr) => [key, callback(key, index, arr)]));
 }
 

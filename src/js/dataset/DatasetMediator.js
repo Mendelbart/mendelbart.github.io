@@ -1,6 +1,8 @@
-import {FontUtils, DOMUtils} from '../utils';
-import Observable from "../utils/classes/Observable";
-import {Game} from "../game";
+import {FontUtils, DOMUtils, Observable} from '../utils';
+import Game from "../game/Game";
+import QuizDealer from "../quiz/QuizDealer";
+import {CardFactory} from "../quiz/card";
+import {SettingCollection, Slider} from "../settings";
 
 
 export default class DatasetMediator extends Observable {
@@ -33,23 +35,21 @@ export default class DatasetMediator extends Observable {
     }
 
     setupSelectorButtons() {
-        const dir = this.dataset.getDir();
-
-        this.selector.setupButtonContents(item => {
-            const content = DOMUtils.createElement("span.symbol-string");
-            content.append(...Object.values(item.getFormNodes()));
-            if (dir) content.dir = dir;
-            return content;
-        });
+        const forms = Object.keys(this.dataset.forms.data);
+        this.selector.setupButtonContents(item => item.combineForms(forms).getNode());
 
         if (this.dataset.selectorData.label) {
-            this.selector.labelButtons(item => item.getSelectorLabel(this.dataset.selectorData.label));
+            const property = this.dataset.selectorData.label.property;
+            this.selector.labelButtons(item => item.getProperty({
+                property: property,
+                splitter: this.dataset.getPropertySplitter(property)
+            }));
         }
     }
 
     setupObservers() {
         this.selectorSettings.observers.push(({forms, variant}, changed) => DOMUtils.transition(
-            () => { this.applySettings(forms, variant, changed); },
+            () => this.applySettings(forms, variant, changed),
             ["selector-forms"]
         ));
 
@@ -108,12 +108,15 @@ export default class DatasetMediator extends Observable {
 
     setSettings(values) {
         if (values.checked) {
-            this.selector.setChecked((_, index) => values.checked[index]);
+            tryMessage(
+                () => this.selector.setChecked((_, index) => values.checked[index]),
+                "Error setting selected selector items:"
+            );
         }
 
-        this.selectorSettings.setValues(values);
-        this.applySettings(values.forms, values.variant);
-        this.gameSettings.setValues(values);
+        tryMessage(() => this.selectorSettings.setValues(values), "Error setting selector settings values:");
+        tryMessage(() => this.applySettings(values.forms, values.variant), "Error setting form/variant values:");
+        tryMessage(() => this.gameSettings.setValues(values), "Error setting game setting values:");
     }
 
     /**
@@ -122,12 +125,11 @@ export default class DatasetMediator extends Observable {
      * @param {"forms" | "variant"} [changed]
      */
     applySettings(forms, variant, changed) {
-        const formKeys = this.dataset.getFormKeysFromSetting(forms);
-        const variantIndices = this.dataset.getVariantItemIndices(variant);
+        const formKeys = this.dataset.getFormKeysFromGrouped(forms);
 
         if (!changed || changed === "forms") {
             this.selector.updateButtonContents(content => {
-                content.querySelectorAll(".symbol-form").forEach(elem => {
+                content.querySelectorAll(".letter").forEach(elem => {
                     const shown = formKeys.includes(elem.dataset.form);
                     DOMUtils.toggleShown(shown, elem);
                 });
@@ -145,41 +147,148 @@ export default class DatasetMediator extends Observable {
         }
 
         this.selector.setDisabled(
-            (item, index) => !variantIndices.has(index) || item.getForms(formKeys).length === 0
+            (item, index) => !this.dataset.isItemIncluded(index, variant) || item.countQuizItems(formKeys) === 0
         );
     }
 
+    /**
+     * @returns {string[]}
+     */
     getActiveForms() {
-        if (!this.dataset.hasSetting("forms")) {
-            return Object.keys(this.dataset.forms.data);
-        }
-        return this.dataset.getFormKeysFromSetting(this.selectorSettings.getValue("forms"));
+        if (!this.dataset.hasSetting("forms")) return Object.keys(this.dataset.forms.data);
+
+        return this.dataset.getFormKeysFromGrouped(this.selectorSettings.getValue("forms"));
     }
 
     getActiveProperties() {
         return this.gameSettings.getDefault("properties", Object.keys(this.dataset.properties));
     }
 
+    /**
+     * @returns {Record<string, string>}
+     */
+    getGameParams() {
+        const params = {};
+        if (this.dataset.hasVariants()) params.variant = this.getVariant();
+        if (this.dataset.hasSetting("language")) params.language = this.getLanguage();
+        return params;
+    }
 
+    /**
+     * @returns {CardFactory}
+     */
+    getCardFactory() {
+        const lang = this.dataset.getLang(this.getVariant());
+        return new CardFactory(
+            (card, item) => {
+                card.display(item.content);
+                card.setLabel("bottom", Object.values(item.answers)[0].display)
+            },
+            lang ? card => {card.displayNode.lang = lang} : null
+        );
+    }
+
+    /**
+     * @returns {Game}
+     */
     getGame() {
+        const forms = this.getActiveForms();
         const properties = this.getActiveProperties();
-        const language = this.getLanguage();
+        const params = this.getGameParams();
         const items = this.dataset.getQuizItems(
             this.getCheckedItems(),
-            this.getActiveForms(),
+            forms,
             properties,
-            language
+            params
         );
-        const referenceItems = this.dataset.getReferenceItems(properties, language);
-        const variant = this.getVariant();
+        const referenceItems = this.dataset.getReferenceItems(properties, forms, params);
 
-        const game = new Game(this.dataset, items, properties, language, variant);
-        game.setReferenceItems(referenceItems);
+        const dealer = new QuizDealer(items);
+        const cardFactory = this.getCardFactory();
+
+        const game = new Game(dealer, cardFactory);
+        game.setReferenceItems(referenceItems, (card, item, property) => {
+            card.display(item.content);
+            card.setLabel("bottom", item.answers[property].display);
+        });
+
+        game.setupCardSettings(this.getCardSettings(), this.cardSettingsCallback(params.variant));
+
+        game.setupAnswerInputs(
+            properties.map(key => {return {key: key, label: this.dataset.properties[key].label}}),
+            {lang: params.language}
+        );
+
         return game
+    }
+
+    /**
+     * @param {string} key
+     * @param {Slider} weightSlider
+     */
+    updateSymbolWeightRange(key, weightSlider) {
+        const family = this.dataset.getFont(key, this.variant).family;
+        const data = FontUtils.getFontData(family);
+        const weightsStr = data.variationSettings?.wght ?? "100 900";
+        const [min, max] = weightsStr.split(" ").map(x => parseInt(x));
+        weightSlider.setMin(min);
+        weightSlider.setMax(max);
+    }
+
+    /**
+     * @returns {SettingCollection}
+     */
+    getCardSettings() {
+        const sc = new SettingCollection();
+
+        const weightSlider = Slider.create(100, 900, this.dataset.gameConfig.defaultWeight ?? 500);
+        weightSlider.label("Weight");
+
+        if (this.dataset.hasSetting("font-family")) {
+            sc.add("family", this.dataset.fontFamilySetting());
+            sc.addObserverTo("family", key => this.updateSymbolWeightRange(key, weightSlider));
+            this.updateSymbolWeightRange(sc.getValue("family"), weightSlider);
+        } else {
+            this.updateSymbolWeightRange(this.dataset.defaultFontKey, weightSlider);
+        }
+
+        sc.add("weight", weightSlider);
+
+        return sc;
+    }
+
+    /**
+     * @param {string} [variant]
+     * @returns {function(Card, {family, weight}, string?): void}
+     */
+    cardSettingsCallback(variant) {
+        return (card, {family, weight}, changed) => {
+            if (!changed || changed === "family") {
+                const font = this.dataset.getFont(family, variant);
+                FontUtils.loadFont(font.family).then(() => {
+                    FontUtils.setFont(card.displayNode, font);
+                    if (weight) card.displayNode.style.fontWeight = weight;
+                });
+            } else if (weight) {
+                card.displayNode.style.fontWeight = weight;
+            }
+        }
     }
 
     teardown() {
         this.selector.teardown();
         this.selectorSettings.teardown();
+    }
+}
+
+/**
+ * @param {function} callback
+ * @param {string} message
+ */
+function tryMessage(callback, message) {
+    try {
+        callback();
+    } catch (e) {
+        console.error(message, e);
     }
 }

@@ -1,6 +1,4 @@
-import {DOMUtils, ObjectUtils} from "../utils";
-import {ElementFitter} from "../utils/classes/ElementFitter";
-import {avg} from "../utils/array";
+import {DOMUtils, ElementFitter} from "../utils";
 
 export const Corners = Object.freeze({
     TOP_RIGHT: "tr",
@@ -10,54 +8,7 @@ export const Corners = Object.freeze({
 });
 
 
-export class QuizItem {
-    /**
-     * @param {any} content
-     * @param {Record<string, QuizAnswer>} answers
-     */
-    constructor(content, answers) {
-        this.content = content;
-        this.answers = answers;
-    }
-
-    /**
-     * @param {Record<string, string>} guesses
-     */
-    gradeAll(guesses) {
-        const grades = ObjectUtils.map(guesses, (guess, key) => this.answers[key].grade(guess));
-        return avg(Object.values(grades));
-    }
-
-    /**
-     * @param {Record<string, string>} guesses
-     */
-    markAll(guesses) {
-        const marked = ObjectUtils.map(guesses, (guess, key) => this.answers[key].mark(guess));
-        const grade = avg(Object.values(marked).map(x => x[0]));
-        return [grade, ObjectUtils.map(marked, x => x[1]), ObjectUtils.map(marked, x => x[2])];
-    }
-
-    /**
-     * @param {string} key
-     * @param {string} guess
-     * @returns {number}
-     */
-    grade(key, guess) {
-        return this.answers[key].grade(guess);
-    }
-
-    /**
-     * @param {string} key
-     * @param {string} guess
-     * @returns {[number,HTMLSpanElement,HTMLSpanElement]}
-     */
-    mark(key, guess) {
-        return this.answers[key].mark(guess);
-    }
-}
-
-
-export class QuizCard {
+export class Card {
     constructor() {
         this.displayNode = DOMUtils.createElement("div.qc-display");
         this.node = DOMUtils.createElement("div.quiz-card", this.displayNode);
@@ -67,10 +18,19 @@ export class QuizCard {
         this.cornerLabels = {};
     }
 
-    setDisplayContent(content) {
+    clearDisplay() {
         this.fitter.clearParent(this.displayNode, false);
-        this.displayNode.replaceChildren(content);
-        this.fitter.fit([content]);
+        this.displayNode.replaceChildren();
+    }
+
+    /**
+     * @param {CardContent} content
+     */
+    display(content) {
+        this.clearDisplay();
+        const node = content.getNode();
+        this.displayNode.replaceChildren(node);
+        this.fitter.fit(node);
     }
 
     /**
@@ -93,7 +53,7 @@ export class QuizCard {
             }
         }
 
-        this.fitter.fit([content]);
+        this.fitter.fit(content);
     }
 
     /**
@@ -158,14 +118,20 @@ export class QuizCard {
         }
     }
 
+    clear() {
+        this.clearDisplay();
+        this.removeLabels();
+        this.removeCornerLabels();
+    }
+
     showLabels() {
-        DOMUtils.show(Object.values(this.labels), "visibility");
-        DOMUtils.show(Object.values(this.cornerLabels));
+        DOMUtils.show(Object.values(this.labels).map(el => el.firstElementChild), "visibility");
+        DOMUtils.show(Object.values(this.cornerLabels).map(el => el.firstElementChild));
     }
 
     hideLabels() {
-        DOMUtils.hide(Object.values(this.labels), "visibility");
-        DOMUtils.hide(Object.values(this.cornerLabels));
+        DOMUtils.hide(Object.values(this.labels).map(el => el.firstElementChild), "visibility");
+        DOMUtils.hide(Object.values(this.cornerLabels).map(el => el.firstElementChild));
     }
 
     teardown() {
@@ -176,49 +142,45 @@ export class QuizCard {
 
 export class CardFactory {
     /**
-     * @param {function(QuizItem): string | HTMLElement} display
-     * @param {function(QuizItem): {top?, bottom?}} [labels]
-     * @param {function(QuizItem): {tl?, tr?, bl?, br?}} [cornerLabels]
+     * @param {CardFactory | function(Card, QuizItem, ...any?)} display
+     * @param {function(Card): void} [setup]
      */
-    constructor({display, labels, cornerLabels}) {
-        this.displayCallback = display;
-        this.labelCallback = labels;
-        this.cornerLabelCallback = cornerLabels;
+    constructor(display, setup) {
+        if (typeof display === 'function') {
+            this.displayCallback = display;
+            if (setup) this.setup = setup;
+        } else {
+            this.displayCallback = display.displayCallback;
+            if (setup) {
+                this.setup = card => {
+                    setup(card);
+                    display.setup(card);
+                }
+            } else {
+                this.setup = display.setup;
+            }
+        }
     }
 
     /**
+     * @param {Card} card
      * @param {QuizItem} item
-     * @returns QuizCard
+     * @param [args]
      */
-    createCard(item) {
-        const card = new QuizCard();
-        this.modifyCard(card, item);
+    display(card, item, ...args) {
+        card.clear();
+        this.displayCallback(card, item, ...args);
+    }
+
+    /**
+     * @param {QuizItem} [item]
+     * @param [args]
+     * @returns Card
+     */
+    createCard(item, ...args) {
+        const card = new Card();
+        if (this.setup) this.setup(card);
+        if (item) this.displayCallback(card, item, ...args);
         return card;
-    }
-
-    /**
-     * @param {QuizCard} card
-     * @param {QuizItem} item
-     */
-    modifyCard(card, item) {
-        card.setDisplayContent(this.displayCallback(item));
-        if (this.labelCallback) {
-            card.setLabels(this.labelCallback(item));
-        } else {
-            card.removeLabels();
-        }
-        if (this.cornerLabelCallback) {
-            card.setCornerLabels(this.cornerLabelCallback(item));
-        } else {
-            card.removeCornerLabels();
-        }
-    }
-
-    /**
-     * @param {QuizItem[]} items
-     * @returns {QuizCard[]}
-     */
-    createCards(items) {
-        return items.map(item => this.createCard(item));
     }
 }

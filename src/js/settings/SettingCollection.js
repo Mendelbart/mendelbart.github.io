@@ -1,4 +1,4 @@
-import Observable from "../utils/classes/Observable";
+import {Observable} from "../utils";
 
 
 export default class SettingCollection extends Observable {
@@ -11,7 +11,7 @@ export default class SettingCollection extends Observable {
     }
 
     /**
-     * @param {Map<string,Setting>} settings
+     * @param {Map<string,Setting> | Record<string, Setting>} settings
      * @returns {SettingCollection}
      */
     static createFrom(settings) {
@@ -146,9 +146,5 @@ export default class SettingCollection extends Observable {
 
     addObserverTo(key, ...observers) {
         this.get(key).observers.push(...observers);
-    }
-
-    observerArgs() {
-        return [this.getValues()];
     }
 }

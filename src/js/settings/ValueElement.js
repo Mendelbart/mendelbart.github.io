@@ -1,5 +1,4 @@
-import Observable from "../utils/classes/Observable";
-import {DOMUtils} from "../utils";
+import {DOMUtils, Observable} from "../utils";
 
 /**
  * @interface Setting

@@ -1,20 +1,20 @@
-import {invertSubsets, processIndexSubsets} from "./indices";
+import {invertSubsets, verifyIndexSubsets} from "../utils/indices";
 import SelectorBlock from "./SelectorBlock";
 import {range, sum} from "../utils/array";
-import {DOMUtils} from "../utils";
-import Observable from "../utils/classes/Observable";
+import {DOMUtils, Observable} from "../utils";
 
 export default class Selector extends Observable {
     /**
      * @template T
      * @param {T[]} items
-     * @param {(string | number[])[]} subsets
-     * @param {?function(T[], number): SelectorBlock} [createBlockCallback] Default: `(items, subsetIndex) => new SelectorBlock(items)`
+     * @param {number[][]} subsets
+     * @param {function(T[], number): SelectorBlock} [createBlockCallback] Default: `(items, subsetIndex) => new SelectorBlock(items)`
      */
-    constructor(items, subsets, createBlockCallback = null) {
+    constructor(items, subsets, createBlockCallback) {
         super();
+        if (!verifyIndexSubsets(subsets, items.length)) throw new Error("Invalid index subsets.");
         this.items = items;
-        this.subsets = processIndexSubsets(subsets, items.length);
+        this.subsets = subsets;
         this.subsetsInverse = invertSubsets(this.subsets, items.length);
 
         /** @type {SelectorBlock[]} */

@@ -115,15 +115,15 @@
               "items": {
                 "$ref": "#/$defs/selectorBlock",
                 "properties": {
-                  "indices": {
+                  "letters": {
                     "oneOf": [
-                      {"$ref": "#/$defs/indexRanges"},
-                      {"const": "rest"}
+                      {"$ref": "#/$defs/letterRanges"},
+                      {"$ref": "#/$defs/letterRange"}
                     ],
                     "description": "Python-like ranges or \"rest\" (default)."
                   }
                 },
-                "required": ["indices"]
+                "required": ["letters"]
               }
             }
           },
@@ -139,21 +139,13 @@
             "property": {
               "type": "string",
               "description": "Which property to label the items with."
-            },
-            "splitFirst": {
-              "type": "boolean",
-              "description": "If true, the property value will be split using the splitter value, and only the first part will be used as a label. E.g. for the letter \"Aleph/Alef\", the label string will be \"Aleph\"",
-              "default": true
-            },
-            "splitter": {
-              "type": "string",
-              "default": "[,;/]"
             }
           },
           "required": ["property"]
         },
         "style": {"$ref": "#/$defs/blockStyle"},
-        "defaultActive": {"type": "string", "pattern": "^(all|none|block\\d+)$"}
+        "defaultActive": {"type": "string", "pattern": "^(all|none|block\\d+)$"},
+        "defaultLetterKey":  { "$ref": "#/$defs/letterKey" }
       },
       "additionalProperties": false
     },
@@ -162,7 +154,7 @@
       "properties": {
         "defaultWeight": {
           "$ref": "#/$defs/fontWeight",
-          "default": 400
+          "default": 500
         }
       }
     },
@@ -225,28 +217,16 @@
         "^[a-z]+$": {
           "type": "object",
           "properties": {
-            "type": {
-              "enum": ["list", "string", "integer", "number"],
-              "description": "\"list\", \"string\", \"integer\" or \"number\". Type of letter property. This will mostly be \"list\"."
-            },
             "label": {"type": "string"},
-            "maxDist": {
-              "type": "integer",
-              "default": 0,
-              "description": "Sets a maximum distance, where the guessed value will still be counted as half-valid. (For strings in levenshtein distance.)"
+            "config": {
+              "$ref": "#/$defs/quizAnswerConfig"
             },
             "active": {
               "type": "boolean",
               "default": false
-            },
-            "substitutions": {
-              "type": "object",
-              "patternProperties": {
-                ".*": {"type": "string"}
-              }
             }
           },
-          "required": ["type", "label"],
+          "required": ["label", "config"],
           "additionalProperties": false
         }
       },
@@ -255,35 +235,37 @@
     "variants": {
       "type": "object",
       "properties": {
+        "defaultLetterKey": { "$ref": "#/$defs/letterKey" },
         "data": {
           "type": "object",
           "patternProperties": {
             "^[a-z]+$": {
-              "anyOf": [
-                {
+              "type": "object",
+              "properties": {
+                "label": {"type": "string"},
+                "lang": {
+                  "type": "string",
+                  "description": "Modifying the HTML lang attribute of the symbols. By default, the key pointing to this entry is used."
+                },
+                "default": {
+                  "type": "boolean",
+                  "default": false
+                },
+                "fonts": {
                   "type": "object",
-                  "properties": {
-                    "label": {"type": "string"},
-                    "lang": {
-                      "type": "string",
-                      "description": "Modifying the HTML lang attribute of the symbols. By default, the key pointing to this entry is used."
-                    },
-                    "default": {
-                      "type": "boolean",
-                      "default": false
-                    },
-                    "fonts": {
-                      "type": "object",
-                      "description": "Modifying the dataset's fonts entries.",
-                      "patternProperties": {
-                        "^[a-z]+$": {"$ref": "#/$defs/fontRef"}
-                      }
-                    }
+                  "description": "Modifying the dataset's fonts entries.",
+                  "patternProperties": {
+                    "^[a-z]+$": {"$ref": "#/$defs/fontRef"}
                   }
                 },
-                {"type": "string"}
-              ],
-              "description": "A variant of the script, e.g. the Russian or Bulgarian variant of the Cyrillic script. A string value is equivalent to `{\"label\": value}`."
+                "letters": {
+                  "oneOf": [
+                    {"$ref": "#/$defs/letterRanges"},
+                    {"$ref": "#/$defs/letterRange"}
+                  ]
+                }
+              },
+              "description": "A variant of the script, e.g. the Russian or Bulgarian variant of the Cyrillic script."
             }
           }
         },
@@ -311,6 +293,11 @@
               "default": "select"
             }
           }
+        },
+        "useKeyAsLang": {
+          "type": "boolean",
+          "description": "If true, the lang attribute of a variant will be set to its key unless already specified.",
+          "default": false
         }
       },
       "required": ["data"],
@@ -324,8 +311,11 @@
         },
         "properties": {
           "type": "array",
-          "description": "Keys to assign the property entries of data rows to. Use `{PROPERTY}_{LANG}` for properties of a specific language.",
-          "items": {"type": "string"}
+          "description": "Keys to assign the property entries of data rows to. RegExp-ish pattern: `PROPERTY(>(v|var|variant):VARIANT)?(>(l|lang|language):LANGUAGE)?`",
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z]+(>(v|var|variant):[a-z]+(,[a-z]+)*)?(>(l|lang|language):[a-z]+(,[a-z]+)*)?$"
+          }
         },
         "data": {
           "type": "array",
@@ -333,37 +323,27 @@
             "type": "array",
             "prefixItems": [
               {
-                "anyOf": [
+                "oneOf": [
                   {"type": "string"},
                   {
                     "type": "array",
                     "items": {"type": "string"}
                   }
                 ]
+              },
+              {
+                "oneOf": [
+                  {"type": ["string", "number"]},
+                  {
+                    "type": "array",
+                    "items": {"type": ["string", "number"]}
+                  }
+                ]
               }
             ],
-            "items": {
-              "anyOf": [
-                {
-                  "type": ["string", "number"]
-                },
-                {
-                  "type": "object",
-                  "properties": {
-                    "source": {"type": "string"},
-                    "alts": {
-                      "type": "object",
-                      "patternProperties": {
-                        ".*": {"type": "string"}
-                      }
-                    }
-                  }
-                }
-              ]
-            },
-            "unevaluatedItems": false
+            "items": false
           },
-          "description": "Array with [[...displayforms], ...properties] entries matching the template. If first element is a string, it will be split into individual characters for forms. Use a single-item array if this isn't wanted."
+          "description": "Array with [[...forms], [...properties]] entries matching the template. If first element is a string, it will be split into individual characters for forms. Use a single-item array if this isn't wanted."
         }
       },
       "required": ["properties", "data"],
@@ -476,11 +456,6 @@
       },
       "additionalProperties": false
     },
-    "indexRanges": {
-      "type": "string",
-      "pattern": "^(\\d+(:\\d+){0,2}(,|$))+",
-      "description": "Julia-like range syntax, separated by commas. E.g. \"0:9:90, 2:8, 4\"."
-    },
     "matrixRanges": {
       "type": "string",
       "pattern": "^(\\((\\d+(:\\d+){0,2},)*(\\d+(:\\d+){0,2},?)\\|(\\d+(:\\d+){0,2},)*(\\d+(:\\d+){0,2},?)\\)(;|$))+$",
@@ -527,6 +502,136 @@
         }
       },
       "additionalProperties": false
+    },
+    "quizAnswerConfig": {
+      "type": "object",
+      "required": ["type"],
+      "additionalProperties": false,
+      "oneOf": [
+        {
+          "properties": {
+            "type": {
+              "const": "string"
+            },
+            "properties": {
+              "type": "object",
+              "properties": {
+                "maxDist": {
+                  "type": "integer",
+                  "default": 0,
+                  "description": "Maximum distance (optimal string alignment) to pass."
+                },
+                "maxDistMult": {
+                  "type": "number",
+                  "description": "If value is n, add 1 to maxDist for every n characters of the word."
+                },
+                "substitutions": {
+                  "type": "object",
+                  "description": "Search-replace key-value entries, using regular expressions, to describe equivalent substitutions that the answerer can use."
+                },
+                "forceSubstitutions": {
+                  "type": "boolean",
+                  "default": false,
+                  "description": "If true, the substitutions need to be used if applicable."
+                },
+                "caseSensitive": {
+                  "type": "boolean",
+                  "default": false,
+                  "description": "Whether the answer is case sensitive."
+                },
+                "ignoreBrackets": {
+                  "type": "string",
+                  "default": "(",
+                  "description": "Used to ignore content in brackets or parentheses for grading. String of opening bracket charaters, e.g. \"([\" to ignore (...) and [...]. Default: \"(\"."
+                }
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        {
+          "properties": {
+            "type": {
+              "const": "list"
+            },
+            "items": {
+              "$ref": "#/$defs/quizAnswerConfig"
+            },
+            "properties": {
+              "type": "object",
+              "properties": {
+                "splitter": {
+                  "type": "string",
+                  "default": "[,/]",
+                  "description": "RegExp to split input into list of answers."
+                },
+                "gradeMode": {
+                  "enum": ["one", "all"],
+                  "default": "one",
+                  "description": "Whether one or all of the entries need to be matched. One will use the best score of the entries, All will use the average."
+                }
+              },
+              "additionalProperties": false
+            }
+          }
+        },
+        {
+          "properties": {
+            "type": {
+              "enum": ["number", "integer"]
+            },
+            "properties": {
+              "type": "object",
+              "properties": {
+                "maxDist": {
+                  "type": "number",
+                  "default": 0,
+                  "description": "Maximum distance from value to pass."
+                },
+                "distanceMode": {
+                  "type": "string",
+                  "default": "linear",
+                  "description": "\"linear\" (default), \"log\" or \"log{BASE}\" where BASE is the log base to use, default base is 10."
+                }
+              },
+              "additionalProperties": false
+            }
+          }
+        }
+      ]
+    },
+    "letterRange": {
+      "type": "string"
+    },
+    "letterRanges": {
+      "type": "object",
+      "properties": {
+        "i0": {
+          "$ref": "#/$defs/letterRange",
+          "description": "0-based index ranges."
+        },
+        "i1": {
+          "$ref": "#/$defs/letterRange",
+          "description": "1-based index ranges."
+        }
+      },
+      "patternProperties": {
+        "prop:[a-z]+(>(v|var|variant):[a-z]+)?(>(l|lang|language):[a-z]+)?": {
+          "$ref": "#/$defs/letterRange",
+          "description": "Property value ranges."
+        },
+        "form(:[a-z]+)?": {
+          "$ref": "#/$defs/letterRange",
+          "description": "Form value ranges."
+        }
+      },
+      "additionalProperties": false
+    },
+    "letterKey": {
+      "type": "string",
+      "default": "i1",
+      "description": "Default key to be used in the letters field of data entries.",
+      "pattern": "^(i0|i1|form(:[a-z]+)?|prop:[a-z]+(>(v|var|variant):[a-z]+)?(>(l|lang|language):[a-z]+)?)$"
     }
   }
 }

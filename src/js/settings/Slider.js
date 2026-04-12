@@ -24,8 +24,10 @@ export default class Slider extends ValueElement {
         this.max = max;
 
         this.displayValue = this.displayValue.bind(this);
-        this.updateProgress = this.updateProgress.bind(this);
+        this.onChange = this.onChange.bind(this);
         this.displayMinMax();
+
+        this.observers.push(this.onChange);
     }
 
     /**
@@ -49,8 +51,7 @@ export default class Slider extends ValueElement {
         return slider;
     }
 
-    _onChange() {
-        super._onChange();
+    onChange() {
         this.updateProgress();
         this.displayValue();
     }
@@ -84,8 +85,7 @@ export default class Slider extends ValueElement {
             console.warn("Slider value outside range.");
         }
         super.value = value.toString();
-        this.displayValue();
-        this.updateProgress();
+        this.onChange();
     }
 
     get value() {
@@ -103,7 +103,7 @@ export default class Slider extends ValueElement {
     setMin(min) {
         if (this.valueNode.value < min) {
             this.valueNode.value = min;
-            this._onChange();
+            this.onChange();
         }
         this.min = min;
         this.valueNode.min = min;
@@ -114,7 +114,7 @@ export default class Slider extends ValueElement {
     setMax(max) {
         if (this.valueNode.value > max) {
             this.valueNode.value = max;
-            this._onChange();
+            this.onChange();
         }
         this.max = max;
         this.valueNode.max = max;

@@ -1,5 +1,5 @@
 // CONVENIENCE CLASSES
-export class FunctionSet {
+export default class FunctionSet {
     constructor() {
         /**
          * @type {Set<Function>}

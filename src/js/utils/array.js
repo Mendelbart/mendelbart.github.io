@@ -73,7 +73,7 @@ export function argmin(arr) {
  * @returns {number}
  */
 export function argmax(arr) {
-    let maximum = Infinity;
+    let maximum = -Infinity;
     let maxIndex = -1;
     for (const [i, value] of arr.entries()) {
         if (value > maximum) {

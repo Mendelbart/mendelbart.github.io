@@ -22,6 +22,7 @@ $bodyMaxWidth: 26rem;
 @import 'colors';
 @import 'view-transitions';
 @import 'fontawesome';
+@import 'card';
 
 :root {
   --font-scale: 1;
@@ -68,6 +69,7 @@ h2 {
 .heading-with-buttons {
   display: flex;
   flex-direction: row;
+  gap: .375rem;
   padding-inline: .125rem;
   align-items: center;
 
@@ -103,7 +105,7 @@ h2 {
   }
 
   &> .icon-button {
-    padding-inline: .5625rem;
+    padding-inline: .25rem;
     font-size: 1.0625rem;
   }
 }
@@ -155,6 +157,7 @@ input[type="checkbox"], input[type="radio"] {
   gap: .25rem;
   overflow-x: auto;
   border: none;
+  padding-block-end: .25rem;
 
   &> .button {
     border-radius: 0;
@@ -241,8 +244,10 @@ input[type="text"], select, .item-eval {
 }
 
 input[type="text"], .item-eval {
-  padding: .5em .625em;
+  padding: .5em .75em;
   background: var(--clr-input);
+  box-sizing: content-box;
+  height: 1.25em;
 }
 
 input[type="text"] {
@@ -364,7 +369,7 @@ input[type="range"] {
 
   .setting {
     min-width: 0;
-    overflow: auto visible;
+    overflow: auto hidden;
   }
 
   &.inline {
@@ -397,7 +402,7 @@ input[type="range"] {
 }
 
 #datasetSelect {
-  padding: 0.4rem 0.7rem;
+  padding: .4rem .625rem;
 
   &> option {
     font-size: 1.125rem;
@@ -412,7 +417,7 @@ input[type="range"] {
 
 .ribbon {
   background: var(--clr-surface);
-  padding: .8rem;
+  padding: .625rem .875rem;
   border: 1px solid var(--clr-surface-border);
   border-radius: .8rem;
   display: flex;
@@ -489,12 +494,6 @@ input[type="range"] {
   }
 }
 
-#font-settings {
-  .font-family-setting > legend {
-    display: none;
-  }
-}
-
 #font-settings-button + label {
   padding-block: .25em;
 
@@ -529,7 +528,7 @@ input[type="range"] {
   border: 1px solid var(--clr-border-soft);
   overflow: auto;
   background: var(--clr-background);
-  padding: .625rem .75rem .75rem;
+  padding: .625rem .75rem;
   box-shadow: 0 0 .25rem hsla(0, 0%, 50%, .125);
   border-radius: .5rem;
 
@@ -588,7 +587,7 @@ input[type="range"] {
 
     content: "";
     display: block;
-    width: max(calc(var(--width) * 100%), var(--height));
+    width: calc(var(--height) + var(--width) * (100% - var(--height)));
     height: 100%;
     opacity: 1;
     background: linear-gradient(to right, oklch(0.54 0.18 var(--accent-hue)), oklch(0.64 0.155 var(--accent-hue)));
@@ -599,46 +598,35 @@ input[type="range"] {
   }
 }
 
-#game-symbols-container {
-  margin-inline: 1rem;
-  padding-block: .5rem;
-  margin-block: .5rem;
-  position: relative;
-  --box-shadow-width: .5rem;
+#game-cards {
+  margin: 1rem;
 
-  &::before, &::after {
-    position: absolute;
-    height: 100%;
-    top: 0;
-    content: " ";
-    width: 1rem;
-  }
-
-  &::before {
-    box-shadow: var(--box-shadow-width) 0 var(--box-shadow-width) calc(-0.5 * var(--box-shadow-width)) var(--clr-background) inset;
-    left: 0;
-  }
-
-  &::after {
-    box-shadow: calc(-1 * var(--box-shadow-width)) 0 var(--box-shadow-width) calc(-0.5 * var(--box-shadow-width)) var(--clr-background) inset;
-    right: 0;
-  }
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1.125rem;
 }
 
-#game-symbols {
+#game-reference-cards {
   display: flex;
   gap: .625rem;
-  align-items: center;
-  margin-inline: auto;
-  width: min-content;
-  max-width: 100%;
-  overflow: auto hidden;
+  min-width: 0;
+  overflow-x: auto;
 }
 
 #game-inputs, #game-evals {
   display: flex;
   flex-direction: column;
   gap: .625rem;
+}
+
+#game-evals {
+  position: absolute;
+  inset: 0;
+}
+
+#game-inputs-evals-container {
+  position: relative;
   margin-block-end: .625rem;
 }
 
@@ -651,110 +639,30 @@ input[type="range"] {
 
 
 /*************** SYMBOLS, EVAL *******************/
-.symbol-string {
+.letter, .letter-combination {
+  box-sizing: content-box;
+  transform-origin: center;
+}
+
+.letter-string {
   font-size: calc(var(--font-scale, 1) * var(--symbol-size, 1) * 1rem);
   line-height: calc(var(--line-height, 1.1) * 1em);
   height: calc(var(--symbol-size, 1) * var(--line-height, 1.1) * 1rem);
+  text-wrap: nowrap;
 
   font-kerning: none;
 }
 
-.symbol-container {
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  overflow: hidden;
-
-  //view-transition-class: text-container;
-  //@media (prefers-reduced-motion: no-preference) {
-  //  view-transition-name: match-element;
-  //}
-
-  max-width: calc(var(--symbol-size) * 1.8rem);
-  flex-shrink: 0;
-
-  font-weight: var(--symbol-weight, 400);
-
-  background: var(--clr-symbol-bg);
-  border-radius: $borderRadiusSmall;
-
-  pointer-events: none;
-
-  --symbol-size: 3.5;
-
-  &:hover {
-    pointer-events: auto;
-  }
-
-  .symbol-display-container {
-    overflow: visible hidden;
-    display: flex;
-    justify-content: center;
-
-    //view-transition-class: text-container;
-    //view-transition-name: match-element;
-  }
-
-  .symbol {
-    display: inline-flex;
-    justify-content: center;
-    box-sizing: content-box;
-    padding: .25em .1em;
-    min-width: .625em;
-    transform-origin: center;
-  }
-
-  .symbol, .symbol-label {
-    text-wrap: nowrap;
-
-    //view-transition-class: text;
-    //view-transition-name: match-element;
-  }
-
-  .symbol-label-container {
-    width: 100%;
-    height: 2.125em;
-    padding-inline: .5em;
-    border-top: 1px solid var(--clr-border);
-    font-size: 1rem;
-    font-weight: 600;
-
-    //view-transition-class: text-container;
-    //view-transition-name: match-element;
-
-    display: flex;
-    justify-content: center;
-    align-items: center;
-  }
-
-  &.symbol-reference {
-    padding: .3rem .625rem .1rem;
-
-    .symbol-label-container {
-      font-size: 0.8125rem;
-    }
-  }
-}
-
-#symbol-current {
-  --symbol-size: 6.25;
-  padding: .4rem 1.25rem .2rem;
-
-  &:has(+ .symbol-reference) {
-    margin-inline: .5rem .25rem;
-  }
-}
-
-
 
 .item-eval {
+  display: flex;
+  gap: .625rem;
+  align-items: center;
+  justify-content: start;
+
   .solution {
     font-style: italic;
     opacity: .75;
-  }
-
-  .submitted:not(:empty) {
-    margin-inline-end: .75rem;
   }
 
   [data-correct="true"] {

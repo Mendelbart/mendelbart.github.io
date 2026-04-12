@@ -419,149 +419,6 @@ export function classesToList(classes) {
     return Array.from(classes);
 }
 
-/**
- * @param {HTMLElement} element element
- * @param {"content-box" | "padding-box" | "border-box"} [box] default `"border-box"`
- * @param {boolean} [scrollSize] default `false`
- * @returns {[number,number]} [width, height]
- */
-export function elementSize(element, box = "border-box", scrollSize = false) {
-    let width = scrollSize ? element.scrollWidth : element.clientWidth;
-    let height = scrollSize ? element.scrollHeight : element.clientHeight;
-
-    const style = window.getComputedStyle(element);
-
-    let scale = style.scale;
-    if (!scale || scale === "none") {
-        scale = 1;
-    } else {
-        scale = parseFloat(scale);
-    }
-
-    if (box === "border-box") {
-        width += scale * (parseFloat(style.borderLeftWidth || 0) + parseFloat(style.borderRightWidth || 0));
-        height += scale * (parseFloat(style.borderTopWidth || 0) + parseFloat(style.borderBottomWidth || 0));
-    } else if (box === "content-box") {
-        width -= scale * (parseFloat(style.paddingLeft || 0) + parseFloat(style.paddingRight || 0));
-        height -= scale * (parseFloat(style.paddingTop || 0) + parseFloat(style.paddingBottom || 0));
-    } else if (box !== "padding-box") {
-        console.error("Invalid value for element size box, use padding-box, content-box or border-box.");
-    }
-
-    return [width, height];
-}
-
-
-/**
- * @param {HTMLElement} element
- * @param {?HTMLElement} [container] - default `element.parentElement`
- * @param {"width" | "height" | "both"} [dimension="width"]
- * @param {"content-box" | "padding-box" | "border-box"} [elementBox="border-box"]
- * @param {"content-box" | "padding-box" | "border-box"} [containerBox="content-box"]
- * @param {boolean} [grow=false]
- */
-export function computeScaleToFit(element, {
-    container = null,
-    dimension = "width",
-    elementBox = "border-box",
-    containerBox = "content-box",
-    grow = false
-} = {}) {
-    container ??= element.parentElement;
-
-    const [elementWidth, elementHeight] = elementSize(element, elementBox, true);
-    const [containerWidth, containerHeight] = elementSize(container, containerBox);
-
-    const scaleWidth = getScale(elementWidth, containerWidth, grow);
-    const scaleHeight = getScale(elementHeight, containerHeight, grow);
-
-    if (!["width", "height", "both"].includes(dimension)) {
-        console.error("Invalid dimension, use 'width', 'height' or 'both'.");
-        dimension = "width";
-    }
-    return dimension === "width" ? scaleWidth : dimension === "height" ? scaleHeight : Math.min(scaleWidth, scaleHeight);
-}
-
-/**
- * @param {HTMLElement} element
- * @param options
- * @param {?HTMLElement} [options.container] - default `element.parentElement`
- * @param {"width" | "height" | "both"} [options.dimension="width"]
- * @param {"content-box" | "padding-box" | "border-box"} [options.elementBox="border-box"]
- * @param {"content-box" | "padding-box" | "border-box"} [options.containerBox="content-box"]
- * @param {boolean} [options.grow=false]
- */
-export function scaleToFit(element, options = {}) {
-    element.style.scale = computeScaleToFit(element, options);
-}
-
-
-/**
- * @param {HTMLElement[] | NodeListOf<HTMLElement>} elements
- * @param options
- * @param {"width" | "height" | "both"} [options.dimension="width"]
- * @param {"content-box" | "padding-box" | "border-box"} [options.elementBox="border-box"]
- * @param {"content-box" | "padding-box" | "border-box"} [options.containerBox="content-box"]
- * @param {boolean} [options.grow=false]
- * @param {number} [options.maxScaleRatio=Infinity]
- * @param {boolean} [options.skipZeroSize=true]
- */
-export function scaleAllToFit(elements, options = {}) {
-    if (!Array.isArray(elements)) {
-        elements = Array.from(elements);
-    }
-
-    if (elements.length === 0) {
-        return;
-    }
-
-    let scales = elements.map(el => computeScaleToFit(el, options));
-    scales = uniformScales(scales, options.maxScaleRatio ?? Infinity)
-
-    for (const [index, element] of elements.entries()) {
-        element.style.scale = scales[index];
-    }
-}
-
-/**
- * @param {number[]} scales
- * @param {number} [maxScaleRatio=Infinity]
- */
-function uniformScales(scales, maxScaleRatio = Infinity) {
-    if (maxScaleRatio === Infinity) {
-        return scales;
-    }
-
-    const minScale = Math.min(...scales);
-    const maxScale = Math.max(...scales);
-
-    if (minScale === 0 || maxScale / minScale <= maxScaleRatio) {
-        return scales;
-    }
-
-    const power = Math.log(maxScaleRatio) / Math.log(maxScale / minScale);
-    return scales.map(scale => (scale / minScale) ** power * minScale);
-}
-
-function getScale(elementSize, containerSize, grow = false) {
-    if (elementSize === 0) {
-        console.warn("getScale: Element's size is 0.");
-        return 1;
-    }
-    if (isNaN(elementSize)) {
-        console.error("Element size is NaN.");
-        return 1;
-    }
-    if (isNaN(containerSize)) {
-        console.error("Container size is NaN.");
-        return 1;
-    }
-
-    let scale = containerSize / elementSize;
-
-    return grow ? scale : Math.min(scale, 1);
-}
-
 
 /**
  * @param {HTMLElement} element
@@ -632,15 +489,26 @@ export function setSearchParams(params) {
     }
 }
 
+
+/**
+ * @param func
+ * @returns {function(): Promise}
+ */
+function wrapInPromise(func) {
+    return () => new Promise((resolve) => resolve(func())).catch(console.error);
+}
+
+
 /**
  * @param {Function} update
  * @param {string[]} [types=[]]
  */
 export function transition(update, types = []) {
+    update = wrapInPromise(update);
     if (document.startViewTransition) {
-        document.startViewTransition({update: () => update(), types: types});
+        document.startViewTransition({update: update, types: types});
     } else {
-        requestAnimationFrame(() => update());
+        requestAnimationFrame(update);
     }
 }
 

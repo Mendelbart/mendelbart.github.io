@@ -1,5 +1,5 @@
 import {SettingCollection, Slider, ButtonGroup} from "./settings";
-import {Game} from "./game";
+import Game from "./game/Game";
 import {Dataset, DEFAULT_DATASET, TERMS} from "./dataset/Dataset.js";
 import DATASETS_METADATA from '../json/datasets_meta.json';
 import {DOMUtils, ObjectUtils} from "./utils";
@@ -38,18 +38,12 @@ export function setup() {
 
 function setupButtonListeners() {
     document.getElementById("start-game-button").addEventListener("click", () => DOMUtils.transition(startGame));
-    document.getElementById("stop-game-button").addEventListener("click", () => {
-        GAME.finish();
-    });
+    document.getElementById("stop-game-button").addEventListener("click", () => GAME.finish());
     document.getElementById("item-submit-button").addEventListener("click", () => {
-        DOMUtils.transition(() => {
-            GAME.submitRound();
-        }, ["game"]);
+        DOMUtils.transition(() => GAME.submitRound(), ["game"]);
     });
     document.getElementById("item-next-button").addEventListener("click", () => {
-        DOMUtils.transition(() => {
-            GAME.newRound();
-        }, ["game"]);
+        DOMUtils.transition(() => GAME.newRound(), ["game"]);
     });
 }
 
@@ -60,8 +54,9 @@ function setupDatasetSelect() {
     );
 
     select.addEventListener("change", (e) => {
-        const key = e.target.value;
-        Dataset.fetch(key).then(dataset => DOMUtils.transition(() => selectDataset(dataset))).catch(console.error);
+        Dataset.fetch(e.target.value).then(
+            dataset => DOMUtils.transition(() => selectDataset(dataset))
+        ).catch(err => console.error(err));
     });
 }
 
@@ -92,8 +87,15 @@ function setPlaying(playing) {
 
 function setupPageSettings() {
     PAGE_SETTINGS = SettingCollection.createFrom({
-        accentColor: getAccentHueSetting(),
-        colorMode: getPageLightDarkModeSetting()
+        accentHue: getAccentHueSetting(),
+        colorMode: getPageLightDarkModeSetting(),
+        keepKeyboardOpen: getKeepKeyboardOpenSetting()
+    });
+
+    PAGE_SETTINGS.observers.push(values => {
+        for (const [key, value] of Object.entries(values)) {
+            window.localStorage.setItem(key, value);
+        }
     });
 
     document.querySelector("#page-settings .settings").replaceChildren(...PAGE_SETTINGS.nodeList());
@@ -133,7 +135,6 @@ function getAccentHueSetting() {
 
 function setAccentHue(hue) {
     document.documentElement.style.setProperty("--accent-hue", hue);
-    window.localStorage.setItem("accentHue", hue);
 }
 
 
@@ -159,27 +160,38 @@ function getPageLightDarkModeSetting() {
         setLightDarkMode(mode);
     });
 
-    colorModeSetting.observers.push(mode => DOMUtils.transition(
-        () => setLightDarkMode(mode, {updateLocalStorage: true})
-    ));
+    colorModeSetting.observers.push(mode => DOMUtils.transition(() => setLightDarkMode(mode)));
 
     return colorModeSetting;
 }
 
 /**
  * @param {"dark" | "light"} mode
- * @param {boolean} [updateLocalStorage=false]
  */
-function setLightDarkMode(mode, {updateLocalStorage = false} = {}) {
+function setLightDarkMode(mode) {
     if (mode !== "dark" && mode !== "light") {
         throw new Error(`Invalid color mode ${mode}, use dark or light.`);
     }
 
     DOMUtils.classIfElse(mode === "dark", document.documentElement, "dark-mode", "light-mode");
+}
 
-    if (updateLocalStorage) {
-        window.localStorage.setItem("colorMode", mode);
-    }
+function getKeepKeyboardOpenSetting() {
+    const bg = ButtonGroup.from(
+        {"true": "On", "false": "Off"},
+        {
+            label: "Keep Keyboard Open",
+            exclusive: true,
+            checked: window.localStorage.getItem("keepKeyboardOpen") ?? "false"
+        }
+    );
+
+    bg.observers.push((value) => {
+        console.log(value);
+        if (GAME) GAME.keepKeyboardOpen = value === "true";
+    });
+
+    return bg;
 }
 
 
@@ -207,8 +219,9 @@ function selectDataset(dataset) {
 
         setupDSM();
         DSM.setSettings(cachedSettings);
+        checkPagesNextButton();
         DATASET.setupGameHeading(document.querySelector("#game-heading h1"), DSM.selectorSettings.getDefault("variant"));
-    });
+    }).catch(err => console.error(err));
 }
 
 function updateDocumentTitle() {
@@ -240,8 +253,6 @@ function setupDSM() {
             DATASET.setupGameHeading(document.querySelector("#game-heading h1"), value);
         });
     }
-
-    checkPagesNextButton();
 }
 
 function checkPagesNextButton() {
@@ -260,17 +271,13 @@ function startGame() {
     const seed = GENERIC_GAME_SETTINGS.getValue("seed");
     if (seed) GAME.seed(seed);
 
-    GAME.onFinish.push(() => {
-        setPlaying(false);
-    });
+    GAME.keepKeyboardOpen = PAGE_SETTINGS.getValue("keepKeyboardOpen") === "true";
 
-    GAME.setup({defaultWeight: DATASET.gameConfig.defaultWeight}).then(() => {
-        setPlaying(true);
-        GAME.newRound();
-        GAME.focus();
-    }).catch(err => console.error(err));
+    GAME.onFinish.push(() => setPlaying(false));
+
+    setPlaying(true);
+    GAME.newRound();
 }
-
 
 
 /************************** STORAGE ***************************/

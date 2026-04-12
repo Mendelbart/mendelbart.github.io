@@ -1,9 +1,8 @@
 import SelectorBlock from "./SelectorBlock";
-import {DOMUtils} from '../utils';
-import Matrix from '../utils/classes/Matrix';
+import {DOMUtils, Matrix} from '../utils';
 import {rangeBetween, sum} from "../utils/array";
 import {label} from "../utils/dom";
-import {matrixIndices} from "./indices";
+import {matrixIndices} from "../utils/indices";
 
 
 export default class SelectorGridBlock extends SelectorBlock {

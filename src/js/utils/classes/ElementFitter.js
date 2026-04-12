@@ -5,37 +5,49 @@ import {scaleElement} from "../dom";
 export class SizeWatcher extends Observable {
     constructor() {
         super();
-        /**
-         * @type {WeakMap<HTMLElement, ResizeObserverSize>}
-         */
+        /** @type {WeakMap<HTMLElement, ResizeObserverSize>} */
         this.sizes = new WeakMap();
 
         this.updateSize = this.updateSize.bind(this);
 
         this.resizeObserver = new ResizeObserver(entries => {
-            entries.forEach(this.updateSize);
+            entries.forEach(entry => this.updateSize(entry));
             this.observers.call(entries.map(entry => entry.target));
         });
     }
 
     /**
+     * @param {HTMLElement} element
+     */
+    watch(element) {
+        this.resizeObserver.observe(element);
+    }
+
+    /**
      * @param {Iterable<HTMLElement>} elements
      */
-    watch(elements) {
+    watchAll(elements) {
         for (const element of elements) {
-            this.resizeObserver.observe(element);
+            this.watch(element);
+        }
+    }
+
+    /**
+     * @param {HTMLElement} element
+     */
+    unwatch(element) {
+        this.resizeObserver.unobserve(element);
+        if (this.sizes.has(element)) {
+            this.sizes.delete(element);
         }
     }
 
     /**
      * @param {Iterable<HTMLElement>} elements
      */
-    unwatch(elements) {
+    unwatchAll(elements) {
         for (const element of elements) {
-            this.resizeObserver.unobserve(element);
-            if (this.sizes.has(element)) {
-                this.sizes.delete(element);
-            }
+            this.unwatch(element);
         }
     }
 
@@ -48,39 +60,40 @@ export class SizeWatcher extends Observable {
 
     /**
      * @param {HTMLElement} element
+     * @returns {ResizeObserverSize}
      */
     getSize(element) {
         return this.sizes.get(element);
     }
 
     teardown() {
-        super.teardown();
         this.resizeObserver.disconnect();
+        super.teardown();
     }
 }
 
+window.sizeWatcher = new SizeWatcher();
 
-export class ElementFitter {
+
+export default class ElementFitter {
     /**
-     * @param {?SizeWatcher} watcher
+     * @param {SizeWatcher} [watcher]
      * @param {number} [uniformFactor=Infinity]
-     * @param {"width" | "height" | "both"} dimension
+     * @param {"width" | "height" | "both"} [dimension]
      */
     constructor({
-        watcher = null,
+        watcher,
         uniformFactor = Infinity,
         dimension = "width"
     } = {}) {
-        this.watcher = watcher ?? new SizeWatcher();
+        this.watcher = watcher ?? window.sizeWatcher;
         this.updateParents = this.updateParents.bind(this);
-        this.watcher.observers.push(this.updateParents.bind(this));
+        this.watcher.observers.push(this.updateParents);
 
         this.dimension = dimension;
         this.uniformFactor = uniformFactor;
 
-        /**
-         * @type {Map<HTMLElement, number>}
-         */
+        /** @type {Map<HTMLElement, number>} */
         this.scales = new Map();
         this.minScale = Infinity;
         this.maxScale = -Infinity;
@@ -90,42 +103,60 @@ export class ElementFitter {
     }
 
     /**
-     * @param {HTMLElement[]} children
+     * @param {HTMLElement} child
      */
-    fit(children) {
-        this._add(children);
-        this.updateChildren(children);
+    fit(child) {
+        this._add(child);
+        this.updateChildren([child]);
     }
 
     /**
      * @param {HTMLElement[]} children
+     */
+    fitAll(children) {
+        for (const child of children) {
+            this._add(child);
+        }
+        this.updateChildren(children);
+    }
+
+    /**
+     * @param {HTMLElement} child
      * @private
      */
-    _add(children) {
-        for (const child of children) {
-            const parent = child.parentElement;
-            if (!this.childrenFromParent.has(parent)) {
-                this.childrenFromParent.set(parent, new Set());
-            }
-            this.childrenFromParent.get(parent).add(child);
+    _add(child) {
+        const parent = child.parentElement;
+        if (!this.childrenFromParent.has(parent)) {
+            this.childrenFromParent.set(parent, new Set());
         }
+        this.childrenFromParent.get(parent).add(child);
+        this.watcher.watch(child.parentElement);
+    }
 
-        this.watcher.watch(children.map(child => child.parentElement));
+    /**
+     * @param {HTMLElement} child
+     */
+    unfit(child) {
+        this.childrenFromParent.get(child.parentElement).delete(child);
+        this.scales.delete(child);
     }
 
     /**
      * @param {Iterable<HTMLElement>} children
      */
-    unfit(children) {
+    unfitAll(children) {
         for (const child of children) {
-            this.childrenFromParent.get(child.parentElement).delete(child);
-            this.scales.delete(child);
+            this.unfit(child);
         }
     }
 
+    /**
+     * @param {HTMLElement} parent
+     * @param {boolean} unwatch
+     */
     clearParent(parent, unwatch = true) {
         if (this.childrenFromParent.has(parent)) {
-            this.unfit(this.childrenFromParent.get(parent));
+            this.unfitAll(this.childrenFromParent.get(parent));
             this.childrenFromParent.delete(parent);
         }
         if (unwatch) this.watcher.unwatch(parent);
@@ -135,13 +166,17 @@ export class ElementFitter {
      * @param {HTMLElement[]} parents
      */
     updateParents(parents) {
-        this.updateChildren(parents.map(parent => Array.from(this.childrenFromParent.get(parent))).flat())
+        this.updateChildren(parents.
+            filter(parent => this.childrenFromParent.has(parent)).
+            map(parent => Array.from(this.childrenFromParent.get(parent))).
+            flat()
+        );
     }
 
     /**
-     * @param {?(HTMLElement[])} [children = null]
+     * @param {HTMLElement[]} [children]
      */
-    updateChildren(children = null) {
+    updateChildren(children) {
         const prevMin = this.minScale;
         const prevMax = this.maxScale;
 
@@ -180,15 +215,10 @@ export class ElementFitter {
      */
     _updateScale(child) {
         const parentSize = this.watcher.getSize(child.parentElement);
-        if (!parentSize) {
-            return;
-        }
+        if (!parentSize) return;
 
         const scale = computeScale(child, parentSize, this.dimension);
-
-        if (scale === null) {
-            return;
-        }
+        if (scale == null) return;
 
         this.scales.set(child, scale);
 
@@ -238,7 +268,8 @@ export class ElementFitter {
 /**
  * @param {HTMLElement} child
  * @param {ResizeObserverSize} parentSize
- * @param {"width" | "height" | "both"} dimension
+ * @param {"width"|"height"|"both"} dimension
+ * @return {number|null}
  */
 function computeScale(child, parentSize, dimension) {
     if (!["width", "height", "both"].includes(dimension)) {
@@ -249,13 +280,13 @@ function computeScale(child, parentSize, dimension) {
 
     if (dimension === "both" || dimension === "width") {
         const widthScale = getScale(child.offsetWidth, parentSize.inlineSize);
-        if (widthScale === null) return null;
+        if (widthScale == null) return null;
         scale = Math.min(scale, widthScale);
     }
 
     if (dimension === "both" || dimension === "height") {
         const heightScale = getScale(child.offsetHeight, parentSize.blockSize);
-        if (heightScale === null) return null;
+        if (heightScale == null) return null;
         scale = Math.min(scale, heightScale);
     }
 
@@ -267,7 +298,7 @@ function computeScale(child, parentSize, dimension) {
  * @param {number} elementSize
  * @param {number} containerSize
  * @param {boolean} [grow=false]
- * @returns {number|number|null}
+ * @returns {number|null}
  */
 function getScale(elementSize, containerSize, grow = false) {
     if (elementSize === 0 || isNaN(elementSize) || isNaN(containerSize)) {

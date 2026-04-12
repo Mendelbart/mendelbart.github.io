@@ -1,11 +1,11 @@
-import RandomNumberGenerator from "../utils/classes/RandomNumberGenerator";
+import {RandomNumberGenerator} from "../utils";
 import {avg, range} from "../utils/array";
 
 export default class QuizDealer {
     clearScore = 0.75
 
     /**
-     * @param {any[]} items
+     * @param {QuizItem[]} items
      * @param {number} [poolSize]
      * @param {number} [maxRounds]
      * @param {number} [patience]
@@ -21,14 +21,14 @@ export default class QuizDealer {
         this.maxTriesPerRound = maxTriesPerRound;
 
         /** @type {{index: number, score: number, tries: number}[]} */
-        this.pool = new Array(this.poolSize);
+        this.pool = [];
         this.cue = range(this.items.length);
         this.rng = new RandomNumberGenerator();
 
-        this._fillPool();
-
         /** @type {{totalScore: number, rounds: number, finished: boolean}[]} */
         this.itemData = this.items.map(() => {return {totalScore: 0, rounds: 0, finished: false}});
+
+        this._refillPool();
     }
 
     /**
@@ -55,13 +55,6 @@ export default class QuizDealer {
         return {index: index, score: 0, tries: 0};
     }
 
-    /** @private */
-    _fillPool() {
-        for (let i = 0; i < this.pool.length; i++) {
-            this._replacePoolElement(i);
-        }
-    }
-
     /**
      * @returns {boolean}
      * @private
@@ -75,8 +68,10 @@ export default class QuizDealer {
         if (this._currentPoolElement.score >= 1 || this._currentPoolElement.tries >= this.maxTriesPerRound) {
             const index = this._currentIndex;
             this.itemData[index].totalScore += this._currentPoolElement.score / this._currentPoolElement.tries;
+            this.itemData[index].rounds += 1;
             if (this._isFinished(index)) {
                 this.itemData[index].finished = true;
+                console.log(this.items[index].answers["name"].display, "finished!");
             } else {
                 this.cue.push(index);
             }
@@ -114,10 +109,16 @@ export default class QuizDealer {
         return (2 - poolScore);
     }
 
+    isEmpty() {
+        return this.pool.length === 0 || this.pool.length === 1 && this.pool[0].index === this._currentIndex;
+    }
+
     /**
-     * @returns {*}
+     * @returns {QuizItem}
      */
     nextItem() {
+        if (this.isEmpty()) throw new Error("Dealer is empty.");
+
         this._lastIndex = this._currentIndex;
         const weights = this.pool.map(
             ({index, score}) => index === this._lastIndex ? 0 : this._poolElementWeight(score)
@@ -128,7 +129,7 @@ export default class QuizDealer {
     }
 
     /**
-     * @returns {*}
+     * @returns {QuizItem}
      */
     get currentItem() {
         return this.items[this._currentIndex];
@@ -153,7 +154,7 @@ export default class QuizDealer {
     }
 
     /**
-     * @param {any} item
+     * @param {QuizItem} item
      */
     punish(item) {
         const index = this.items.indexOf(item);
@@ -181,5 +182,16 @@ export default class QuizDealer {
 
     totalScore() {
         return avg(this.getScores());
+    }
+
+    /**
+     * @returns {number}
+     */
+    progress() {
+        return avg(this.itemData.map(({totalScore, rounds, finished}) => {
+            if (finished) return 1;
+            if (rounds === 0) return 0;
+            return Math.max(totalScore / rounds, rounds / this.maxRounds);
+        }));
     }
 }

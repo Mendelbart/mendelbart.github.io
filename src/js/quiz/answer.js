@@ -1,8 +1,6 @@
 import {argmax, mapFromKeys, avg, full} from "../utils/array";
 import {osaDistance} from "./string-metrics";
-import Matrix from "../utils/classes/Matrix";
-import {ObjectUtils} from "../utils";
-import SubString from "../utils/classes/SubString";
+import {Matrix, SubString} from "../utils";
 
 /** @interface QuizAnswer */
 /** @type string */
@@ -23,27 +21,96 @@ import SubString from "../utils/classes/SubString";
 export function QuizAnswerFactory(data) {
     switch(data.type) {
         case "string":
-            data = ObjectUtils.withoutKeys(data, "type");
-            return (value) => new StringAnswer(value, data);
+            return (value) => new StringAnswer(value, data.properties);
         case "list":
             const callback = QuizAnswerFactory(data.items);
-            data = ObjectUtils.withoutKeys(data, ["type", "items"]);
-            return (value) => new ListAnswer(value, callback, data);
+            return (value) => new ListAnswer(value, callback, data.properties);
+        case "number":
+        case "integer":
+            data.integer = data.type === "integer";
+            return (value) => new NumberAnswer(value, data.properties);
         default:
             throw new Error(`Unknown quiz answer type ${data.type}.`);
     }
 }
 
-/**
- * @param {Record<string, Record<string, any>>} data
- * @returns {function(Record<string, any>): Record<string, QuizAnswer>}
- * @constructor
- */
-export function QuizAnswerRecordFactory(data) {
-    const factories = ObjectUtils.map(data, d => QuizAnswerFactory(d));
-    return values => ObjectUtils.map(values, (value, key) => factories[key](value));
+export const DefaultListSplitter = "[,;/]";
+
+/** @implements QuizAnswer */
+class SimpleQuizAnswer {
+    /**
+     * @param {string} display
+     * @param value
+     * @param {number} maxDist
+     */
+    constructor(display, value, maxDist = 0) {
+        this.display = display;
+        this.value = value;
+        this.maxDist = maxDist;
+    }
+
+    parseGuess(guess) {
+        return guess;
+    }
+
+    distance(value, guess) {
+        throw new Error("Not implemented.");
+    }
+
+    grade(guess) {
+        try {
+            guess = this.parseGuess(guess);
+        } catch {
+            return 0;
+        }
+
+        const dist = this.distance(this.value, guess);
+        return gradeFromDist(dist, this.maxDist);
+    }
+
+    /**
+     * @param guess
+     * @returns {[number, HTMLSpanElement, HTMLSpanElement]}
+     */
+    mark(guess) {
+        const grade = this.grade(guess);
+        return [grade, markedSpan(guess, grade), markedSpan(this.display, grade)];
+    }
 }
 
+export class NumberAnswer extends SimpleQuizAnswer {
+    constructor(value, {
+        integer = false,
+        maxDist = 0,
+        distanceMode = "linear"
+    } = {}) {
+        if (typeof value === "string") {
+            super(value, integer ? parseInt(value) : parseFloat(value), maxDist);
+        } else {
+            super(value.toString(), value, maxDist);
+        }
+
+        if (distanceMode.substring(0, 3) === "log") {
+            this.distanceMode = "log";
+            const logBaseString = distanceMode.substring(3);
+            this.logBase = logBaseString ? parseFloat(logBaseString) : 10;
+        }
+
+        this.integer = integer;
+    }
+
+    parseGuess(guess) {
+        return this.integer ? parseFloat(guess) : parseInt(guess);
+    }
+
+    distance(value, guess) {
+        if (this.distanceMode === "log") {
+            return Math.abs(Math.log(value) - Math.log(guess)) / Math.log(this.logBase);
+        } else {
+            return Math.abs(value - guess);
+        }
+    }
+}
 
 /** @implements QuizAnswer */
 export class StringAnswer {
@@ -58,7 +125,7 @@ export class StringAnswer {
      */
     constructor(display, {
         maxDist = 0,
-        maxDistMult,
+        maxDistMult = Infinity,
         substitutions = {},
         forceSubstitutions = false,
         caseSensitive = false,
@@ -72,10 +139,12 @@ export class StringAnswer {
         this.values = this.applySubstitutions(display, substitutions, forceSubstitutions).map(s => this.standardizeString(s));
     }
 
+    /**
+     * @param {string} value
+     * @returns {number}
+     */
     getMaxDist(value) {
-        if (!this.maxDistMult || this.maxDist === 0) return this.maxDist;
-
-        return this.maxDist * Math.max(1, Math.ceil(value.length / this.maxDistMult));
+        return this.maxDist + Math.floor(value.length / this.maxDistMult);
     }
 
     /**
@@ -104,10 +173,13 @@ export class StringAnswer {
         return Array.from(new Set(vals));
     }
 
+    /**
+     * @param {string} str
+     * @returns {string}
+     */
     standardizeString(str) {
-        str = str.normalize("NFKD").replaceAll(/\p{M}/gu, "");
+        str = str.trim().normalize("NFKD").replaceAll(/\p{M}/gu, "");
         if (!this.caseSensitive) str = str.toLowerCase();
-        str = str.trim();
 
         if (this.ignoreBrackets) {
             for (const opening of this.ignoreBrackets.split("")) {
@@ -148,11 +220,11 @@ export class ListAnswer {
      * @param {string} value
      * @param {function(string): QuizAnswer} callback
      * @param {string | RegExp} [splitter]
-     * @param {"best" | "avg"} [gradeMode]
+     * @param {"one" | "all"} [gradeMode]
      */
     constructor(value, callback, {
-        splitter = /,\s*/,
-        gradeMode = "best"
+        splitter = DefaultListSplitter,
+        gradeMode = "one"
     } = {}) {
         this.display = value;
         this.splitter = new RegExp(splitter, "gu");
@@ -160,27 +232,39 @@ export class ListAnswer {
         /** @type {QuizAnswer[]} */
         this.answers = this.values.map(answer => callback(answer.str));
 
-        if (!["best", "avg"].includes(gradeMode)) {
+        if (!["one", "all"].includes(gradeMode)) {
             throw new Error(`Invalid list answer grade mode ${gradeMode}.`);
         }
         this.gradeMode = gradeMode;
     }
 
+    /**
+     * @param {string} guessesStr
+     * @returns {SubString[]}
+     */
     splitGuesses(guessesStr) {
         return new SubString(guessesStr).split(this.splitter);
     }
 
+    /**
+     * @param {string} guessesStr
+     * @returns {number|number}
+     */
     grade(guessesStr) {
-        const answerGrades = this.gradingData(guessesStr)[2];
+        const answerGrades = this.gradingData(this.splitGuesses(guessesStr))[2];
         return this.calculateGrade(answerGrades);
     }
 
+    /**
+     * @param {number[]} answerGrades
+     * @returns {number}
+     */
     calculateGrade(answerGrades) {
-        return this.gradeMode === "avg" ? avg(answerGrades) : Math.max(...answerGrades);
+        return this.gradeMode === "all" ? avg(answerGrades) : Math.max(...answerGrades);
     }
 
     /**
-     * @param guesses
+     * @param {SubString[]} guesses
      * @returns {[Matrix, number[], number[]]} [grades, bestGuessIndices, answerGrades]
      */
     gradingData(guesses) {
@@ -196,6 +280,7 @@ export class ListAnswer {
 
     /**
      * @param {string} guessesStr
+     * @returns {[number, HTMLSpanElement, HTMLSpanElement]}
      */
     mark(guessesStr) {
         const guesses = this.splitGuesses(guessesStr);
@@ -203,12 +288,13 @@ export class ListAnswer {
 
         const grade = this.calculateGrade(answerGrades);
         const markedGuess = replaceWithElements(guessesStr, mapFromKeys(
-            guesses, (guess, i) => markedSpan(guess.str, Math.max(...grades.getRow(i)))
+            guesses.filter(guess => guess.length > 0),
+            (guess, i) => markedSpan(guess.str, Math.max(...grades.getRow(i)))
         ));
 
         let markedSolution;
 
-        if (this.gradeMode === "avg") {
+        if (this.gradeMode === "all") {
             markedSolution = replaceWithElements(this.display, mapFromKeys(
                 this.values, (value, i) => markedSpan(value.str, grades.get(i, bestGuessIndices[i]))
             ));
@@ -234,6 +320,10 @@ export class ListAnswer {
 }
 
 
+/**
+ * @param {number} grade
+ * @returns {boolean}
+ */
 export function passes(grade) {
     return grade >= 0.5;
 }
@@ -284,7 +374,7 @@ function gradeFromDist(dist, maxDist = 0) {
     if (dist > maxDist) return 0;
     if (maxDist === 0) return 1;
 
-    return 0.5 + (maxDist - dist) / maxDist;
+    return 0.5 + 0.5 * (maxDist - dist) / maxDist;
 }
 
 
