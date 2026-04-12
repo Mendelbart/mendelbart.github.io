@@ -84,18 +84,18 @@ function setPlaying(playing) {
 
 
 /***************************** PAGE SETTINGS ************************/
-
+const PageSettingCreators = {
+    accentHue: getAccentHueSetting,
+    colorMode: getPageLightDarkModeSetting,
+    keepKeyboardOpen: getKeepKeyboardOpenSetting
+}
 function setupPageSettings() {
-    PAGE_SETTINGS = SettingCollection.createFrom({
-        accentHue: getAccentHueSetting(),
-        colorMode: getPageLightDarkModeSetting(),
-        keepKeyboardOpen: getKeepKeyboardOpenSetting()
-    });
+    PAGE_SETTINGS = SettingCollection.createFrom(ObjectUtils.map(PageSettingCreators,
+        (creator, key) => creator(window.localStorage.getItem(key))
+    ));
 
-    PAGE_SETTINGS.observers.push(values => {
-        for (const [key, value] of Object.entries(values)) {
-            window.localStorage.setItem(key, value);
-        }
+    PAGE_SETTINGS.observers.push((values, key) => {
+        if (key) window.localStorage.setItem(key, values[key]);
     });
 
     document.querySelector("#page-settings .settings").replaceChildren(...PAGE_SETTINGS.nodeList());
@@ -123,8 +123,13 @@ function hidePageSettings() {
 }
 
 
-function getAccentHueSetting() {
-    const hue = window.localStorage.getItem("accentHue") || 250;
+/**
+ * @param {string} [value]
+ * @returns {Slider}
+ */
+function getAccentHueSetting(value) {
+    let hue = parseInt(value);
+    if (Number.isNaN(hue)) hue = 250;
     setAccentHue(hue);
     const slider = Slider.create(0, 360, hue);
     slider.label("Accent Hue");
@@ -137,10 +142,13 @@ function setAccentHue(hue) {
     document.documentElement.style.setProperty("--accent-hue", hue);
 }
 
-
-function getPageLightDarkModeSetting() {
+/**
+ * @param {"dark" | "light"} [mode]
+ * @returns {ButtonGroup}
+ */
+function getPageLightDarkModeSetting(mode) {
     const colorSchemeQuery = window.matchMedia('(prefers-color-scheme: dark)');
-    const mode = window.localStorage.getItem("colorMode") || (colorSchemeQuery.matches ? "dark" : "light");
+    mode ??= colorSchemeQuery.matches ? "dark" : "light";
     setLightDarkMode(mode);
 
     const colorModeSetting = ButtonGroup.from(
@@ -176,13 +184,18 @@ function setLightDarkMode(mode) {
     DOMUtils.classIfElse(mode === "dark", document.documentElement, "dark-mode", "light-mode");
 }
 
-function getKeepKeyboardOpenSetting() {
+/**
+ * @param {"true" | "false"} [checked]
+ * @returns {ButtonGroup}
+ */
+function getKeepKeyboardOpenSetting(checked) {
+    checked ??= DOMUtils.isMobileBrowser().toString();
     const bg = ButtonGroup.from(
         {"true": "On", "false": "Off"},
         {
             label: "Keep Keyboard Open",
             exclusive: true,
-            checked: window.localStorage.getItem("keepKeyboardOpen") ?? "false"
+            checked: checked
         }
     );
 
