@@ -34,9 +34,7 @@ export default class SubString {
 
         let i = 0;
         for (const match of matches) {
-            if (!includeEmpty && i === match.index) {
-                continue;
-            }
+            if (!includeEmpty && i === match.index) continue;
 
             result.push(new this.constructor(this, i, match.index));
             i = match.index + match[0].length;

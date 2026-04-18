@@ -65,13 +65,13 @@ export default class QuizDealer {
 
     /** @private */
     _updatePool() {
-        if (this._currentPoolElement.score >= 1 || this._currentPoolElement.tries >= this.maxTriesPerRound) {
+        const elem = this._currentPoolElement;
+        if (elem.score >= 0.75 + 0.25 * elem.tries || elem.tries >= this.maxTriesPerRound) {
             const index = this._currentIndex;
-            this.itemData[index].totalScore += this._currentPoolElement.score / this._currentPoolElement.tries;
+            this.itemData[index].totalScore += elem.score / elem.tries;
             this.itemData[index].rounds += 1;
             if (this._isFinished(index)) {
                 this.itemData[index].finished = true;
-                console.log(this.items[index].answers["name"].display, "finished!");
             } else {
                 this.cue.push(index);
             }

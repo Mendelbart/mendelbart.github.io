@@ -115,7 +115,7 @@ export class Dataset {
 
     /**
      * @param {string} key
-     * @returns {?Promise<Dataset>}
+     * @returns {Promise<Dataset>}
      */
     static fetch(key) {
         if (!(key in DATASETS_METADATA)) {

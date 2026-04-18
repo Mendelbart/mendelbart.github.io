@@ -2,21 +2,18 @@
  * @typedef {HTMLElement | NodeListOf<HTMLElement> | HTMLElement[] | HTMLCollection} HTMLElements
  */
 
-import * as ObjectHelper from './object.js';
+import * as ObjectHelper from './object';
 
 let IdPrefixCounter = 0;
-window.hasTouch = 'ontouchstart' in window;
 
-/**
- * @type {Record<string. HTMLTemplateElement>}
- */
+/** @type {Record<string. HTMLTemplateElement>} */
 const TEMPLATES = {};
 
 /**
- * @param {Record<string,string>} htmls
+ * @param {Record<string,string>} htmlTemplates
  */
-export function registerTemplates(htmls) {
-    for (const [key, html] of Object.entries(htmls)) {
+export function registerTemplates(htmlTemplates) {
+    for (const [key, html] of Object.entries(htmlTemplates)) {
         registerTemplate(key, html);
     }
 }
@@ -61,11 +58,11 @@ registerTemplates({
 /**
  * @param {string} type
  * @param {string} value
- * @param {string | Node | null} labelContent
- * @param {string | null} id
+ * @param {string | Node} [labelContent]
+ * @param {string} [id]
  * @returns {[HTMLInputElement, HTMLLabelElement]} [inputNode, labelNode]
  */
-export function button(type, value, labelContent = null, id = null) {
+export function button(type, value, labelContent, id) {
     const input = getTemplate("buttonInput");
     const label = getTemplate("buttonLabel");
     id ??= uniqueIdPrefix("button") + value;
@@ -79,9 +76,10 @@ export function button(type, value, labelContent = null, id = null) {
 
     if (labelContent) {
         if (typeof labelContent === "string") {
-            labelContent = document.createTextNode(labelContent);
+            label.textContent = labelContent;
+        } else {
+            label.append(labelContent);
         }
-        label.appendChild(labelContent);
     }
 
     return [input, label];
@@ -90,9 +88,9 @@ export function button(type, value, labelContent = null, id = null) {
 /**
  * @param {string | Node} element - Element or ID to label.
  * @param {string} content
- * @param {string | null} [defaultId]
+ * @param {string} [defaultId]
  */
-export function label(element, content, defaultId = null) {
+export function label(element, content, defaultId) {
     const label = document.createElement("LABEL");
     if (element instanceof Node) {
         element = setDefaultId(element, defaultId);
@@ -197,34 +195,6 @@ function createOption(key, value, selected, disabled) {
         option.disabled = "disabled";
     }
     return option;
-}
-
-/**
- * @param {Node} parent Parent node
- * @param {Node[] | NodeList} children Can be Object with Nodes as values.
- */
-export function appendChildren(parent, children) {
-    for (const child of children) {
-        parent.appendChild(child);
-    }
-}
-
-/**
- * @param {Object.<string,Element>} elements
- * @param {string[] | string} keys
- * @param {string} attr
- * @param {string} [value]
- */
-export function setAttrOnKeys(elements, keys, attr, value = "") {
-    if (!keys) {
-        return;
-    }
-    if (typeof keys === "string") {
-        keys = [keys];
-    }
-    for (const key of keys) {
-        elements[key].setAttribute(attr, value);
-    }
 }
 
 
@@ -332,10 +302,8 @@ export function forEachElement(elements, callback) {
  * @param {string | string[]} trueClasses
  * @param {string | string[]} [falseClasses]
  */
-export function classIfElse(bool, elements, trueClasses, falseClasses = null) {
-    if (!bool) {
-        [trueClasses, falseClasses] = [falseClasses, trueClasses];
-    }
+export function classIfElse(bool, elements, trueClasses, falseClasses) {
+    if (!bool) [trueClasses, falseClasses] = [falseClasses, trueClasses];
 
     trueClasses = classesToList(trueClasses);
     falseClasses = classesToList(falseClasses);
@@ -391,10 +359,10 @@ export function hide(elements, property = "display") {
 /**
  * @param {boolean} showFirst
  * @param {HTMLElements} first
- * @param {?HTMLElements} [second]
+ * @param {HTMLElements} [second]
  * @param {"display"|"visibility"|"opacity"} [property] default "display"
  */
-export function toggleShown(showFirst, first, second = null, property = "display") {
+export function toggleShown(showFirst, first, second, property = "display") {
     if (showFirst) {
         if (second) {
             hide(second, property);
@@ -468,6 +436,71 @@ export function showPage(page, container = null) {
     }
 }
 
+
+/**
+ * @param {HTMLElement} container
+ * @param {boolean} [closable]
+ */
+export function setupRibbon(container, closable = false) {
+    const contents = container.querySelector(".ribbon-contents");
+    const inputs = container.querySelectorAll(".ribbon-buttons input[type=checkbox]");
+    container.dataset.closable = closable.toString();
+
+    let openId = container.dataset.openId;
+    if (!openId) {
+        for (const input of inputs) {
+            if (input.checked) {
+                openId = input.dataset.contentId;
+                break;
+            }
+        }
+    }
+
+    hide(contents.querySelectorAll(".ribbon-content"));
+    if (!openId && !closable) {
+        openId = inputs[0].dataset.contentId;
+        inputs[0].checked = true;
+    }
+
+    if (openId) {
+        show([document.getElementById(openId), contents]);
+    } else if (closable) {
+        container.classList.add("contents-hidden");
+    }
+
+    container.querySelector('.ribbon-buttons').addEventListener("change", ribbonButtonsChangeListener);
+}
+
+/**
+ * @param {Event} event
+ */
+function ribbonButtonsChangeListener(event) {
+    transition(() => {
+        const input = event.target;
+        const container = input.closest(".ribbon");
+        const contents = container.querySelector('.ribbon-contents');
+
+        if (input.checked) {
+            const previousOpenId = container.dataset.openId;
+            if (!container.classList.contains("contents-hidden") && previousOpenId) {
+                hide(document.getElementById(previousOpenId));
+                container.querySelector(`.ribbon-buttons input[data-content-id="${previousOpenId}"]`).checked = false;
+            }
+
+            container.dataset.openId = input.dataset.contentId;
+            show([document.getElementById(input.dataset.contentId), contents]);
+            container.classList.remove("contents-hidden");
+        } else if (container.dataset.closable === "true") {
+            container.classList.add("contents-hidden")
+            hide(contents);
+            container.dataset.openId = "";
+        } else {
+            input.checked = true;
+        }
+    });
+}
+
+
 /**
  * @param {Record<string, string|number|boolean>} params
  */
@@ -498,14 +531,15 @@ function wrapInPromise(func) {
     return () => new Promise((resolve) => resolve(func())).catch(console.error);
 }
 
-
+window.useViewTransitions = true;
 /**
  * @param {Function} update
  * @param {string[]} [types=[]]
  */
 export function transition(update, types = []) {
     update = wrapInPromise(update);
-    if (document.startViewTransition) {
+
+    if (window.useViewTransitions && document.startViewTransition) {
         document.startViewTransition({update: update, types: types});
     } else {
         requestAnimationFrame(update);
@@ -531,8 +565,13 @@ export function getARIA(element, attribute) {
     return element.getAttribute("aria-" + attribute);
 }
 
-export function span(content) {
-    const node = document.createElement("span");
-    node.textContent = content;
-    return node;
+/**
+ * Using RegEx from http://detectmobilebrowsers.com/
+ * @returns {boolean}
+ */
+function isMobileBrowser() {
+    let check = false;
+    (function(a){if(/(android|bb\d+|meego).+mobile|avantgo|bada\/|blackberry|blazer|compal|elaine|fennec|hiptop|iemobile|ip(hone|od)|iris|kindle|lge |maemo|midp|mmp|mobile.+firefox|netfront|opera m(ob|in)i|palm( os)?|phone|p(ixi|re)\/|plucker|pocket|psp|series[46]0|symbian|treo|up\.(browser|link)|vodafone|wap|windows ce|xda|xiino/i.test(a)||/1207|6310|6590|3gso|4thp|50[1-6]i|770s|802s|a wa|abac|ac(er|oo|s-)|ai(ko|rn)|al(av|ca|co)|amoi|an(ex|ny|yw)|aptu|ar(ch|go)|as(te|us)|attw|au(di|-m|r |s )|avan|be(ck|ll|nq)|bi(lb|rd)|bl(ac|az)|br[ev]w|bumb|bw-[nu]|c55\/|capi|ccwa|cdm-|cell|chtm|cldc|cmd-|co(mp|nd)|craw|da(it|ll|ng)|dbte|dc-s|devi|dica|dmob|do[cp]o|ds(12|-d)|el(49|ai)|em(l2|ul)|er(ic|k0)|esl8|ez([4-7]0|os|wa|ze)|fetc|fly[-_]|g1 u|g560|gene|gf-5|g-mo|go(\.w|od)|gr(ad|un)|haie|hcit|hd-[mpt]|hei-|hi(pt|ta)|hp( i|ip)|hs-c|ht(c[- _agpst]|tp)|hu(aw|tc)|i-(20|go|ma)|i230|iac[- \/]|ibro|idea|ig01|ikom|im1k|inno|ipaq|iris|ja[tv]a|jbro|jemu|jigs|kddi|keji|kgt[ \/]|klon|kpt |kwc-|kyo[ck]|le(no|xi)|lg( g|\/[klu]|50|54|-[a-w])|libw|lynx|m1-w|m3ga|m50\/|ma(te|ui|xo)|mc(01|21|ca)|m-cr|me(rc|ri)|mi(o8|oa|ts)|mmef|mo(01|02|bi|de|do|t[- ov]|zz)|mt(50|p1|v )|mwbp|mywa|n10[0-2]|n20[2-3]|n30[02]|n50[025]|n7(0[01]|10)|ne([cm]-|on|tf|wf|wg|wt)|nok[6i]|nzph|o2im|op(ti|wv)|oran|owg1|p800|pan[adt]|pdxg|pg(13|-([1-8]|c))|phil|pire|pl(ay|uc)|pn-2|po(ck|rt|se)|prox|psio|pt-g|qa-a|qc(07|12|21|32|60|-[2-7]|i-)|qtek|r380|r600|raks|rim9|ro(ve|zo)|s55\/|sa(ge|ma|mm|ms|ny|va)|sc(01|h-|oo|p-)|sdk\/|se(c[-01]|47|mc|nd|ri)|sgh-|shar|sie[-m]|sk-0|sl(45|id)|sm(al|ar|b3|it|t5)|so(ft|ny)|sp(01|h-|v-|v )|sy(01|mb)|t2(18|50)|t6(00|10|18)|ta(gt|lk)|tcl-|tdg-|tel[im]|tim-|t-mo|to(pl|sh)|ts(70|m-|m3|m5)|tx-9|up(\.b|g1|si)|utst|v400|v750|veri|vi(rg|te)|vk(40|5[0-3]|-v)|vm40|voda|vulc|vx(52|53|60|61|70|80|81|83|85|98)|w3c[- ]|webc|whit|wi(g |nc|nw)|wmlb|wonu|x700|yas-|your|zeto|zte-/i.test(a.substring(0,4))) check = true;})(navigator.userAgent||navigator.vendor||window.opera);
+    return check;
 }
+window.isMobile = isMobileBrowser();

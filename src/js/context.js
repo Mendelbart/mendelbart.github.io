@@ -2,9 +2,8 @@ import {SettingCollection, Slider, ButtonGroup} from "./settings";
 import Game from "./game/Game";
 import {Dataset, DEFAULT_DATASET, TERMS} from "./dataset/Dataset.js";
 import DATASETS_METADATA from '../json/datasets_meta.json';
-import {DOMUtils, ObjectUtils} from "./utils";
+import {DOMUtils, ObjectUtils, FontUtils} from "./utils";
 import {encodeBase64BoolArray, decodeBase64BoolArray} from "./utils/base64";
-import * as FontUtils from "./utils/font";
 import DatasetMediator from "./dataset/DatasetMediator";
 
 
@@ -23,27 +22,28 @@ let PAGE_SETTINGS;
 
 
 /******************** SETUP ***********************/
-
 export function setup() {
-    setupButtonListeners();
     setupPageSettings();
-
-    document.getElementById("generic-game-settings").append(...GENERIC_GAME_SETTINGS.nodeList());
+    setupButtonListeners();
 
     window.addEventListener("popstate", () => DOMUtils.transition(readFromSearchParams));
 
-    setupDatasetSelect();
-    readFromSearchParams(false);
+    DOMUtils.transition(() => {
+        document.getElementById("generic-game-settings").append(...GENERIC_GAME_SETTINGS.nodeList());
+
+        setupDatasetSelect();
+        readFromSearchParams(false);
+    });
 }
 
 function setupButtonListeners() {
     document.getElementById("start-game-button").addEventListener("click", () => DOMUtils.transition(startGame));
     document.getElementById("stop-game-button").addEventListener("click", () => GAME.finish());
     document.getElementById("item-submit-button").addEventListener("click", () => {
-        DOMUtils.transition(() => GAME.submitRound(), ["game"]);
+        GAME.transition(() => GAME.submitRound());
     });
     document.getElementById("item-next-button").addEventListener("click", () => {
-        DOMUtils.transition(() => GAME.newRound(), ["game"]);
+        GAME.transition(() => GAME.newRound());
     });
 }
 
@@ -84,18 +84,20 @@ function setPlaying(playing) {
 
 
 /***************************** PAGE SETTINGS ************************/
+const PageSettingCreators = {
+    accentHue: getAccentHueSetting,
+    colorMode: getPageLightDarkModeSetting,
+    keepKeyboardOpen: getKeepKeyboardOpenSetting,
+    useViewTransitions: getViewTransitionSetting
+}
 
 function setupPageSettings() {
-    PAGE_SETTINGS = SettingCollection.createFrom({
-        accentHue: getAccentHueSetting(),
-        colorMode: getPageLightDarkModeSetting(),
-        keepKeyboardOpen: getKeepKeyboardOpenSetting()
-    });
+    PAGE_SETTINGS = SettingCollection.createFrom(ObjectUtils.map(PageSettingCreators,
+        (creator, key) => creator(window.localStorage.getItem(key))
+    ));
 
-    PAGE_SETTINGS.observers.push(values => {
-        for (const [key, value] of Object.entries(values)) {
-            window.localStorage.setItem(key, value);
-        }
+    PAGE_SETTINGS.observers.push((values, changedKey) => {
+        if (changedKey) window.localStorage.setItem(changedKey, values[changedKey]);
     });
 
     document.querySelector("#page-settings .settings").replaceChildren(...PAGE_SETTINGS.nodeList());
@@ -123,8 +125,13 @@ function hidePageSettings() {
 }
 
 
-function getAccentHueSetting() {
-    const hue = window.localStorage.getItem("accentHue") || 250;
+/**
+ * @param {string} [value]
+ * @returns {Slider}
+ */
+function getAccentHueSetting(value) {
+    let hue = parseInt(value);
+    if (Number.isNaN(hue)) hue = 250;
     setAccentHue(hue);
     const slider = Slider.create(0, 360, hue);
     slider.label("Accent Hue");
@@ -133,65 +140,94 @@ function getAccentHueSetting() {
     return slider;
 }
 
+/**
+ * @param {number} hue
+ */
 function setAccentHue(hue) {
     document.documentElement.style.setProperty("--accent-hue", hue);
 }
 
-
-function getPageLightDarkModeSetting() {
-    const colorSchemeQuery = window.matchMedia('(prefers-color-scheme: dark)');
-    const mode = window.localStorage.getItem("colorMode") || (colorSchemeQuery.matches ? "dark" : "light");
+/**
+ * @param {"dark" | "light" | "default"} [mode]
+ * @returns {ButtonGroup}
+ */
+function getPageLightDarkModeSetting(mode = "default") {
     setLightDarkMode(mode);
 
     const colorModeSetting = ButtonGroup.from(
         {
-            dark: "Dark Mode",
-            light: "Light Mode"
+            dark: "Dark",
+            light: "Light",
+            default: "Default"
         },
         {
-            label: "Color Mode",
+            label: "Color Theme",
             exclusive: true,
             checked: mode
-        });
-
-    colorSchemeQuery.addEventListener("change", event => {
-        const mode = event.matches ? "dark" : "light"
-        colorModeSetting.value = [mode];
-        setLightDarkMode(mode);
-    });
+        }
+    );
 
     colorModeSetting.observers.push(mode => DOMUtils.transition(() => setLightDarkMode(mode)));
-
     return colorModeSetting;
 }
 
 /**
- * @param {"dark" | "light"} mode
+ * @param {"dark" | "light" | "default"} mode
  */
 function setLightDarkMode(mode) {
-    if (mode !== "dark" && mode !== "light") {
-        throw new Error(`Invalid color mode ${mode}, use dark or light.`);
+    if (!["default", "dark", "light"].includes(mode)) {
+        if (mode) console.error(`Invalid color mode ${mode}, use dark, light or default.`);
+        mode = "default";
+    }
+
+    if (mode === "default") {
+        document.documentElement.classList.remove("dark-mode", "light-mode");
+        return;
     }
 
     DOMUtils.classIfElse(mode === "dark", document.documentElement, "dark-mode", "light-mode");
 }
 
-function getKeepKeyboardOpenSetting() {
-    const bg = ButtonGroup.from(
-        {"true": "On", "false": "Off"},
-        {
-            label: "Keep Keyboard Open",
-            exclusive: true,
-            checked: window.localStorage.getItem("keepKeyboardOpen") ?? "false"
-        }
-    );
-
+/**
+ * @param {"true" | "false"} [checked]
+ * @returns {ButtonGroup}
+ */
+function getKeepKeyboardOpenSetting(checked) {
+    const bg = getOnOffSetting("Keep Keyboard Open", checked ?? window.isMobile.toString());
     bg.observers.push((value) => {
-        console.log(value);
         if (GAME) GAME.keepKeyboardOpen = value === "true";
     });
 
     return bg;
+}
+
+/**
+ * @param {"true" | "false"} checked
+ */
+function getViewTransitionSetting(checked) {
+    checked ??= "true";
+    const bg = getOnOffSetting("Use View Transitions");
+    bg.observers.push((value) => {
+        window.useViewTransitions = value === "true";
+    });
+    window.useViewTransitions = checked === "true";
+    return bg;
+}
+
+/**
+ * @param {string} label
+ * @param {"true" | "false"} [checked]
+ * @returns ButtonGroup
+ */
+function getOnOffSetting(label, checked) {
+    return ButtonGroup.from(
+        {true: "On", false: "Off"},
+        {
+            label: label,
+            exclusive: true,
+            checked: checked
+        }
+    );
 }
 
 

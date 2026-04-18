@@ -69,7 +69,7 @@ h2 {
 .heading-with-buttons {
   display: flex;
   flex-direction: row;
-  gap: .375rem;
+  gap: .4375rem;
   padding-inline: .125rem;
   align-items: center;
 
@@ -360,7 +360,7 @@ input[type="range"] {
   display: flex;
   flex-direction: column;
   align-items: stretch;
-  gap: .5rem;
+  gap: .25rem;
   overflow-x: hidden;
 
   &:empty {
@@ -394,6 +394,10 @@ input[type="range"] {
   font-weight: 600;
   font-size: .9rem;
   color: var(--clr-text-soft);
+}
+
+.button-group legend {
+  margin-block-end: .1em;
 }
 
 
@@ -523,6 +527,7 @@ input[type="range"] {
   inset: 50%;
   transform: translate(-50%, -50%);
 
+  width: 16rem;
   max-width: calc(100% - 3.5rem);
   max-height: calc(100% - 2rem);
   border: 1px solid var(--clr-border-soft);
@@ -595,6 +600,8 @@ input[type="range"] {
     border-radius: inherit;
 
     transition: width 125ms ease-out;
+    view-transition-name: match-element;
+    view-transition-class: progress-bar;
   }
 }
 
