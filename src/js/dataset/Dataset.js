@@ -1,4 +1,4 @@
-import {DOMUtils, ObjectUtils, FontUtils, Matrix, ParametricValue} from '../utils';
+import {DOMUtils, ObjectUtils, Matrix, ParametricValue} from '../utils';
 import {SettingCollection, ButtonGroup, ValueElement} from "../settings";
 import DATASETS_METADATA from '../../json/datasets_meta.json';
 import {range} from "../utils/array";
@@ -12,6 +12,7 @@ import {
 import {DefaultListSplitter, QuizAnswerFactory} from "../quiz/answer";
 import QuizItem from '../quiz/QuizItem';
 import {LetterCombination, StringLetter} from "./letter";
+import {Font} from "../utils/font";
 
 
 DOMUtils.registerTemplate(
@@ -92,9 +93,10 @@ export class Dataset {
      * @param {JSONDataset} data
      */
     constructor(data) {
+        this.key = data.key;
         this.name = data.name;
         this.metadata = this.processMetadata(data.metadata);
-        this.processFonts(data.fonts);
+        this.fonts = this.processFonts(data.fonts);
         this.gameConfig = data.game ?? {};
         this.forms = this.processForms(data.forms);
         this.properties = this.processProperties(data.properties);
@@ -205,8 +207,8 @@ export class Dataset {
             return [prop, params];
         });
 
-        return data.map(([forms, propValues]) => new DatasetItem(
-            this.processLetterForms(forms),
+        return data.map(([forms, propValues], index) => new DatasetItem(
+            this.processLetterForms(forms, index),
             this.processItemProperties(propParams, propValues)
         ));
     }
@@ -237,22 +239,18 @@ export class Dataset {
      * @param {string|string[]|Record<string,string>} display
      * @returns {Record<string, string>}
      */
-    processLetterForms(display) {
-        if (Object.keys(this.forms.data).length === 1) {
-            if (Array.isArray(display)) display = display[0];
-
-            return Object.fromEntries([[Object.keys(this.forms.data)[0], display]]);
+    standardizeLetterForms(display) {
+        if (typeof display === "string") {
+            if (Object.keys(this.forms.data).length === 1) {
+                display = [display];
+            } else {
+                display = display.split("");
+            }
         }
 
-        if (typeof display === "string") display = display.split("");
-
         if (Array.isArray(display)) {
-            const forms = {};
             const formKeys = Object.keys(this.forms.data);
-            for (const [index, value] of display.entries()) {
-                if (value) forms[formKeys[index]] = value;
-            }
-            return forms;
+            display = Object.fromEntries(display.map((str, index) => [formKeys[index], str]));
         }
 
         if (typeof display !== "object") {
@@ -260,6 +258,16 @@ export class Dataset {
         }
 
         return ObjectUtils.onlyKeys(display, Object.keys(this.forms.data), true);
+    }
+
+    /**
+     * @param {any} display
+     * @param {string|number} key
+     * @returns {Record<string, Letter>}
+     */
+    processLetterForms(display, key) {
+        display = this.standardizeLetterForms(display);
+        return ObjectUtils.map(display, (str, form) => new StringLetter(str, key, form));
     }
 
 
@@ -380,7 +388,7 @@ export class Dataset {
             case "forms":
                 return Object.keys(this.ungroupedForms()).length > 1;
             case "font-family":
-                return Object.keys(this.fonts).length > 1;
+                return Object.keys(this.fonts.data).length > 1;
             default:
                 throw new Error(`Invalid settings key ${key}.`);
         }
@@ -466,6 +474,19 @@ export class Dataset {
     }
 
     /**
+     * @param {string} variant
+     * @returns {{lang?: string, dir?: string}}
+     */
+    getLetterNodeAttrs(variant) {
+        const data = {};
+        const lang = this.getLang(variant);
+        const dir = this.getDir();
+        if (lang) data.lang = lang;
+        if (dir) data.dir = dir;
+        return data;
+    }
+
+    /**
      * @param {string | Record<string,string>} which
      * @param {string} [defaultKey]
      * @returns {number[]}
@@ -547,7 +568,7 @@ export class Dataset {
      */
     createFormIndexMap(formKey) {
         return new Map(this.items.map(
-            (item, index) => [item.forms[formKey], index]
+            (item, index) => [item.forms[formKey].data, index]
         ));
     }
 
@@ -606,27 +627,24 @@ export class Dataset {
     /**
      * @param {string | Record<string, *>} font
      * @param {string} [variant]
-     * @returns {Record<string, *>}
+     * @returns {Font}
      */
-    getFont(font = {}, variant) {
+    getFont(font, variant) {
+        font ??= {};
         if (typeof font === "string") font = {key: font};
         if ("family" in font) {
             console.warn(`Found family property "${font.family}" in font: Will be overwritten! Use 'key' property to reference dataset fonts instead.`);
         }
 
-        font.key ??= this.defaultFontKey;
-        if (!(font.key in this.fonts)) {
-            console.error(`Unknown font key "${font.key}".`);
-            font.key = this.defaultFontKey;
+        let key = font.key ?? this.fonts.defaultKey;
+        if (!(key in this.fonts.data)) {
+            console.error(`Unknown font key "${key}".`);
+            key = this.fonts.defaultKey;
         }
 
-        return ObjectUtils.withoutKeys(
-            Object.assign({},
-                this.fonts[font.key],
-                this.getVariantFontModification(font.key, variant),
-                font
-            ),
-            ["key", "default", "label"]
+        return this.fonts.data[key].font.applyParams(
+            this.getVariantFontParams(key, variant),
+            ObjectUtils.withoutKeys(font, "key")
         );
     }
 
@@ -635,7 +653,7 @@ export class Dataset {
      * @param {string} [variant]
      * @returns {Record<string, *>}
      */
-    getVariantFontModification(key, variant) {
+    getVariantFontParams(key, variant) {
         if (variant) {
             const fonts = this.variants.data[variant].fonts;
             if (fonts && key in fonts) {
@@ -646,14 +664,28 @@ export class Dataset {
         return {};
     }
 
+    /**
+     * @param {string} [variant]
+     * @returns {Font}
+     */
     getSelectorDisplayFont(variant) {
         return this.getFont(this.selectorData.font, variant);
     }
 
+    /**
+     * @param fonts
+     * @returns {{data: Record<string, {family: string, font: Font, label: string}>, defaultKey: string}}
+     */
     processFonts(fonts) {
-        this.fonts = fonts;
-        const defaultEntry = Object.entries(fonts).find(([_, font]) => font.default);
-        this.defaultFontKey = defaultEntry ? defaultEntry[0] : Object.keys(fonts)[0];
+        let defaultKey;
+        for (const [key, data] of Object.entries(fonts.data)) {
+            data.font = Font.get(data.family).applyParams(fonts.params ?? {}, data.params);
+            if (data.default) defaultKey = key;
+            data.label ??= data.family;
+        }
+        defaultKey ??= Object.keys(fonts.data)[0];
+        fonts.defaultKey = defaultKey;
+        return fonts;
     }
 
     /**
@@ -662,11 +694,11 @@ export class Dataset {
      */
     fontFamilySetting(checked) {
         const setting = ButtonGroup.from(
-            ObjectUtils.map(this.fonts, font => font.label ?? font.family),
+            ObjectUtils.map(this.fonts.data, font => font.label),
             {
                 label: "Font",
                 exclusive: true,
-                checked: checked ?? this.defaultFontKey
+                checked: checked ?? this.fonts.defaultKey
             }
         );
         setting.node.classList.add("font-family-setting");
@@ -681,12 +713,12 @@ export class Dataset {
 
     /**
      * @param {DatasetItem[]} items
-     * @param {string[]} forms
      * @param {string[]} properties
+     * @param {string[]} forms
      * @param {Record<string, string>} [params]
      * @returns {QuizItem[]}
      */
-    getQuizItems(items, forms, properties, params) {
+    getQuizItems(items, properties, forms, params) {
         const result = [];
         const factories = this.getAnswerFactories();
 
@@ -720,15 +752,13 @@ export class Dataset {
     }
 
     /**
-     * @param {HTMLElement} element
      * @param {string} [variant]
      */
-    setupGameHeading(element, variant) {
-        const gameHeading = this.metadata.gameHeading;
+    getGameHeading(variant) {
+        const data = this.metadata.gameHeading;
+        const font = this.getFont(data.font, variant);
 
-        FontUtils.setFont(element, this.getFont(gameHeading.font, variant));
-
-        if (this.name === "Atomic Elements") {
+        if (this.key === "elements") {
             const container = document.createElement("div");
             container.classList.add("element-heading-container");
             const els = [];
@@ -739,20 +769,23 @@ export class Dataset {
                 els.push(el);
             }
             container.replaceChildren(...els);
-            element.replaceChildren(container);
-        } else {
-            element.replaceChildren(gameHeading.string);
+            font.applyTo(container);
+
+            return container;
         }
 
-        element.setAttribute("lang", gameHeading.lang ?? this.metadata.lang);
-        element.setAttribute("dir", gameHeading.dir ?? this.metadata.dir);
+        const span = DOMUtils.createElement("span", data.string ?? "Kadmos");
+        span.setAttribute("lang", data.lang ?? this.getLang());
+        span.setAttribute("dir", data.dir ?? this.getDir());
+        font.applyTo(span);
+        return span;
     }
 }
 
 
 class DatasetItem {
     /**
-     * @param {Record<string, string>} forms
+     * @param {Record<string, Letter>} forms
      * @param {Record<string, ParametricValue>} properties
      */
     constructor(forms, properties) {
@@ -776,15 +809,15 @@ class DatasetItem {
      * @returns {string[]}
      */
     getAvailableForms(forms) {
-        return forms.filter(form => this.forms[form]);
+        return forms.filter(form => this.hasForm(form));
     }
 
     /**
      * @param {string} form
-     * @returns {StringLetter}
+     * @returns {Letter}
      */
     getForm(form) {
-        return new StringLetter(this.forms[form], {form: form});
+        return this.forms[form];
     }
 
     /**

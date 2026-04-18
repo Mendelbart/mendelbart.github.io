@@ -6,8 +6,10 @@
     "gameHeading": {"string": "Кадмос", "font": "sans"}
   },
   "fonts": {
-    "serif": {"family": "Noto Serif", "label": "Serif", "default": true},
-    "sans": {"family": "Noto Sans", "label": "Sans"}
+    "data": {
+      "serif": {"family": "Noto Serif", "label": "Serif", "default": true},
+      "sans": {"family": "Noto Sans", "label": "Sans"}
+    }
   },
   "properties": {
     "name": {

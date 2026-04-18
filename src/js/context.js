@@ -2,7 +2,7 @@ import {SettingCollection, Slider, ButtonGroup} from "./settings";
 import Game from "./game/Game";
 import {Dataset, DEFAULT_DATASET, TERMS} from "./dataset/Dataset.js";
 import DATASETS_METADATA from '../json/datasets_meta.json';
-import {DOMUtils, ObjectUtils, FontUtils} from "./utils";
+import {DOMUtils, ObjectUtils} from "./utils";
 import {encodeBase64BoolArray, decodeBase64BoolArray} from "./utils/base64";
 import DatasetMediator from "./dataset/DatasetMediator";
 
@@ -156,9 +156,9 @@ function getPageLightDarkModeSetting(mode = "default") {
 
     const colorModeSetting = ButtonGroup.from(
         {
+            default: "Default",
             dark: "Dark",
             light: "Light",
-            default: "Default"
         },
         {
             label: "Color Theme",
@@ -245,9 +245,9 @@ function selectDataset(dataset) {
     const cachedSettings = getCachedSettings();
     const gameHeading = DATASET.metadata.gameHeading;
 
-    return FontUtils.loadFonts([
-        DATASET.getFont(gameHeading.font),
-        DATASET.getSelectorDisplayFont()
+    return Promise.all([
+        DATASET.getFont(gameHeading.font).load(),
+        DATASET.getSelectorDisplayFont().load()
     ]).then(() => {
         setupTerms();
 
@@ -256,7 +256,9 @@ function selectDataset(dataset) {
         setupDSM();
         DSM.setSettings(cachedSettings);
         checkPagesNextButton();
-        DATASET.setupGameHeading(document.querySelector("#game-heading h1"), DSM.selectorSettings.getDefault("variant"));
+        document.querySelector("#game-heading h1").replaceChildren(
+            DATASET.getGameHeading(DSM.selectorSettings.getDefault("variant"))
+        );
     }).catch(err => console.error(err));
 }
 
@@ -285,8 +287,8 @@ function setupDSM() {
     document.getElementById("dataset-game-settings").replaceChildren(...DSM.gameSettings.nodeList());
 
     if (DSM.selectorSettings.has("variant")) {
-        DSM.selectorSettings.addObserverTo("variant", value => {
-            DATASET.setupGameHeading(document.querySelector("#game-heading h1"), value);
+        DSM.selectorSettings.addObserverTo("variant", variant => {
+            document.querySelector("#game-heading h1").replaceChildren(DATASET.getGameHeading(variant));
         });
     }
 }

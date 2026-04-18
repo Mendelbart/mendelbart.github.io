@@ -42,7 +42,6 @@ $selectorBorderRadius: .25rem;
     --button-min-width: 0;
     --button-max-width: 1fr;
     --label-gap: .1rem;
-    --symbol-size: 1.4;
 
     &.selector-block-flex {
       display: flex;
@@ -139,6 +138,8 @@ $selectorBorderRadius: .25rem;
     padding-inline: .25em;
     font-weight: 600;
     transform-origin: center;
+
+    --base-font-size: 1.4rem;
   }
 
   .letter {

@@ -10,9 +10,6 @@ $borderRadiusSmall: .5rem;
   //@media (prefers-reduced-motion: no-preference) {
   //  view-transition-name: match-element;
   //}
-
-  min-width: calc(var(--symbol-size) * 1.2rem);
-  max-width: calc(var(--symbol-size) * 1.8rem);
   flex-shrink: 0;
 
   font-weight: var(--symbol-weight, 400);
@@ -27,8 +24,11 @@ $borderRadiusSmall: .5rem;
   }
 
   &.game-reference-card {
-    --symbol-size: 3.5;
     padding: .3rem .625rem .1rem;
+
+    .qc-display {
+      --base-font-size: 3.5rem;
+    }
 
     .qc-label {
       font-size: 0.8125rem;
@@ -40,8 +40,10 @@ $borderRadiusSmall: .5rem;
   overflow: hidden;
   display: flex;
   justify-content: center;
-  font-size: calc(var(--symbol-size, 1) * 1rem);
   padding: .25em .1em;
+
+  min-width: calc(var(--base-font-size) * 1);
+  max-width: calc(var(--base-font-size) * 1.5);
 }
 
 .qc-label {
@@ -70,6 +72,6 @@ $borderRadiusSmall: .5rem;
 
 
 .game-main-card {
-  --symbol-size: 6.25;
+  --base-font-size: 6.25rem;
   padding: .4rem 1.25rem .2rem;
 }

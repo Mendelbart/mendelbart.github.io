@@ -26,11 +26,10 @@ export class Card {
     }
 
     /**
-     * @param {CardContent} content
+     * @param {Node} node
      */
-    display(content) {
+    display(node) {
         this.clearDisplay();
-        const node = content.getNode();
         this.displayNode.replaceChildren(node);
         this.fitter.fit(node);
     }
@@ -162,27 +161,33 @@ export class CardFactory {
                 this.setup = display.setup;
             }
         }
+        this.displayArgs = [];
+    }
+
+    /**
+     * @param {any} args
+     */
+    setDisplayArgs(...args) {
+        this.displayArgs = args;
     }
 
     /**
      * @param {Card} card
      * @param {QuizItem} item
-     * @param [args]
      */
-    display(card, item, ...args) {
+    display(card, item) {
         card.clear();
-        this.displayCallback(card, item, ...args);
+        this.displayCallback(card, item, ...this.displayArgs);
     }
 
     /**
      * @param {QuizItem} [item]
-     * @param [args]
      * @returns Card
      */
-    createCard(item, ...args) {
+    createCard(item) {
         const card = new Card();
         if (this.setup) this.setup(card);
-        if (item) this.displayCallback(card, item, ...args);
+        if (item) this.display(card, item);
         return card;
     }
 }

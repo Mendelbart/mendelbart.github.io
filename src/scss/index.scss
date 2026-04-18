@@ -27,7 +27,6 @@ $bodyMaxWidth: 26rem;
 :root {
   --font-scale: 1;
   --font-shift: 0;
-  --font-base-size: 1em;
   --letter-spacing: 0ch;
 }
 
@@ -49,8 +48,11 @@ body {
 
 .font-transform {
   transform-origin: left center;
-  translate: calc(var(--letter-spacing) / 2) calc(var(--font-shift) * 1em);
+  translate: calc(var(--letter-spacing) / 2) calc(var(--font-shift) * var(--base-font-size, 1em));
   letter-spacing: var(--letter-spacing);
+
+  font-size: calc(var(--font-scale, 1) * var(--base-font-size, 1em));
+  line-height: calc(var(--line-height, 1.2) * var(--base-font-size, 1em));
 }
 
 /****************** HEADINGS ******************/
@@ -99,7 +101,7 @@ h2 {
   }
 
   &> h1 {
-    font-size: calc(var(--font-scale, 1) * 1.8rem);
+    font-size: 1.8rem;
     height: 2.4rem;
     align-items: end;
   }
@@ -126,13 +128,15 @@ h2 {
     display: flex;
     flex-direction: column;
     align-items: center;
+    margin-block-start: -.625rem;
 
     .heading-element-number {
       font-size: .625rem;
-      translate: 0 0.45rem;
-      width: 0;
+      height: 1em;
+      margin-block-end: -.1rem;
       display: flex;
       justify-content: center;
+      align-items: center;
     }
   }
 }
@@ -652,12 +656,12 @@ input[type="range"] {
 }
 
 .letter-string {
-  font-size: calc(var(--font-scale, 1) * var(--symbol-size, 1) * 1rem);
-  line-height: calc(var(--line-height, 1.1) * 1em);
-  height: calc(var(--symbol-size, 1) * var(--line-height, 1.1) * 1rem);
   text-wrap: nowrap;
-
   font-kerning: none;
+}
+
+.letter-combination {
+  display: flex;
 }
 
 

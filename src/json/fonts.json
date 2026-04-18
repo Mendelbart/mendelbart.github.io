@@ -83,6 +83,8 @@
   {
     "family": "Junicode",
     "fallback": "serif",
+    "scale": 1.2,
+    "shift": 0.16,
     "variationSettings": {
       "wght": "300 700",
       "wdth": "100",

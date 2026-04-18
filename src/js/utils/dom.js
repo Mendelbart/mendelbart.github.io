@@ -233,7 +233,7 @@ const booleanAttributes = new Set([
 /**
  * Set the `attrs` on the `object`.
  * @param {Element} element
- * @param {Object.<string,string | boolean>} attrs
+ * @param {Record<string,string | boolean>} attrs
  */
 export function setAttrs(element, attrs) {
     for (const [key, value] of Object.entries(attrs)) {

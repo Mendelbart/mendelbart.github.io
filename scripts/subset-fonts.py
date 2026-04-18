@@ -62,21 +62,22 @@ def main():
 
     for filename in listdir(datasets_dir):
         with open(join(datasets_dir, filename), "r") as datasetJSON:
-            print(datasetJSON)
             dataset = json.load(datasetJSON)
 
         print("Processing dataset", dataset["name"])
 
-        if not contains_subsettable_fonts(dataset["fonts"], fonts):
+        dataset_fonts = dataset["fonts"]["data"]
+
+        if not contains_subsettable_fonts(dataset_fonts, fonts):
             continue
 
-        default_font = get_default_font(dataset["fonts"])
+        default_font = get_default_font(dataset_fonts)
         dataset_chars = set()
 
         game_heading = dataset["metadata"]["gameHeading"]
         game_heading_font = default_font
         if "font" in game_heading:
-            game_heading_font = get_family(game_heading["font"], dataset["fonts"], default_font)
+            game_heading_font = get_family(game_heading["font"], dataset_fonts, default_font)
 
         update_charset(game_heading_font, game_heading["string"])
 
@@ -89,15 +90,15 @@ def main():
             dataset_chars.update(list("".join(item[0])))
 
 
-        for font_data in dataset["fonts"].values():
+        for font_data in dataset_fonts.values():
             family = font_data["family"]
             if family not in fonts:
                 continue
 
             update_charset(family, dataset_chars)
 
-            if "styleset" in font_data:
-                vals = re.split(r",\s*", font_data["styleset"])
+            if "params" in font_data and "styleset" in font_data["params"]:
+                vals = re.split(r",\s*", font_data["params"]["styleset"])
 
                 for val in vals:
                     stylesets[family].add(fonts[family]["styleset"][val])

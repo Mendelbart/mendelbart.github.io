@@ -7,52 +7,73 @@ import {DOMUtils} from '../utils';
  * @returns HTMLElement
  */
 
-/**
- * @interface Letter
- * @extends CardContent
- */
-
-/** @implements Letter */
-export class StringLetter {
+/** @implements CardContent */
+export class Letter {
     /**
-     * @param {string} str
-     * @param {{lang?, dir?, form?}} [params]
+     * @param {any} data
+     * @param {string | number} key
+     * @param {string} [form]
      */
-    constructor(str, params = {}) {
-        this.str = str;
-        this.params = params;
+    constructor(data, key, form) {
+        this.data = data;
+        this.key = key;
+        this.form = form;
     }
 
+    getNode() {
+        throw new Error('Not implemented');
+    }
+}
+
+
+export class StringLetter extends Letter {
     /**
      * @returns {HTMLSpanElement}
      */
     getNode() {
-        const node = DOMUtils.createElement("span.letter.letter-string", this.str);
-        const {lang, dir, form} = this.params;
-        if (lang) node.lang = lang;
-        if (dir) node.dir = dir;
-        if (form) node.dataset.form = form;
-
+        const node = DOMUtils.createElement("span.letter.letter-string", this.data);
+        if (this.form) node.dataset.form = this.form;
         return node;
     }
 }
 
-/** @implements Letter */
-export class ImageLetter {
-    constructor(src) {
-        this.src = src;
+
+export class CombiningStringLetter extends StringLetter {
+    /**
+     * @param {string} str
+     * @param {function(string[]): string} combiner
+     * @param {string|number} key
+     * @param {string} [form]
+     */
+    constructor(str, combiner, key, form) {
+        super(str, key, form);
+        this.combiner = combiner;
     }
 
+    /**
+     * @param {string} base
+     * @returns {HTMLSpanElement}
+     */
+    getNode(base) {
+        const node = super.getNode();
+        node.textContent = this.combiner([base, this.str]);
+        return node;
+    }
+}
+
+
+export class ImageLetter extends Letter{
     /**
      * @returns {HTMLImageElement}
      */
     getNode() {
         const img = new Image();
-        img.src = this.src;
+        img.src = this.data;
         img.classList.add('letter', 'letter-image');
         return img;
     }
 }
+
 
 /** @implements CardContent */
 export class LetterCombination {
@@ -66,28 +87,30 @@ export class LetterCombination {
     /**
      * @returns {HTMLSpanElement}
      */
-    getNode() {
-        return DOMUtils.createElement("span.letter-combination", ...this.letters.map(letter => letter.getNode()));
+    getNode(...args) {
+        return DOMUtils.createElement("span.letter-combination", ...this.letters.map(letter => letter.getNode(...args)));
     }
 }
 
 
 /**
- * @param {string[]} keys
- * @param {Record<string, string | RegExp>} sourceRegExps
  * @param {string} template
- * @returns {function(Record<string, string>): string}
+ * @param {number | (string | RegExp)[]} sourceRegExps - if number `n`, will use default RegExp `/[\t+]*\/` `n` times
+ * @returns {function(string[]): string}
  */
-export function stringComponentCombiner(keys, sourceRegExps, template) {
-    const pattern = keys.map(key => {
-        let s = sourceRegExps[key] ?? "[^\\t]*";
-        if (typeof s !== 'string') s = s.source;
-        return `(?<${key}>${s})`;
+export function stringComponentCombiner(template, sourceRegExps) {
+    if (typeof sourceRegExps === 'number') {
+        sourceRegExps = new Array(sourceRegExps).fill('[\\t+]*');
+    }
+
+    const pattern = sourceRegExps.map((regex, index) => {
+        if (typeof regex !== 'string') regex = regex.source;
+        return `(?<g${index}>${regex})`;
     }).join('\\t');
     const sourceRegExp = new RegExp("^" + pattern + "$", "u");
 
     return (components) => {
-        const source = keys.map(key => components[key] ?? "").join('\t');
+        const source = components.join('\t');
         if (!sourceRegExp.test(source)) throw new Error("Components don't match RegExps.");
         return source.replace(sourceRegExp, template);
     }

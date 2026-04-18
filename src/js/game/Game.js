@@ -172,7 +172,7 @@ export default class Game {
         this.mainCard.clear();
         this.updateProgressBar(0);
 
-        document.getElementById("game-inputs").removeEventListener("keydown", this.onInputKeypress);
+        document.getElementById("game-inputs").removeEventListener("keypress", this.onInputKeypress);
         document.getElementById("game-inputs").replaceChildren();
         document.getElementById("game-evals").replaceChildren();
     }
@@ -264,7 +264,8 @@ export default class Game {
      * @returns {Card[]}
      */
     referenceCards(referenceItems, property) {
-        return referenceItems.map(item => this.referenceCardFactory.createCard(item, property));
+        this.referenceCardFactory.setDisplayArgs(property);
+        return referenceItems.map(item => this.referenceCardFactory.createCard(item));
     }
 
     clearInputs() {
@@ -291,7 +292,6 @@ export default class Game {
             const referenceContainer = document.getElementById("game-reference-cards");
             referenceContainer.replaceChildren();
             DOMUtils.hide(referenceContainer);
-
             DOMUtils.hide(evals);
             DOMUtils.show(inputs, "visibility");
 
