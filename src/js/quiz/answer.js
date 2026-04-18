@@ -243,12 +243,12 @@ export class ListAnswer {
      * @returns {SubString[]}
      */
     splitGuesses(guessesStr) {
-        return new SubString(guessesStr).split(this.splitter);
+        return new SubString(guessesStr).split(this.splitter, true);
     }
 
     /**
      * @param {string} guessesStr
-     * @returns {number|number}
+     * @returns {number}
      */
     grade(guessesStr) {
         const answerGrades = this.gradingData(this.splitGuesses(guessesStr))[2];
@@ -288,8 +288,7 @@ export class ListAnswer {
 
         const grade = this.calculateGrade(answerGrades);
         const markedGuess = replaceWithElements(guessesStr, mapFromKeys(
-            guesses.filter(guess => guess.length > 0),
-            (guess, i) => markedSpan(guess.str, Math.max(...grades.getRow(i)))
+            guesses, (guess, j) => markedSpan(guess.str, Math.max(...grades.getColumn(j)))
         ));
 
         let markedSolution;

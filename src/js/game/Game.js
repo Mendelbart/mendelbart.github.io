@@ -153,9 +153,9 @@ export default class Game {
                 input.nextElementSibling.focus();
             } else {
                 if (this.shown === "inputs") {
-                    this.submitRound();
+                    this.transition(() => this.submitRound());
                 } else {
-                    this.newRound();
+                    this.transition(() => this.newRound());
                 }
             }
         } else if (event.key === "Backspace" && event.target.default === "" && input.previousElementSibling) {
@@ -341,5 +341,13 @@ export default class Game {
      */
     displayItem(item) {
         this.cardFactory.display(this.mainCard, item);
+    }
+
+    /**
+     * @param {function} callback
+     * @param {string[]} [types]
+     */
+    transition(callback, types = []) {
+        DOMUtils.transition(callback, types.concat(["game"]));
     }
 }

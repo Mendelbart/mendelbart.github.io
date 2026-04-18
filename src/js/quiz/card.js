@@ -14,7 +14,9 @@ export class Card {
         this.node = DOMUtils.createElement("div.quiz-card", this.displayNode);
 
         this.fitter = new ElementFitter();
+        /** @type {Record<string, HTMLDivElement>} */
         this.labels = {};
+        /** @type {Record<string, HTMLDivElement>} */
         this.cornerLabels = {};
     }
 
@@ -38,7 +40,7 @@ export class Card {
      * @param {HTMLElement | string} content
      */
     setLabel(position, content) {
-        if (typeof content === "string") content = DOMUtils.span(content);
+        if (typeof content === "string") content = DOMUtils.createElement("span.qc-label-content", content);
 
         if (this.labels[position]) {
             this.fitter.clearParent(this.labels[position], false);
@@ -85,7 +87,7 @@ export class Card {
      * @param {string | Node} content
      */
     setCornerLabel(position, content) {
-        if (typeof content === "string") content = DOMUtils.span(content);
+        if (typeof content === "string") content = DOMUtils.createElement("span.qc-corner-label-content", content);
 
         if (this.cornerLabels[position]) {
             this.cornerLabels[position].replaceChildren(content);

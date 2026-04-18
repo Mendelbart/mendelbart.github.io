@@ -18,7 +18,7 @@
     @include set-vt-anim(ease-out, timing-function, ease-out);
     @include set-vt-anim(page-settings, duration, 150ms);
     @include set-vt-anim(selector-forms, duration, 150ms);
-    @include set-vt-anim(game, duration, 150ms);
+    @include set-vt-anim(game, duration, 100ms);
   }
 
   ::view-transition-group(*) {
@@ -33,7 +33,9 @@
   }
 
   ::view-transition-new(.text-container),
-  ::view-transition-old(.text-container) {
+  ::view-transition-old(.text-container),
+  ::view-transition-new(.progress-bar),
+  ::view-transition-old(.progress-bar) {
     height: 100%;
   }
 }
