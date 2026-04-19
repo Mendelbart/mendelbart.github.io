@@ -1,4 +1,4 @@
-import {SettingCollection, Slider, ButtonGroup} from "./settings";
+import {SettingCollection, Slider, ButtonGroup, Switch} from "./settings";
 import Game from "./game/Game";
 import {Dataset, DEFAULT_DATASET, TERMS} from "./dataset/Dataset.js";
 import DATASETS_METADATA from '../json/datasets_meta.json';
@@ -188,46 +188,45 @@ function setLightDarkMode(mode) {
     DOMUtils.classIfElse(mode === "dark", document.documentElement, "dark-mode", "light-mode");
 }
 
+const SwitchTrueValue = "1";
+const SwitchFalseValue = "0";
 /**
- * @param {"true" | "false"} [checked]
- * @returns {ButtonGroup}
+ * @param {string} [value]
+ * @returns Switch
  */
-function getKeepKeyboardOpenSetting(checked) {
-    const bg = getOnOffSetting("Keep Keyboard Open", checked ?? window.isMobile.toString());
-    bg.observers.push((value) => {
-        if (GAME) GAME.keepKeyboardOpen = value === "true";
+function getKeepKeyboardOpenSetting(value) {
+    const sw = getOnOffSetting("Keep Keyboard Open", value ?? window.isMobile.toString());
+    sw.observers.push((value) => {
+        if (GAME) GAME.keepKeyboardOpen = value === SwitchTrueValue;
     });
 
-    return bg;
+    return sw;
 }
 
 /**
- * @param {"true" | "false"} checked
+ * @param {string} value
+ * @returns Switch
  */
-function getViewTransitionSetting(checked) {
-    checked ??= "true";
-    const bg = getOnOffSetting("Use View Transitions");
-    bg.observers.push((value) => {
-        window.useViewTransitions = value === "true";
+function getViewTransitionSetting(value) {
+    value ??= SwitchTrueValue;
+    const sw = getOnOffSetting("Use View Transitions");
+    sw.observers.push((val) => {
+        window.useViewTransitions = val === SwitchTrueValue;
     });
-    window.useViewTransitions = checked === "true";
-    return bg;
+    window.useViewTransitions = value === SwitchTrueValue;
+    return sw;
 }
 
 /**
  * @param {string} label
- * @param {"true" | "false"} [checked]
- * @returns ButtonGroup
+ * @param {string} [value]
+ * @returns Switch
  */
-function getOnOffSetting(label, checked) {
-    return ButtonGroup.from(
-        {true: "On", false: "Off"},
-        {
-            label: label,
-            exclusive: true,
-            checked: checked
-        }
-    );
+function getOnOffSetting(label, value) {
+    const sw = Switch.create(label);
+    sw.setValues(SwitchFalseValue, SwitchTrueValue);
+    sw.value = value;
+    return sw;
 }
 
 
@@ -256,9 +255,7 @@ function selectDataset(dataset) {
         setupDSM();
         DSM.setSettings(cachedSettings);
         checkPagesNextButton();
-        document.querySelector("#game-heading h1").replaceChildren(
-            DATASET.getGameHeading(DSM.selectorSettings.getDefault("variant"))
-        );
+        setupGameHeading(DSM.selectorSettings.getDefault("variant"));
     }).catch(err => console.error(err));
 }
 
@@ -288,9 +285,15 @@ function setupDSM() {
 
     if (DSM.selectorSettings.has("variant")) {
         DSM.selectorSettings.addObserverTo("variant", variant => {
-            document.querySelector("#game-heading h1").replaceChildren(DATASET.getGameHeading(variant));
+            setupGameHeading(variant);
         });
     }
+}
+
+function setupGameHeading(variant) {
+    const heading = document.getElementById('game-heading');
+    heading.querySelector("h1").replaceChildren(DATASET.getGameHeading(variant));
+    heading.dir = DATASET.getDir();
 }
 
 function checkPagesNextButton() {

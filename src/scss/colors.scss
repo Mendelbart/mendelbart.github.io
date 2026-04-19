@@ -1,34 +1,35 @@
 @mixin light-mode {
   --accent-hue: 250;
   --accent-border: oklch(0.59 0.16 var(--accent-hue));
-  --accent-border-light: hsla(0, 0%, 100%, 25%);
+  --accent-border-light: oklch(0.62 0.16 var(--accent-hue));
+  --accent-button-border: oklch(0.58 0.16 var(--accent-hue));
   --accent-bg: oklch(0.58 0.16 var(--accent-hue));
   --accent-bg-hover: oklch(0.60 0.16 var(--accent-hue));
 
   --clr-background: #ffffff;
-  --clr-surface: hsl(0, 0%, 95%);
+  --clr-surface: hsl(0, 0%, 93%);
   --clr-surface-border: var(--clr-border-soft);
   --clr-symbol-bg: #f2f5f8;
   --clr-input: hsla(0, 0%, 97%);
   --clr-range: hsl(0, 0%, 0%, 0.08);
-  --clr-surface-standout: hsl(0, 0%, 95%);
+  --clr-surface-standout: var(--clr-surface);
 
   --clr-border: hsl(0, 0%, 60%);
 
-  --clr-text-soft: hsl(0, 0%, 17%);
-  --clr-text: hsl(0, 0%, 10%);
+  --clr-text-soft: hsl(0, 0%, 28%);
+  --clr-text: hsl(0, 0%, 14%);
 
   --clr-text-accent: var(--clr-text);
 
-  --clr-border-soft: #00000035;
+  --clr-border-soft: #8888;
   --clr-button: var(--accent-bg);
   --clr-button-hover: oklch(0.595 0.165 var(--accent-hue));
   --clr-button-active: oklch(0.63 0.15 var(--accent-hue));
   --clr-button-text: #ffffff;
 
-  --clr-button-grey: hsl(0, 0%, 40%);
-  --clr-button-grey-hover: hsl(0, 0%, 44%);
-  --clr-button-grey-active: hsl(0, 0%, 47%);
+  --clr-button-grey: hsl(0, 0%, 50%);
+  --clr-button-grey-hover: hsl(0, 0%, 54%);
+  --clr-button-grey-active: hsl(0, 0%, 57%);
 
   --clr-grp-button: transparent;
   --clr-grp-button-border: hsla(0, 0%, 0%, .4);
@@ -45,9 +46,9 @@
   --clr-ribbon-button: var(--clr-surface);
   --clr-ribbon-button-hover: hsl(0, 0%, 92%);
   --clr-ribbon-button-active: hsl(0, 0%, 88%);
-  --clr-ribbon-button-checked: hsl(0, 0%, 20%);
-  --clr-ribbon-button-checked-hover: hsl(0, 0%, 24%);
-  --clr-ribbon-button-checked-active: hsl(0, 0%, 28%);
+  --clr-ribbon-button-checked: hsl(0, 0%, 25%);
+  --clr-ribbon-button-checked-hover: hsl(0, 0%, 29%);
+  --clr-ribbon-button-checked-active: hsl(0, 0%, 32%);
   --clr-ribbon-button-checked-text: var(--clr-surface);
 
   --clr-selector-button: transparent;
@@ -71,6 +72,8 @@
 }
 
 @mixin dark-mode {
+  --accent-button-border: var(--clr-border-soft);
+
   --clr-background: hsl(0, 0%, 8%);
   --clr-surface: hsl(0, 0%, 15%);
   --clr-surface-border: var(--clr-surface);
@@ -139,4 +142,5 @@
 
 html {
   color-scheme: dark light;
+  accent-color: var(--accent-bg);
 }
