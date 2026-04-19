@@ -195,7 +195,7 @@ const SwitchFalseValue = "0";
  * @returns Switch
  */
 function getKeepKeyboardOpenSetting(value) {
-    const sw = getOnOffSetting("Keep Keyboard Open", value ?? window.isMobile.toString());
+    const sw = getSwitch("Keep Keyboard Open", value ?? window.isMobile.toString());
     sw.observers.push((value) => {
         if (GAME) GAME.keepKeyboardOpen = value === SwitchTrueValue;
     });
@@ -209,7 +209,7 @@ function getKeepKeyboardOpenSetting(value) {
  */
 function getViewTransitionSetting(value) {
     value ??= SwitchTrueValue;
-    const sw = getOnOffSetting("Use View Transitions");
+    const sw = getSwitch("Use View Transitions", value);
     sw.observers.push((val) => {
         window.useViewTransitions = val === SwitchTrueValue;
     });
@@ -222,7 +222,7 @@ function getViewTransitionSetting(value) {
  * @param {string} [value]
  * @returns Switch
  */
-function getOnOffSetting(label, value) {
+function getSwitch(label, value) {
     const sw = Switch.create(label);
     sw.setValues(SwitchFalseValue, SwitchTrueValue);
     sw.value = value;
@@ -312,7 +312,7 @@ function startGame() {
     const seed = GENERIC_GAME_SETTINGS.getValue("seed");
     if (seed) GAME.seed(seed);
 
-    GAME.keepKeyboardOpen = PAGE_SETTINGS.getValue("keepKeyboardOpen") === "true";
+    GAME.keepKeyboardOpen = PAGE_SETTINGS.getValue("keepKeyboardOpen") === SwitchTrueValue;
 
     GAME.onFinish.push(() => setPlaying(false));
 
