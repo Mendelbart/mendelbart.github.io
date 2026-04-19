@@ -97,10 +97,6 @@ h2 {
 #game-heading {
   margin-block-end: .3rem;
 
-  &:has(> [dir="rtl"]) {
-    flex-direction: row-reverse;
-  }
-
   &> h1 {
     font-size: 1.8rem;
     height: 2.4rem;
@@ -113,7 +109,7 @@ h2 {
   }
 }
 
-[dir="rtl"] ~ #stop-game-button {
+[dir="rtl"] #stop-game-button {
   rotate: 180deg;
 }
 
@@ -482,7 +478,7 @@ input[type="range"] {
 
 #page-settings {
   &::backdrop {
-    background: hsla(0, 0%, 50%, 0.16);
+    background: var(--backdrop);
   }
 
   position: sticky;
