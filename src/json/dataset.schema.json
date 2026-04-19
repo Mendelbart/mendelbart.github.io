@@ -75,25 +75,36 @@
     "fonts": {
       "type": "object",
       "description": "A registry of the fonts used by the dataset, with lowercase keys.",
-      "patternProperties": {
-        "^[a-z]+$": {
+      "properties": {
+        "data": {
           "type": "object",
-          "allOf": [{"$ref": "#/$defs/fontProperties"}],
-          "properties": {
-            "family": {
-              "type": "string",
-              "description": "Font family name. E.g. \"Noto Sans\" or \"Noto Serif Hebrew\"."
-            },
-            "label": {
-              "type": "string",
-              "description": "Label of the Font in the game font settings. Default: family"
-            },
-            "default": {
-              "type": "boolean",
-              "default": false
+          "patternProperties": {
+            "^[a-z]+$": {
+              "type": "object",
+              "properties": {
+                "family": {
+                  "type": "string",
+                  "description": "Font family name. E.g. \"Noto Sans\" or \"Noto Serif Hebrew\"."
+                },
+                "label": {
+                  "type": "string",
+                  "description": "Label of the Font in the game font settings. Default: family"
+                },
+                "default": {
+                  "type": "boolean",
+                  "default": false
+                },
+                "params": {"$ref": "#/$defs/fontParams"}
+              },
+              "required": ["family"],
+              "additionalProperties": false
             }
           },
-          "required": ["family"]
+          "additionalProperties": false
+        },
+        "params": {
+          "$ref": "#/$defs/fontParams",
+          "description": "Params applied to all fonts."
         }
       },
       "additionalProperties": false
@@ -359,7 +370,7 @@
       "minimum": 100,
       "maximum": 900
     },
-    "fontProperties": {
+    "fontParams": {
       "type": "object",
       "properties": {
         "weight": {"$ref": "#/$defs/fontWeight"},
@@ -394,7 +405,7 @@
         {"type": "string"},
         {
           "type": "object",
-          "allOf": [{"$ref": "#/$defs/fontProperties"}],
+          "allOf": [{"$ref": "#/$defs/fontParams"}],
           "properties": {
             "key": {
               "type": "string",

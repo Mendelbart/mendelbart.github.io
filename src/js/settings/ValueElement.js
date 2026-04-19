@@ -21,9 +21,9 @@ import {DOMUtils, Observable} from "../utils";
  * @name Setting#remove
  */
 
+let IdCount = 0;
 /** @implements Setting */
 export default class ValueElement extends Observable {
-    static idCount = 0;
     static updateEvent = "change"
     /** @type {HTMLDivElement} */
     node
@@ -55,21 +55,18 @@ export default class ValueElement extends Observable {
 
     /**
      * @param {string} type
-     * @param {?string} [label]
-     * @param {?Record<string,string>} [attrs]
+     * @param {string} [label]
+     * @param {Record<string,string>} [attrs]
      * @returns {ValueElement}
      */
-    static createInput(type, label = null, attrs = null) {
+    static createInput(type, label, attrs) {
         const input = document.createElement("INPUT");
         input.type = type;
-        if (attrs) {
-            DOMUtils.setAttrs(input, attrs);
-        }
+        if (attrs) DOMUtils.setAttrs(input, attrs);
+
         const ve = new this(input);
 
-        if (label) {
-            ve.label(label);
-        }
+        if (label) ve.label(label);
         return ve;
     }
 
@@ -85,12 +82,8 @@ export default class ValueElement extends Observable {
         container.append(select);
 
         const ve = new this(container);
-        if (options.id) {
-            ve.setId(options.id);
-        }
-        if (options.label) {
-            ve.label(options.label);
-        }
+        if (options.id) ve.setId(options.id);
+        if (options.label) ve.label(options.label);
 
         return ve;
     }
@@ -103,20 +96,18 @@ export default class ValueElement extends Observable {
         return tag === "SELECT" || tag === "TEXTAREA" || (tag === "INPUT" && node.type !== "hidden");
     }
 
-    isCheckbox() {
-        return this.valueNode.tagName === "INPUT" && this.valueNode.type === "checkbox";
-    }
-
+    /**
+     * @returns {any}
+     */
     get value() {
-        return this.isCheckbox() ? this.valueNode.checked : this.valueNode.value;
+        return this.valueNode.value;
     }
 
+    /**
+     * @param {any} value
+     */
     set value(value) {
-        if (this.isCheckbox()) {
-            this.valueNode.checked = value;
-        } else {
-            this.valueNode.value = value;
-        }
+        this.valueNode.value = value;
     }
 
     observerArgs() {
@@ -142,7 +133,8 @@ export default class ValueElement extends Observable {
     }
 
     static generateId(prefix = "") {
-        return "ve_" + prefix + this.idCount.toString().padStart(4, "0");
+        IdCount += 1;
+        return "ve_" + prefix + IdCount.toString().padStart(4, "0");
     }
 
     /**
@@ -155,9 +147,7 @@ export default class ValueElement extends Observable {
         if (!labelElement) {
             labelElement = document.createElement("label");
 
-            if (!this.valueNode.id) {
-                this.setId();
-            }
+            if (!this.valueNode.id) this.setId();
             labelElement.htmlFor = this.valueNode.id;
 
             this.node.prepend(labelElement);

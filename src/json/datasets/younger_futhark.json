@@ -2,11 +2,18 @@
   "key": "younger_futhark",
   "name": "Younger Futhark",
   "metadata": {
-    "gameHeading": {"string": "kadmos", "font": {"shift": 0.16}},
+    "gameHeading": {"string": "kadmos"},
     "terms": {"letter": "rune"}
   },
   "fonts": {
-    "junicode": {"family": "Junicode", "styleset": "Younger-futhark, Long-branch-to-short-twig", "shift": 0.08, "scale": 1.2}
+    "data": {
+      "junicode": {
+        "family": "Junicode",
+        "params": {
+          "styleset": "Younger-futhark, Long-branch-to-short-twig"
+        }
+      }
+    }
   },
   "selector": {
     "font": {"weight": 700},
@@ -19,7 +26,7 @@
       "gaps": "(6|2,3)"
     },
     "label": {"property": "name"},
-    "style": {"buttonMinWidth": "4ch", "buttonMaxWidth": "7ch", "labelGap": "0.15rem"}
+    "style": {"buttonMinWidth": "4ch", "buttonMaxWidth": "7ch", "labelGap": "0.2rem"}
   },
   "properties": {
     "name": {
@@ -31,7 +38,7 @@
           "properties": {
             "maxDist": 1,
             "substitutions": {
-              "ð": "th",
+              "[ðþ]": "th",
               "ʀ": "r"
             }
           }

@@ -1,5 +1,4 @@
-import * as ObjectHelper from "./object.js";
-import {classIfElse} from './dom.js';
+import * as ObjectUtils from "./object";
 import _font_data from '../../json/fonts.json';
 
 const FONT_DATA = Object.fromEntries(_font_data.map(font => [font.family, font]));
@@ -13,7 +12,6 @@ const DEFAULT_FONTFACE_DATA = {
 const FONT_FACES = {};
 
 const FONT_PROPERTY_KEYS = {
-    family: "font-family",
     weight: "font-weight",
     scale: "--font-scale",
     shift: "--font-shift",
@@ -22,36 +20,7 @@ const FONT_PROPERTY_KEYS = {
     lineHeight: "--line-height",
 };
 
-const FONT_TRANSFORM_PROPERTIES = ["shift", "scale", "letterSpacing"];
-
-/**
- * @param {string | Record} family
- * @returns {Promise<FontFace>}
- */
-export function loadFont(family) {
-    if (!family) {
-        return Promise.reject("No family given.");
-    }
-
-    if (typeof family === "object") {
-        return loadFont(family.family);
-    }
-
-    if (!(family in FONT_FACES)) {
-        FONT_FACES[family] = getFontFace(family);
-        document.fonts.add(FONT_FACES[family]);
-    }
-
-    return FONT_FACES[family].load();
-}
-
-/**
- * @param {(string | Record)[]} families
- * @returns {Promise<Awaited<FontFace>[]>}
- */
-export function loadFonts(families) {
-    return Promise.all(families.map(family => loadFont(family)));
-}
+const FONT_TRANSFORM_PROPERTIES = ["shift", "scale", "letterSpacing", "lineHeight"];
 
 function defaultFontURL(family) {
     const url = `/kadmos/assets/fonts/scripts/${family.replaceAll(" ", "")}.woff2`;
@@ -100,7 +69,7 @@ function digestFontVariationSettings(variationSettings) {
     const result = {};
     if ("wght" in variationSettings) {
         result.weight = variationSettings.wght;
-        variationSettings = ObjectHelper.withoutKeys(variationSettings, "wght");
+        variationSettings = ObjectUtils.withoutKeys(variationSettings, "wght");
     }
 
     if (Object.keys(variationSettings).length > 0) {
@@ -109,96 +78,6 @@ function digestFontVariationSettings(variationSettings) {
     return result;
 }
 
-
-/**
- * @param {HTMLElement} element
- * @param {string | Object} family
- * @param {{weight?, shift?, scale?, styleset?}} [properties]
- *
- * @example
- * setFont(element, properties)
- * // -> setFont(element, properties.family, properties)
- */
-export function setFont(element, family, properties) {
-    if (typeof family !== "string") {
-        if ("family" in family && typeof family.family === "string") {
-            setFont(element, family.family, family);
-            return;
-        } else {
-            throw new Error("Need properties.family of type string if family argument is omitted.");
-        }
-    }
-
-    if (!(family in FONT_DATA)) {
-        throw new Error(`Unknown family ${family}.`);
-    }
-
-    clearFont(element);
-    setFontFamily(element, family);
-    setFontProperties(element, applyDefaultProperties(properties, family));
-}
-
-function applyDefaultProperties(properties, family) {
-    const newProps = Object.assign({}, properties);
-    const defaultData = FONT_DATA[family];
-
-    if ("shift" in defaultData) {
-        newProps.shift = defaultData.shift + (properties.shift ?? 0);
-    }
-    if ("scale" in defaultData) {
-        newProps.scale = defaultData.scale * (properties.scale ?? 1);
-    }
-    return newProps;
-}
-
-/**
- * @param family
- * @returns {Record<string,*>}
- */
-export function getFontData(family) {
-    return FONT_DATA[family];
-}
-
-/**
- * @param {HTMLElement} element
- * @param {{weight?, shift?, scale?, styleset?}} properties
- */
-export function setFontProperties(element, properties) {
-    let transform = false;
-
-    for (const [key, value] of Object.entries(properties)) {
-        if (key === "family") {
-            continue;
-        }
-
-        if (!(key in FONT_PROPERTY_KEYS)) {
-            console.warn(`Unknown font property '${key}'`);
-            continue;
-        }
-
-        if (FONT_TRANSFORM_PROPERTIES.includes(key)) {
-            transform = true;
-        }
-
-        if (key === "styleset") {
-            if (!("family" in properties)) {
-                console.error("Cannot set styleset without knowing family.");
-            } else {
-                setStylesets(element, value, properties.family);
-            }
-        } else {
-            element.style.setProperty(FONT_PROPERTY_KEYS[key], value);
-        }
-    }
-
-    classIfElse(transform, element, "font-transform");
-}
-
-function setFontFamily(element, family) {
-    const font = FONT_DATA[family];
-    element.style.fontFamily = family + ", " + (font.fallback ?? "system-ui, sans-serif");
-    setFontProperties(element, ObjectHelper.onlyKeys(font, FONT_TRANSFORM_PROPERTIES));
-}
 
 /**
  * @param {HTMLElement} element
@@ -227,3 +106,112 @@ function setStylesets(element, stylesets, family) {
         element.style.setProperty("font-feature-settings", ssIDsStr);
     }
 }
+
+
+
+export class Font {
+    /**
+     * @param {string} family
+     * @param {Record<string, *>} params
+     */
+    constructor(family, params = {}) {
+        this.constructor.validateFamily(family);
+        this.family = family;
+        this.params = ObjectUtils.onlyKeys(params, Object.keys(FONT_PROPERTY_KEYS), true);
+    }
+
+    /**
+     * @param {string} family
+     * @returns {Font}
+     */
+    static get(family) {
+        this.validateFamily(family);
+        const params = ObjectUtils.onlyKeys(FONT_DATA[family], FONT_TRANSFORM_PROPERTIES);
+        return new this(family, params);
+    }
+
+    static validateFamily(family) {
+        if (!(family in FONT_DATA)) {
+            throw new Error(`Unknown family ${family}.`);
+        }
+    }
+
+    /**
+     * @returns {Promise<FontFace>}
+     */
+    load() {
+        if (!(this.family in FONT_FACES)) {
+            FONT_FACES[this.family] = getFontFace(this.family);
+            document.fonts.add(FONT_FACES[this.family]);
+        }
+
+        return FONT_FACES[this.family].load();
+    }
+
+    /**
+     * @param {Record<string, *>} [params]
+     * @param {Record<string, *>} [args]
+     * @returns {Font}
+     */
+    applyParams(params, ...args) {
+        if (!params) return this;
+
+        const newParams = Object.assign({}, this.params);
+        for (const [key, value] of Object.entries(params)) {
+            if (key === "shift") {
+                newParams.shift ??= 0;
+                newParams.shift += value;
+            } else if (key === "scale") {
+                newParams.scale ??= 1;
+                newParams.scale *= value;
+            } else {
+                newParams[key] = value;
+            }
+        }
+
+        return new this.constructor(this.family, newParams).applyParams(...args);
+    }
+
+    /**
+     * @param {HTMLElement} element
+     */
+    applyTo(element) {
+        const data = this.getFontData();
+
+        clearFont(element);
+        element.style.fontFamily = this.family + ", " + (data.fallback ?? "system-ui, sans-serif");
+
+        let transform = false;
+        for (let [key, value] of Object.entries(this.params)) {
+            if (FONT_TRANSFORM_PROPERTIES.includes(key)) {
+                transform = true;
+            }
+
+            if (key === "styleset") {
+                setStylesets(element, value, this.family);
+            } else {
+                if (typeof value === "number") {
+                    value = Math.round(value * 10000) / 10000;
+                }
+                element.style.setProperty(FONT_PROPERTY_KEYS[key], value);
+            }
+        }
+
+        element.classList.add("font-transform");
+    }
+
+    getFontData() {
+        return FONT_DATA[this.family];
+    }
+
+    /**
+     * @returns {[number, number]}
+     */
+    getWeightLimits() {
+        const data = this.getFontData();
+        const weightsStr = data.variationSettings?.wght ?? "100 900";
+        const [min, max] = weightsStr.split(" ").map(x => parseInt(x));
+        return [min, max];
+    }
+}
+

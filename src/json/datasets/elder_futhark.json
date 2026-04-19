@@ -2,17 +2,24 @@
   "key": "elder_futhark",
   "name": "Elder Futhark",
   "metadata": {
-    "gameHeading": {"string": "kadmos", "font": {"shift": 0.16}},
+    "gameHeading": {"string": "kadmos"},
     "terms": {"letter": "rune"}
   },
   "fonts": {
-    "junicode": {"family": "Junicode", "styleset": "Elder-futhark", "shift": 0.08, "scale": 1.2}
+    "data": {
+      "junicode": {
+        "family": "Junicode",
+        "params": {
+          "styleset": "Elder-futhark"
+        }
+      }
+    }
   },
   "selector": {
     "font": {"weight": 700},
     "block": {"grid": true, "dimensions": [8, 3], "fillDirection": "columns", "columnLabels": [1,2,3], "rangeMode": "walkColumns"},
     "label": {"property": "name"},
-    "style": {"buttonMinWidth": "4ch", "buttonMaxWidth": "7ch", "labelGap": "0.15rem"}
+    "style": {"buttonMinWidth": "4ch", "buttonMaxWidth": "7ch", "labelGap": "0.1rem"}
   },
   "properties": {
     "name": {

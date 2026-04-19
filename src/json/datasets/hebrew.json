@@ -2,14 +2,17 @@
   "key": "hebrew",
   "name": "Hebrew",
   "metadata": {
-    "gameHeading": {"string": "קדמוס", "font": {"key": "sans", "shift": 0.1}},
+    "gameHeading": {"string": "קדמוס", "font": {"key": "sans", "shift": 0.2}},
     "dir": "rtl",
     "lang": "he"
   },
   "fonts": {
-    "serif": {"family": "Noto Serif Hebrew", "label": "Serif", "lineHeight": 1.25, "default": true},
-    "sans": {"family": "Noto Sans Hebrew", "label": "Sans", "lineHeight": 1.25},
-    "rashi": {"family": "Noto Rashi Hebrew", "label": "Rashi", "lineHeight": 1.25}
+    "data": {
+      "serif": {"family": "Noto Serif Hebrew", "label": "Serif", "default": true},
+      "sans": {"family": "Noto Sans Hebrew", "label": "Sans"},
+      "rashi": {"family": "Noto Rashi Hebrew", "label": "Rashi"}
+    },
+    "params": {"lineHeight": 1.25}
   },
   "properties": {
     "name": {
@@ -36,7 +39,7 @@
     }
   },
   "selector": {
-    "font": {"key": "serif", "lineHeight": 1.35, "shift": -0.18, "scale": 1.1},
+    "font": {"key": "serif", "lineHeight": 1.35, "scale": 1.1},
     "block": {"mode": "flex"},
     "label": {"property": "name", "splitFirst": true},
     "style": {"buttonWidth": "5ch"}

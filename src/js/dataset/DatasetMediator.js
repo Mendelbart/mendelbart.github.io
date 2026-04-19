@@ -1,4 +1,4 @@
-import {FontUtils, DOMUtils, Observable} from '../utils';
+import {DOMUtils, Observable} from '../utils';
 import Game from "../game/Game";
 import QuizDealer from "../quiz/QuizDealer";
 import {CardFactory} from "../quiz/card";
@@ -73,7 +73,7 @@ export default class DatasetMediator extends Observable {
     updateSelectorFont(variant) {
         const font = this.dataset.getSelectorDisplayFont(variant);
         this.selector.updateButtonContents(content => {
-            FontUtils.setFont(content, font);
+            font.applyTo(content);
         });
     }
 
@@ -178,14 +178,18 @@ export default class DatasetMediator extends Observable {
      * @returns {CardFactory}
      */
     getCardFactory() {
-        const lang = this.dataset.getLang(this.getVariant());
-        return new CardFactory(
-            (card, item) => {
-                card.display(item.content);
-                card.setLabel("bottom", Object.values(item.answers)[0].display)
+        const attrs = this.dataset.getLetterNodeAttrs(this.getVariant());
+        const property = Object.keys(this.dataset.properties)[0];
+
+        const factory = new CardFactory(
+            (card, item, ...args) => {
+                card.display(item.content.getNode(...args));
+                card.setLabel("bottom", item.answers[property].display)
             },
-            lang ? card => {card.displayNode.lang = lang} : null
+            card => DOMUtils.setAttrs(card.displayNode, attrs)
         );
+        factory.setDisplayArgs();
+        return factory;
     }
 
     /**
@@ -195,12 +199,7 @@ export default class DatasetMediator extends Observable {
         const forms = this.getActiveForms();
         const properties = this.getActiveProperties();
         const params = this.getGameParams();
-        const items = this.dataset.getQuizItems(
-            this.getCheckedItems(),
-            forms,
-            properties,
-            params
-        );
+        const items = this.dataset.getQuizItems(this.getCheckedItems(), properties, forms, params);
         const referenceItems = this.dataset.getReferenceItems(properties, forms, params);
 
         const dealer = new QuizDealer(items);
@@ -208,7 +207,7 @@ export default class DatasetMediator extends Observable {
 
         const game = new Game(dealer, cardFactory);
         game.setReferenceItems(referenceItems, (card, item, property) => {
-            card.display(item.content);
+            card.display(item.content.getNode());
             card.setLabel("bottom", item.answers[property].display);
         });
 
@@ -227,10 +226,7 @@ export default class DatasetMediator extends Observable {
      * @param {Slider} weightSlider
      */
     updateSymbolWeightRange(key, weightSlider) {
-        const family = this.dataset.getFont(key, this.variant).family;
-        const data = FontUtils.getFontData(family);
-        const weightsStr = data.variationSettings?.wght ?? "100 900";
-        const [min, max] = weightsStr.split(" ").map(x => parseInt(x));
+        const [min, max] = this.dataset.getFont(key, this.variant).getWeightLimits();
         weightSlider.setMin(min);
         weightSlider.setMax(max);
     }
@@ -249,7 +245,7 @@ export default class DatasetMediator extends Observable {
             sc.addObserverTo("family", key => this.updateSymbolWeightRange(key, weightSlider));
             this.updateSymbolWeightRange(sc.getValue("family"), weightSlider);
         } else {
-            this.updateSymbolWeightRange(this.dataset.defaultFontKey, weightSlider);
+            this.updateSymbolWeightRange(this.dataset.fonts.defaultKey, weightSlider);
         }
 
         sc.add("weight", weightSlider);
@@ -265,8 +261,8 @@ export default class DatasetMediator extends Observable {
         return (card, {family, weight}, changed) => {
             if (!changed || changed === "family") {
                 const font = this.dataset.getFont(family, variant);
-                FontUtils.loadFont(font.family).then(() => {
-                    FontUtils.setFont(card.displayNode, font);
+                font.load().then(() => {
+                    font.applyTo(card.displayNode);
                     if (weight) card.displayNode.style.fontWeight = weight;
                 });
             } else if (weight) {

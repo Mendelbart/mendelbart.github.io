@@ -145,19 +145,19 @@ export function createElement(str, ...children) {
  *
  * @param {HTMLSelectElement} select
  * @param {Record<string,string>} data
- * @param {?string} [selected] default: first key of `data`
+ * @param {string} [selected] default: first key of `data`
  * @param {string[]} [disabled]
  * @param {{label, keys}[]} [groups]
  */
 export function setOptions(select, data, {
-    selected = null,
+    selected,
     disabled = [],
     groups = []
 } = {}) {
     selected ??= Object.keys(data)[0];
 
     const grouped = ObjectHelper.map(data, () => false);
-    let before = null;
+    let before;
 
     for (const {label, keys} of groups) {
         /** @type {HTMLOptGroupElement} **/
@@ -171,10 +171,9 @@ export function setOptions(select, data, {
             optgroup.append(createOption(key, data[key], selected, disabled));
             grouped[key] = true;
         }
+
         select.add(optgroup);
-        if (!before) {
-            before = optgroup;
-        }
+        if (!before) before = optgroup;
     }
 
     for (const [key, value] of Object.entries(data)) {
@@ -233,7 +232,7 @@ const booleanAttributes = new Set([
 /**
  * Set the `attrs` on the `object`.
  * @param {Element} element
- * @param {Object.<string,string | boolean>} attrs
+ * @param {Record<string,string | boolean>} attrs
  */
 export function setAttrs(element, attrs) {
     for (const [key, value] of Object.entries(attrs)) {

@@ -7,7 +7,9 @@
     "dir": "rtl"
   },
   "fonts": {
-    "sans": {"family": "Noto Sans Phoenician"}
+    "data": {
+      "sans": {"family": "Noto Sans Phoenician"}
+    }
   },
   "properties": {
     "name": {

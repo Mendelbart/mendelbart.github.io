@@ -1,8 +1,8 @@
-import {SettingCollection, Slider, ButtonGroup} from "./settings";
+import {SettingCollection, Slider, ButtonGroup, Switch} from "./settings";
 import Game from "./game/Game";
 import {Dataset, DEFAULT_DATASET, TERMS} from "./dataset/Dataset.js";
 import DATASETS_METADATA from '../json/datasets_meta.json';
-import {DOMUtils, ObjectUtils, FontUtils} from "./utils";
+import {DOMUtils, ObjectUtils} from "./utils";
 import {encodeBase64BoolArray, decodeBase64BoolArray} from "./utils/base64";
 import DatasetMediator from "./dataset/DatasetMediator";
 
@@ -156,9 +156,9 @@ function getPageLightDarkModeSetting(mode = "default") {
 
     const colorModeSetting = ButtonGroup.from(
         {
+            default: "Default",
             dark: "Dark",
             light: "Light",
-            default: "Default"
         },
         {
             label: "Color Theme",
@@ -188,46 +188,45 @@ function setLightDarkMode(mode) {
     DOMUtils.classIfElse(mode === "dark", document.documentElement, "dark-mode", "light-mode");
 }
 
+const SwitchTrueValue = "1";
+const SwitchFalseValue = "0";
 /**
- * @param {"true" | "false"} [checked]
- * @returns {ButtonGroup}
+ * @param {string} [value]
+ * @returns Switch
  */
-function getKeepKeyboardOpenSetting(checked) {
-    const bg = getOnOffSetting("Keep Keyboard Open", checked ?? window.isMobile.toString());
-    bg.observers.push((value) => {
-        if (GAME) GAME.keepKeyboardOpen = value === "true";
+function getKeepKeyboardOpenSetting(value) {
+    const sw = getOnOffSetting("Keep Keyboard Open", value ?? window.isMobile.toString());
+    sw.observers.push((value) => {
+        if (GAME) GAME.keepKeyboardOpen = value === SwitchTrueValue;
     });
 
-    return bg;
+    return sw;
 }
 
 /**
- * @param {"true" | "false"} checked
+ * @param {string} value
+ * @returns Switch
  */
-function getViewTransitionSetting(checked) {
-    checked ??= "true";
-    const bg = getOnOffSetting("Use View Transitions");
-    bg.observers.push((value) => {
-        window.useViewTransitions = value === "true";
+function getViewTransitionSetting(value) {
+    value ??= SwitchTrueValue;
+    const sw = getOnOffSetting("Use View Transitions");
+    sw.observers.push((val) => {
+        window.useViewTransitions = val === SwitchTrueValue;
     });
-    window.useViewTransitions = checked === "true";
-    return bg;
+    window.useViewTransitions = value === SwitchTrueValue;
+    return sw;
 }
 
 /**
  * @param {string} label
- * @param {"true" | "false"} [checked]
- * @returns ButtonGroup
+ * @param {string} [value]
+ * @returns Switch
  */
-function getOnOffSetting(label, checked) {
-    return ButtonGroup.from(
-        {true: "On", false: "Off"},
-        {
-            label: label,
-            exclusive: true,
-            checked: checked
-        }
-    );
+function getOnOffSetting(label, value) {
+    const sw = Switch.create(label);
+    sw.setValues(SwitchFalseValue, SwitchTrueValue);
+    sw.value = value;
+    return sw;
 }
 
 
@@ -245,9 +244,9 @@ function selectDataset(dataset) {
     const cachedSettings = getCachedSettings();
     const gameHeading = DATASET.metadata.gameHeading;
 
-    return FontUtils.loadFonts([
-        DATASET.getFont(gameHeading.font),
-        DATASET.getSelectorDisplayFont()
+    return Promise.all([
+        DATASET.getFont(gameHeading.font).load(),
+        DATASET.getSelectorDisplayFont().load()
     ]).then(() => {
         setupTerms();
 
@@ -256,7 +255,7 @@ function selectDataset(dataset) {
         setupDSM();
         DSM.setSettings(cachedSettings);
         checkPagesNextButton();
-        DATASET.setupGameHeading(document.querySelector("#game-heading h1"), DSM.selectorSettings.getDefault("variant"));
+        setupGameHeading(DSM.selectorSettings.getDefault("variant"));
     }).catch(err => console.error(err));
 }
 
@@ -285,10 +284,16 @@ function setupDSM() {
     document.getElementById("dataset-game-settings").replaceChildren(...DSM.gameSettings.nodeList());
 
     if (DSM.selectorSettings.has("variant")) {
-        DSM.selectorSettings.addObserverTo("variant", value => {
-            DATASET.setupGameHeading(document.querySelector("#game-heading h1"), value);
+        DSM.selectorSettings.addObserverTo("variant", variant => {
+            setupGameHeading(variant);
         });
     }
+}
+
+function setupGameHeading(variant) {
+    const heading = document.getElementById('game-heading');
+    heading.querySelector("h1").replaceChildren(DATASET.getGameHeading(variant));
+    heading.dir = DATASET.getDir();
 }
 
 function checkPagesNextButton() {

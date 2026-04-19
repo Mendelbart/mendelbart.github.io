@@ -7,9 +7,11 @@
     "dir": "rtl"
   },
   "fonts": {
-    "naskh": {"family": "Noto Naskh Arabic", "label": "Naskh", "default": true},
-    "sans": {"family": "Noto Sans Arabic", "label": "Sans"},
-    "kufi": {"family": "Noto Kufi Arabic", "label": "Kufi"}
+    "data": {
+      "naskh": {"family": "Noto Naskh Arabic", "label": "Naskh", "default": true},
+      "sans": {"family": "Noto Sans Arabic", "label": "Sans"},
+      "kufi": {"family": "Noto Kufi Arabic", "label": "Kufi"}
+    }
   },
   "properties": {
     "name": {
@@ -32,9 +34,9 @@
     }
   },
   "selector": {
-    "font": {"key": "naskh", "weight": 650},
+    "font": {"key": "naskh", "weight": 650, "scale": 1.1},
     "label": {"property": "name"},
-    "style": {"buttonWidth": "4.8ch", "symbolSize": 1.6}
+    "style": {"buttonWidth": "4.8ch", "labelGap": ".25rem"}
   },
   "forms": {
     "label": "Form",
