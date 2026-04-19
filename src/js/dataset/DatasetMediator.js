@@ -114,8 +114,14 @@ export default class DatasetMediator extends Observable {
             );
         }
 
-        tryMessage(() => this.selectorSettings.setValues(values), "Error setting selector settings values:");
-        tryMessage(() => this.applySettings(values.forms, values.variant), "Error setting form/variant values:");
+        try {
+            this.selectorSettings.setValues(values);
+            const {forms, variant} = this.selectorSettings.getValues();
+            this.applySettings(forms, variant);
+        } catch (error) {
+            console.error("Error setting selector settings values:", error);
+        }
+
         tryMessage(() => this.gameSettings.setValues(values), "Error setting game setting values:");
     }
 
@@ -149,6 +155,7 @@ export default class DatasetMediator extends Observable {
         this.selector.setDisabled(
             (item, index) => !this.dataset.isItemIncluded(index, variant) || item.countQuizItems(formKeys) === 0
         );
+        this.selector.callObservers();
     }
 
     /**

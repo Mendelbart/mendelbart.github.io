@@ -297,6 +297,7 @@ function setupGameHeading(variant) {
 }
 
 function checkPagesNextButton() {
+    console.log(DSM.checkedCount());
     document.querySelector('#game-settings-pages .pages-next-button').disabled = DSM.checkedCount() === 0;
 }
 

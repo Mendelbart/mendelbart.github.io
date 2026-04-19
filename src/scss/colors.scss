@@ -2,7 +2,7 @@
   --accent-hue: 250;
   --accent-border: oklch(0.59 0.16 var(--accent-hue));
   --accent-border-light: oklch(0.62 0.16 var(--accent-hue));
-  --accent-button-border: oklch(0.58 0.16 var(--accent-hue));
+  --accent-button-border: transparent;
   --accent-bg: oklch(0.58 0.16 var(--accent-hue));
   --accent-bg-hover: oklch(0.60 0.16 var(--accent-hue));
 
@@ -31,14 +31,14 @@
   --clr-button-grey-hover: hsl(0, 0%, 54%);
   --clr-button-grey-active: hsl(0, 0%, 57%);
 
-  --clr-grp-button: transparent;
-  --clr-grp-button-border: hsla(0, 0%, 0%, .4);
-  --clr-grp-button-hover: hsla(0, 0%, 0%, 0.02);
-  --clr-grp-button-active: oklch(0.83 0.063 var(--accent-hue) / 20%);
-  --clr-grp-button-checked: oklch(0.73 0.145 var(--accent-hue) / 17%);
-  --clr-grp-button-checked-hover: oklch(0.73 0.145 var(--accent-hue) / 22%);
-  --clr-grp-button-checked-border: var(--accent-border);
-  --clr-grp-button-checked-active: oklch(0.67 0.13 var(--accent-hue) / 27%);
+  --clr-grp-button: hsla(0, 0%, 0%, 0.07);
+  --clr-grp-button-border: hsla(0, 0%, 0%, 0.07);
+  --clr-grp-button-hover: hsla(0, 0%, 0%, 0.09);
+  --clr-grp-button-active: hsla(0, 0%, 0%, 0.13);
+  --clr-grp-button-checked: oklch(0.73 0.145 var(--accent-hue) / 23%);
+  --clr-grp-button-checked-hover: oklch(0.73 0.145 var(--accent-hue) / 28%);
+  --clr-grp-button-checked-active: oklch(0.73 0.145 var(--accent-hue) / 35%);
+  --clr-grp-button-checked-border: oklch(0.6 0.145 var(--accent-hue) / 40%);
 
   --clr-grp-button-text: hsl(0, 0%, 40%);
   --clr-grp-button-checked-text: oklch(0.54 0.13 var(--accent-hue));
@@ -54,14 +54,14 @@
   --clr-selector-button: transparent;
   --clr-selector-button-hover: hsla(0, 0%, 50%, 0.06);
   --clr-selector-button-active: hsla(0, 0%, 50%, 0.12);
-  --clr-selector-button-border: hsla(0, 0%, 50%, 0.3);
+  --clr-selector-button-border: hsla(0, 0%, 50%, 0.2);
   --clr-selector-button-active-border: oklch(0.55 0.25 var(--accent-hue) / 0.35);
   --clr-selector-button-text: hsl(0, 0%, 50%);
   --clr-selector-button-checked: hsla(0, 0%, 50%, 0.06);
   --clr-selector-button-checked-hover: hsla(0, 0%, 50%, 0.12);
   --clr-selector-button-checked-active: hsla(0, 0%, 50%, 0.16);
   --clr-selector-button-checked-text: var(--clr-text);
-  --clr-selector-button-checked-border: hsl(0, 0%, 50%, 0.8);
+  --clr-selector-button-checked-border: hsl(0, 0%, 50%, 0.5);
   --clr-selector-button-checked-active-border: oklch(0.5 0.1 var(--accent-hue) / 0.5);
   --clr-selector-button-checked-active-symbol: hsl(0, 0%, 10%);
   --clr-selector-button-checked-active-label: hsl(0, 0%, 15%);
@@ -96,17 +96,17 @@
   --clr-button-grey-hover: hsl(0, 0%, 33%);
   --clr-button-grey-active: hsl(0, 0%, 38%);
 
-  --clr-grp-button: transparent;
-  --clr-grp-button-border: hsla(0, 0%, 100%, .3);
-  --clr-grp-button-hover: hsla(0, 0%, 100%, 0.03);
-  --clr-grp-button-active: oklch(0.8 0.145 var(--accent-hue) / 14%);
+  --clr-grp-button: hsla(0, 0%, 100%, 0.05);
+  --clr-grp-button-border: hsla(0, 0%, 100%, 0.1);
+  --clr-grp-button-hover: hsla(0, 0%, 100%, 0.065);
+  --clr-grp-button-active: hsla(0, 0%, 100%, 0.09);
   --clr-grp-button-checked: oklch(0.73 0.145 var(--accent-hue) / 14%);
   --clr-grp-button-checked-hover: oklch(0.73 0.145 var(--accent-hue) / 16%);
   --clr-grp-button-checked-active: oklch(0.73 0.145 var(--accent-hue) / 20%);
+  --clr-grp-button-checked-border: oklch(0.73 0.145 var(--accent-hue) / 30%);
 
-
-  --clr-grp-button-text: hsl(0, 0%, 70%);
-  --clr-grp-button-checked-text: oklch(0.73 0.16 var(--accent-hue));
+  --clr-grp-button-text: hsl(210, 8%, 66%);
+  --clr-grp-button-checked-text: oklch(0.75 0.14 var(--accent-hue));
 
   --clr-ribbon-button-hover: hsl(0, 0%, 20%);
   --clr-ribbon-button-active: hsl(0, 0%, 23%);

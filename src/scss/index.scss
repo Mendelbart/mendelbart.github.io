@@ -1,5 +1,5 @@
 $borderRadiusSmall: .5rem;
-$shortTransition: 75ms;
+$shortTransition: 125ms;
 $bodyMaxWidth: 26rem;
 
 @mixin button-events($clr-var-prefix) {
@@ -219,9 +219,11 @@ input[type="checkbox"], input[type="radio"] {
   }
 
   &:disabled {
-    opacity: 0.8;
+    opacity: 0.75;
     pointer-events: none;
-    filter: grayscale(0.85);
+    background: transparent;
+    color: var(--clr-text-soft);
+    border: 1px solid var(--clr-border-soft);
   }
 }
 
