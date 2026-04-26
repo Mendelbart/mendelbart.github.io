@@ -97,5 +97,25 @@
       "Long-branch-to-short-twig": 15,
       "Latin-to-Gothic": 19
     }
+  },
+  {
+    "family": "Noto Sans Devanagari",
+    "fallback": "system-ui, sans-serif",
+    "shift": 0.12,
+    "lineHeight": 1,
+    "variationSettings": {
+      "wght": "100 900",
+      "wdth": "100"
+    }
+  },
+  {
+    "family": "Noto Serif Devanagari",
+    "fallback": "serif",
+    "shift": 0.12,
+    "lineHeight": 1,
+    "variationSettings": {
+      "wght": "100 900",
+      "wdth": "100"
+    }
   }
 ]

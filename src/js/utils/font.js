@@ -75,6 +75,7 @@ function digestFontVariationSettings(variationSettings) {
     if (Object.keys(variationSettings).length > 0) {
         result.variationSettings = Object.entries(variationSettings).map(([key, value]) => `"${key}" ${value}`).join(",");
     }
+
     return result;
 }
 

@@ -36,9 +36,11 @@
     "style": {"buttonWidth": "5ch", "symbolSize": 1.35}
   },
   "forms": {
-    "label": "Case",
     "data": {
-      "upper": "Uppercase",
+      "upper": {
+        "label": "Uppercase",
+        "active": true
+      },
       "lower": "Lowercase",
       "final": {"groupWith": "lower"}
     }

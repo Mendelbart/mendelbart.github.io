@@ -89,10 +89,19 @@ export default class Matrix {
         return this.data[this.getIndex(i, j)];
     }
 
+    /**
+     * @param {number} i
+     * @param {number} j
+     * @param value
+     */
     set(i, j, value) {
         this.data[this.getIndex(i, j)] = value;
     }
 
+    /**
+     * @param value
+     * @returns {Matrix}
+     */
     fill(value) {
         this.data.fill(value);
         return this;
@@ -140,6 +149,9 @@ export default class Matrix {
         this.m += 1;
     }
 
+    /**
+     * @returns {Matrix}
+     */
     transpose() {
         const data = full(this.length, index => {
             const [i, j] = this.getCartesian(index);
@@ -162,6 +174,9 @@ export default class Matrix {
         return new this(rows.length, rows[0].length, rows.flat());
     }
 
+    /**
+     * @returns {string}
+     */
     toString() {
         return this.toRows().toString();
     }
@@ -187,6 +202,9 @@ export default class Matrix {
         return full(this.length, index => this.getCartesian(index));
     }
 
+    /**
+     * @returns {[number,number][]}
+     */
     keysColumnsFirst() {
         return full(this.length, index => this.getCartesianColumnMajor(index));
     }
@@ -198,6 +216,9 @@ export default class Matrix {
         return this.data.map((value, index) => [this.getCartesian(index), value]);
     }
 
+    /**
+     * @returns {[[number,number], any][]}
+     */
     entriesColumnsFirst() {
         return full(this.length, index => {
             const [i, j] = this.getCartesianColumnMajor(index);
@@ -212,24 +233,44 @@ export default class Matrix {
         this.data.forEach((value, index) => callback(value, ...this.getCartesian(index), this));
     }
 
+    /**
+     * @returns {number}
+     */
     get length() {
         return this.n * this.m;
     }
 
+    /**
+     * @returns {Matrix}
+     */
     copy() {
         return new this.constructor(this.n, this.m, this.data.slice());
     }
 
+    /**
+     * @param {number} i
+     * @returns {*[]}
+     */
     getRow(i) {
         return full(this.m, j => this.get(i, j));
     }
 
+    /**
+     * @param {number} j
+     * @returns {*[]}
+     */
     getColumn(j) {
         return full(this.n, i => {
             return this.get(i, j);
         });
     }
 
+    /**
+     * @param {number} n
+     * @param {number} m
+     * @param {function(number, number): any} callback
+     * @returns {Matrix}
+     */
     static full(n, m, callback) {
         const matrix = new this(n, m);
         for (const [i, j] of matrix.keys()) {

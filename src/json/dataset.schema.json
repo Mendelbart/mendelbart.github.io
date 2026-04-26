@@ -1,368 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://example.com/dataset.schema.json",
-  "title": "Kadmos Dataset",
-  "type": "object",
-  "properties": {
-    "key": {
-      "type": "string",
-      "description": "Unique key for this script dataset. Preferably from the <a href=\"https://www.iana.org/assignments/language-subtag-registry/language-subtag-registry\">IANA Language Subtag Registry</a>."
-    },
-    "name": {
-      "type": "string",
-      "description": "Name of the dataset"
-    },
-    "metadata": {
-      "type": "object",
-      "properties": {
-        "gameHeading": {
-          "anyOf": [
-            {
-              "type": "string",
-              "description": "Heading of the game. Equivalent to {\"string\": \"Heading\"}."
-            },
-            {"type": "object",
-              "properties": {
-                "string": {
-                  "type": "string",
-                  "description": "Heading of the game."
-                },
-                "font": {
-                  "$ref": "#/$defs/fontRef",
-                  "additionalProperties": false
-                }
-              }
-            }
-          ]
-        },
-        "lang": {
-          "type": "string",
-          "description": "Value of the HTML lang attribute for letters of this script. Default \"en\"."
-        },
-        "dir": {
-          "enum": ["ltr", "rtl"],
-          "default": "ltr",
-          "description": "Direction of the script: ltr for left-to-right (default) or rtl for right-to-left."
-        },
-        "terms": {
-          "type": "object",
-          "description": "Specify what the equivalent of e.g. \"letter\" and \"letters\" in this font are called.",
-          "properties": {
-            "letter": {"type": "string", "default": "letter"},
-            "letters": {"type": "string", "description": "Default: terms.letter + 's'"}
-          }
-        }
-      },
-      "patternProperties": {
-        "^_.+$": {"type": "string"}
-      },
-      "required": ["gameHeading"],
-      "additionalProperties": false
-    },
-    "languages": {
-      "type": "object",
-      "properties": {
-        "keys": {
-          "type": "array",
-          "items": {"type": "string"},
-          "description": "Language subtags. In items, use \"p:PROPERTY_SUBTAG\" (e.g. \"p:name_de\") as key to specify language-specific property values."
-        },
-        "default": {"type": "string"}
-      },
-      "required": ["keys"],
-      "additionalProperties": false
-    },
-    "fonts": {
-      "type": "object",
-      "description": "A registry of the fonts used by the dataset, with lowercase keys.",
-      "properties": {
-        "data": {
-          "type": "object",
-          "patternProperties": {
-            "^[a-z]+$": {
-              "type": "object",
-              "properties": {
-                "family": {
-                  "type": "string",
-                  "description": "Font family name. E.g. \"Noto Sans\" or \"Noto Serif Hebrew\"."
-                },
-                "label": {
-                  "type": "string",
-                  "description": "Label of the Font in the game font settings. Default: family"
-                },
-                "default": {
-                  "type": "boolean",
-                  "default": false
-                },
-                "params": {"$ref": "#/$defs/fontParams"}
-              },
-              "required": ["family"],
-              "additionalProperties": false
-            }
-          },
-          "additionalProperties": false
-        },
-        "params": {
-          "$ref": "#/$defs/fontParams",
-          "description": "Params applied to all fonts."
-        }
-      },
-      "additionalProperties": false
-    },
-    "selector": {
-      "type": "object",
-      "oneOf": [
-        {},
-        {
-          "properties": {
-            "block": {"$ref": "#/$defs/selectorBlock"}
-          },
-          "required": ["block"]
-        },
-        {
-          "properties": {
-            "blocks": {
-              "type": "array",
-              "items": {
-                "$ref": "#/$defs/selectorBlock",
-                "properties": {
-                  "letters": {
-                    "oneOf": [
-                      {"$ref": "#/$defs/letterRanges"},
-                      {"$ref": "#/$defs/letterRange"}
-                    ],
-                    "description": "Python-like ranges or \"rest\" (default)."
-                  }
-                },
-                "required": ["letters"]
-              }
-            }
-          },
-          "required": ["blocks"]
-        }
-      ],
-      "properties": {
-        "font": {"$ref": "#/$defs/fontRef"},
-        "label": {
-          "type": "object",
-          "description": "Settings for the label underneath letters in the selector. If not set, these won't appear.",
-          "properties": {
-            "property": {
-              "type": "string",
-              "description": "Which property to label the items with."
-            }
-          },
-          "required": ["property"]
-        },
-        "style": {"$ref": "#/$defs/blockStyle"},
-        "defaultActive": {"type": "string", "pattern": "^(all|none|block\\d+)$"},
-        "defaultLetterKey":  { "$ref": "#/$defs/letterKey" }
-      },
-      "additionalProperties": false
-    },
-    "game": {
-      "type": "object",
-      "properties": {
-        "defaultWeight": {
-          "$ref": "#/$defs/fontWeight",
-          "default": 500
-        }
-      }
-    },
-    "forms": {
-      "type": "object",
-      "properties": {
-        "data": {
-          "type": "object",
-          "patternProperties": {
-            "^[a-z]+$": {
-              "anyOf": [
-                {
-                  "type": "object",
-                  "oneOf": [
-                    {
-                      "properties": {
-                        "label": {"type": "string"},
-                        "active": {
-                          "type": "boolean",
-                          "default": true
-                        }
-                      },
-                      "required": ["label"]
-                    },
-                    {
-                      "properties": {
-                        "groupWith": {
-                          "type": "string",
-                          "description": "If set, this form will not appear in the settings, but will follow the setting of the given key."
-                        }
-                      },
-                      "required": ["groupWith"]
-                    }
-                  ],
-                  "additionalProperties": false
-                },
-                {"type": "string"}
-              ],
-              "description": "A form of letter, e.g. lower- or uppercase."
-            }
-          }
-        },
-        "label": {
-          "type": "string",
-          "description": "Label of the forms setting. Default \"Forms\".",
-          "default": "Forms"
-        },
-        "exclusive": {
-          "type": "boolean",
-          "description": "If true, you can only select one form to play at a time.",
-          "default": false
-        }
-      },
-      "required": ["data"],
-      "additionalProperties": false
-    },
-    "properties": {
-      "type": "object",
-      "patternProperties": {
-        "^[a-z]+$": {
-          "type": "object",
-          "properties": {
-            "label": {"type": "string"},
-            "config": {
-              "$ref": "#/$defs/quizAnswerConfig"
-            },
-            "active": {
-              "type": "boolean",
-              "default": false
-            }
-          },
-          "required": ["label", "config"],
-          "additionalProperties": false
-        }
-      },
-      "additionalProperties": false
-    },
-    "variants": {
-      "type": "object",
-      "properties": {
-        "defaultLetterKey": { "$ref": "#/$defs/letterKey" },
-        "data": {
-          "type": "object",
-          "patternProperties": {
-            "^[a-z]+$": {
-              "type": "object",
-              "properties": {
-                "label": {"type": "string"},
-                "lang": {
-                  "type": "string",
-                  "description": "Modifying the HTML lang attribute of the symbols. By default, the key pointing to this entry is used."
-                },
-                "default": {
-                  "type": "boolean",
-                  "default": false
-                },
-                "fonts": {
-                  "type": "object",
-                  "description": "Modifying the dataset's fonts entries.",
-                  "patternProperties": {
-                    "^[a-z]+$": {"$ref": "#/$defs/fontRef"}
-                  }
-                },
-                "letters": {
-                  "oneOf": [
-                    {"$ref": "#/$defs/letterRanges"},
-                    {"$ref": "#/$defs/letterRange"}
-                  ]
-                }
-              },
-              "description": "A variant of the script, e.g. the Russian or Bulgarian variant of the Cyrillic script."
-            }
-          }
-        },
-        "groups": {
-          "type": "object",
-          "patternProperties": {
-            "^[a-z]+$": {
-              "type": "object",
-              "properties": {
-                "label": {"type":  "string"},
-                "keys": {
-                  "type": "array",
-                  "items": {"type": "string"},
-                  "description": "List of keys from the variants.data field."
-                }
-              }
-            }
-          }
-        },
-        "setting": {
-          "type": "object",
-          "properties": {
-            "type": {
-              "enum": ["select", "buttonGroup"],
-              "default": "select"
-            }
-          }
-        },
-        "useKeyAsLang": {
-          "type": "boolean",
-          "description": "If true, the lang attribute of a variant will be set to its key unless already specified.",
-          "default": false
-        }
-      },
-      "required": ["data"],
-      "additionalProperties": false
-    },
-    "items": {
-      "type": "object",
-      "properties": {
-        "symbolType": {
-          "enum": ["string"]
-        },
-        "properties": {
-          "type": "array",
-          "description": "Keys to assign the property entries of data rows to. RegExp-ish pattern: `PROPERTY(>(v|var|variant):VARIANT)?(>(l|lang|language):LANGUAGE)?`",
-          "items": {
-            "type": "string",
-            "pattern": "^[a-z]+(>(v|var|variant):[a-z]+(,[a-z]+)*)?(>(l|lang|language):[a-z]+(,[a-z]+)*)?$"
-          }
-        },
-        "data": {
-          "type": "array",
-          "items": {
-            "type": "array",
-            "prefixItems": [
-              {
-                "oneOf": [
-                  {"type": "string"},
-                  {
-                    "type": "array",
-                    "items": {"type": "string"}
-                  }
-                ]
-              },
-              {
-                "oneOf": [
-                  {"type": ["string", "number"]},
-                  {
-                    "type": "array",
-                    "items": {"type": ["string", "number"]}
-                  }
-                ]
-              }
-            ],
-            "items": false
-          },
-          "description": "Array with [[...forms], [...properties]] entries matching the template. If first element is a string, it will be split into individual characters for forms. Use a single-item array if this isn't wanted."
-        }
-      },
-      "required": ["properties", "data"],
-      "additionalProperties": false
-    }
-  },
-  "required": ["key", "name", "metadata", "fonts", "properties", "selector", "items"],
-  "additionalProperties": false,
   "$defs": {
     "fontWeight": {
       "type": "integer",
@@ -643,6 +281,414 @@
       "default": "i1",
       "description": "Default key to be used in the letters field of data entries.",
       "pattern": "^(i0|i1|form(:[a-z]+)?|prop:[a-z]+(>(v|var|variant):[a-z]+)?(>(l|lang|language):[a-z]+)?)$"
+    },
+    "subset": {
+      "type": "object",
+      "properties": {
+        "properties": {
+          "type": "object",
+          "patternProperties": {
+            "^[a-z]+$": {
+              "type": "object",
+              "properties": {
+                "label": {"type": "string"},
+                "config": {
+                  "$ref": "#/$defs/quizAnswerConfig"
+                },
+                "active": {
+                  "type": "boolean",
+                  "default": false
+                }
+              },
+              "required": ["label", "config"],
+              "additionalProperties": false
+            }
+          },
+          "additionalProperties": false
+        },
+        "selector": {
+          "type": "object",
+          "oneOf": [
+            {},
+            {
+              "properties": {
+                "block": {"$ref": "#/$defs/selectorBlock"}
+              },
+              "required": ["block"]
+            },
+            {
+              "properties": {
+                "blocks": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/$defs/selectorBlock",
+                    "properties": {
+                      "letters": {
+                        "oneOf": [
+                          {"$ref": "#/$defs/letterRanges"},
+                          {"$ref": "#/$defs/letterRange"}
+                        ],
+                        "description": "Python-like ranges or \"rest\" (default)."
+                      }
+                    },
+                    "required": ["letters"]
+                  }
+                }
+              },
+              "required": ["blocks"]
+            }
+          ],
+          "properties": {
+            "font": {"$ref": "#/$defs/fontRef"},
+            "label": {
+              "type": "object",
+              "description": "Settings for the label underneath letters in the selector. If not set, these won't appear.",
+              "properties": {
+                "property": {
+                  "type": "string",
+                  "description": "Which property to label the items with."
+                }
+              },
+              "required": ["property"]
+            },
+            "style": {"$ref": "#/$defs/blockStyle"},
+            "defaultActive": {"type": "string", "pattern": "^(all|none|block\\d+)$"},
+            "defaultLetterKey":  { "$ref": "#/$defs/letterKey" }
+          },
+          "additionalProperties": false
+        },
+        "forms": {
+          "type": "object",
+          "properties": {
+            "data": {
+              "type": "object",
+              "patternProperties": {
+                "^[a-z]+$": {
+                  "anyOf": [
+                    {
+                      "type": "object",
+                      "oneOf": [
+                        {
+                          "properties": {
+                            "label": {"type": "string"},
+                            "active": {
+                              "type": "boolean",
+                              "default": true
+                            }
+                          },
+                          "required": ["label"]
+                        },
+                        {
+                          "properties": {
+                            "groupWith": {
+                              "type": "string",
+                              "description": "If set, this form will not appear in the settings, but will follow the setting of the given key."
+                            }
+                          },
+                          "required": ["groupWith"]
+                        }
+                      ],
+                      "additionalProperties": false
+                    },
+                    {"type": "string"}
+                  ],
+                  "description": "A form of letter, e.g. lower- or uppercase."
+                }
+              }
+            },
+            "label": {
+              "type": "string",
+              "description": "Label of the forms setting. Default \"Forms\".",
+              "default": "Forms"
+            },
+            "exclusive": {
+              "type": "boolean",
+              "description": "If true, you can only select one form to play at a time.",
+              "default": false
+            }
+          },
+          "required": ["data"],
+          "additionalProperties": false
+        },
+        "items": {
+          "type": "object",
+          "properties": {
+            "symbolType": {
+              "enum": ["string"]
+            },
+            "properties": {
+              "type": "array",
+              "description": "Keys to assign the property entries of data rows to. RegExp-ish pattern: `PROPERTY(>(v|var|variant):VARIANT)?(>(l|lang|language):LANGUAGE)?`",
+              "items": {
+                "type": "string",
+                "pattern": "^[a-z]+(>(v|var|variant):[a-z]+(,[a-z]+)*)?(>(l|lang|language):[a-z]+(,[a-z]+)*)?$"
+              }
+            },
+            "data": {
+              "type": "array",
+              "items": {
+                "type": "array",
+                "prefixItems": [
+                  {
+                    "oneOf": [
+                      {"type": ["string", "null"]},
+                      {
+                        "type": "array",
+                        "items": {"type": "string"}
+                      }
+                    ]
+                  },
+                  {
+                    "oneOf": [
+                      {"type": ["string", "number"]},
+                      {
+                        "type": "array",
+                        "items": {"type": ["string", "number"]}
+                      }
+                    ]
+                  }
+                ],
+                "items": false
+              },
+              "description": "Array with [[...forms], [...properties]] entries matching the template. If first element is a string, it will be split into individual characters for forms. Use a single-item array if this isn't wanted."
+            }
+          },
+          "required": ["properties", "data"],
+          "additionalProperties": false
+        }
+      },
+      "required": ["properties", "selector", "items"],
+      "additionalProperties": false
     }
-  }
+  },
+  "title": "Kadmos Dataset",
+  "type": "object",
+  "properties": {
+    "key": {
+      "type": "string",
+      "description": "Unique key for this script dataset. Preferably from the <a href=\"https://www.iana.org/assignments/language-subtag-registry/language-subtag-registry\">IANA Language Subtag Registry</a>."
+    },
+    "name": {
+      "type": "string",
+      "description": "Name of the dataset"
+    },
+    "metadata": {
+      "type": "object",
+      "properties": {
+        "gameHeading": {
+          "anyOf": [
+            {
+              "type": "string",
+              "description": "Heading of the game. Equivalent to {\"string\": \"Heading\"}."
+            },
+            {"type": "object",
+              "properties": {
+                "string": {
+                  "type": "string",
+                  "description": "Heading of the game."
+                },
+                "font": {
+                  "$ref": "#/$defs/fontRef",
+                  "additionalProperties": false
+                }
+              }
+            }
+          ]
+        },
+        "lang": {
+          "type": "string",
+          "description": "Value of the HTML lang attribute for letters of this script. Default \"en\"."
+        },
+        "dir": {
+          "enum": ["ltr", "rtl"],
+          "default": "ltr",
+          "description": "Direction of the script: ltr for left-to-right (default) or rtl for right-to-left."
+        },
+        "terms": {
+          "type": "object",
+          "description": "Specify what the equivalent of e.g. \"letter\" and \"letters\" in this font are called.",
+          "properties": {
+            "letter": {"type": "string", "default": "letter"},
+            "letters": {"type": "string", "description": "Default: terms.letter + 's'"}
+          }
+        }
+      },
+      "patternProperties": {
+        "^_.+$": {"type": "string"}
+      },
+      "required": ["gameHeading"],
+      "additionalProperties": false
+    },
+    "languages": {
+      "type": "object",
+      "properties": {
+        "keys": {
+          "type": "array",
+          "items": {"type": "string"},
+          "description": "Language subtags. In items, use \"p:PROPERTY_SUBTAG\" (e.g. \"p:name_de\") as key to specify language-specific property values."
+        },
+        "default": {"type": "string"}
+      },
+      "required": ["keys"],
+      "additionalProperties": false
+    },
+    "fonts": {
+      "type": "object",
+      "description": "A registry of the fonts used by the dataset, with lowercase keys.",
+      "properties": {
+        "data": {
+          "type": "object",
+          "patternProperties": {
+            "^[a-z]+$": {
+              "type": "object",
+              "properties": {
+                "family": {
+                  "type": "string",
+                  "description": "Font family name. E.g. \"Noto Sans\" or \"Noto Serif Hebrew\"."
+                },
+                "label": {
+                  "type": "string",
+                  "description": "Label of the Font in the game font settings. Default: family"
+                },
+                "default": {
+                  "type": "boolean",
+                  "default": false
+                },
+                "params": {"$ref": "#/$defs/fontParams"}
+              },
+              "required": ["family"],
+              "additionalProperties": false
+            }
+          },
+          "additionalProperties": false
+        },
+        "params": {
+          "$ref": "#/$defs/fontParams",
+          "description": "Params applied to all fonts."
+        }
+      },
+      "additionalProperties": false
+    },
+    "variants": {
+      "type": "object",
+      "properties": {
+        "defaultLetterKey": { "$ref": "#/$defs/letterKey" },
+        "data": {
+          "type": "object",
+          "patternProperties": {
+            "^[a-z]+$": {
+              "type": "object",
+              "properties": {
+                "label": {"type": "string"},
+                "lang": {
+                  "type": "string",
+                  "description": "Modifying the HTML lang attribute of the symbols. By default, the key pointing to this entry is used."
+                },
+                "default": {
+                  "type": "boolean",
+                  "default": false
+                },
+                "fonts": {
+                  "type": "object",
+                  "description": "Modifying the dataset's fonts entries.",
+                  "patternProperties": {
+                    "^[a-z]+$": {"$ref": "#/$defs/fontRef"}
+                  }
+                },
+                "letters": {
+                  "oneOf": [
+                    {"$ref": "#/$defs/letterRanges"},
+                    {"$ref": "#/$defs/letterRange"}
+                  ]
+                }
+              },
+              "description": "A variant of the script, e.g. the Russian or Bulgarian variant of the Cyrillic script."
+            }
+          }
+        },
+        "groups": {
+          "type": "object",
+          "patternProperties": {
+            "^[a-z]+$": {
+              "type": "object",
+              "properties": {
+                "label": {"type":  "string"},
+                "keys": {
+                  "type": "array",
+                  "items": {"type": "string"},
+                  "description": "List of keys from the variants.data field."
+                }
+              }
+            }
+          }
+        },
+        "setting": {
+          "type": "object",
+          "properties": {
+            "type": {
+              "enum": ["select", "buttonGroup"],
+              "default": "select"
+            }
+          }
+        },
+        "useKeyAsLang": {
+          "type": "boolean",
+          "description": "If true, the lang attribute of a variant will be set to its key unless already specified.",
+          "default": false
+        }
+      },
+      "required": ["data"],
+      "additionalProperties": false
+    },
+    "game": {
+      "type": "object",
+      "properties": {
+        "defaultWeight": {
+          "$ref": "#/$defs/fontWeight",
+          "default": 500
+        }
+      }
+    }
+  },
+  "required": ["key", "name", "metadata", "fonts"],
+  "additionalProperties": false,
+  "oneOf": [
+    {
+      "properties": {
+        "subsets": {
+          "type": "object",
+          "patternProperties": {
+            "^[a-z]+$": {
+              "$ref": "#/$defs/subset",
+              "properties": {
+                "variants": {
+                  "type": "object",
+                  "properties": {
+                    "letters": {
+                      "type": "object",
+                      "description": "Set the letter ranges for the variants defined globally.",
+                      "patternProperties": {
+                        "^[a-z]+$": {"$ref": "#/$defs/letterRanges"}
+                      },
+                      "additionalProperties": false
+                    },
+                    "defaultLetterKey": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "label": {
+                  "type": "string"
+                }
+              },
+              "required": ["label"]
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "required": ["subsets"]
+    },
+    {"$ref": "#/$defs/subset"}
+  ]
 }

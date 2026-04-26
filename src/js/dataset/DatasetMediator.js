@@ -12,52 +12,75 @@ export default class DatasetMediator extends Observable {
     constructor(dataset) {
         super();
         this.dataset = dataset;
-        /** @type {Selector} */
-        this.selector = dataset.createSelector();
+        if (this.dataset.hasSetting("subset")) {
+            this.subsetSetting = this.dataset.subsetSetting();
+            this.subsetSetting.observers.push(() => this.updateSubset());
+        }
 
-        /** @type {SettingCollection} */
-        this.selectorSettings = dataset.getSelectorSettings();
-        /** @type {SettingCollection} */
-        this.gameSettings = dataset.getGameSettings();
-
-        this.setup();
+        this.updateSubset();
     }
 
-    setup() {
+    updateSubset() {
+        const key = this.subsetSetting ? this.subsetSetting.value : null;
+        this.subset = this.dataset.getSubset(key);
+        this.setupSettings();
+        this.setupSelector();
         this.setupObservers();
+    }
 
+    setupSettings() {
+        const selectorSettings = this.subset.getSelectorSettings();
+        const gameSettings = this.dataset.getGameSettings(this.subset.key);
+
+        if (this.selectorSettings) this.selectorSettings.replaceWith(selectorSettings);
+        if (this.gameSettings) this.gameSettings.replaceWith(gameSettings);
+
+        this.selectorSettings = selectorSettings;
+        this.gameSettings = gameSettings;
+    }
+
+    setupSelector() {
+        const oldSelector = this.selector;
+        this.selector = this.subset.createSelector();
         this.setupSelectorButtons();
         this.selector.finishSetup();
 
-        this.applyStyles();
+        this.applySelectorStyles();
         const {forms, variant} = this.selectorSettings.getValues();
-        this.applySettings(forms, variant);
+        this.applySelectorSettings(forms, variant);
+
+        if (oldSelector) oldSelector.replaceWith(this.selector);
     }
 
     setupSelectorButtons() {
-        const forms = Object.keys(this.dataset.forms.data);
+        const forms = Object.keys(this.subset.forms.data);
         this.selector.setupButtonContents(item => item.combineForms(forms).getNode());
 
-        if (this.dataset.selectorData.label) {
-            const property = this.dataset.selectorData.label.property;
+        if (this.subset.selectorData.label) {
+            const property = this.subset.selectorData.label.property;
             this.selector.labelButtons(item => item.getProperty({
                 property: property,
-                splitter: this.dataset.getPropertySplitter(property)
+                splitter: this.subset.getPropertySplitter(property)
             }));
         }
     }
 
     setupObservers() {
         this.selectorSettings.observers.push(({forms, variant}, changed) => DOMUtils.transition(
-            () => this.applySettings(forms, variant, changed),
+            () => {
+                this.applySelectorSettings(forms, variant, changed);
+                this.callObservers();
+            },
             ["selector-forms"]
         ));
 
-        for (const x of [this.selector, this.selectorSettings, this.gameSettings]) {
-            x.observers.push(this.callObservers);
-        }
+        this.selector.observers.push(this.callObservers);
+        this.gameSettings.observers.push(this.callObservers);
     }
 
+    /**
+     * @returns {{checked: boolean[], form?: string, variant?: string, properties?: string[], language?: string}}
+     */
     getSettingsValues() {
         return Object.assign(
             {checked: this.selector.getChecked({includeDisabled: true})},
@@ -77,10 +100,10 @@ export default class DatasetMediator extends Observable {
         });
     }
 
-    applyStyles() {
+    applySelectorStyles() {
         this.selector.node.dir = this.dataset.getDir();
 
-        const blockStyles = this.dataset.getSelectorBlockStyles();
+        const blockStyles = this.subset.getSelectorBlockStyles();
         this.selector.blocks.forEach((block, index) => {
             block.applyStyle(blockStyles[index]);
         });
@@ -117,7 +140,7 @@ export default class DatasetMediator extends Observable {
         try {
             this.selectorSettings.setValues(values);
             const {forms, variant} = this.selectorSettings.getValues();
-            this.applySettings(forms, variant);
+            this.applySelectorSettings(forms, variant);
         } catch (error) {
             console.error("Error setting selector settings values:", error);
         }
@@ -130,8 +153,8 @@ export default class DatasetMediator extends Observable {
      * @param {string} [variant]
      * @param {"forms" | "variant"} [changed]
      */
-    applySettings(forms, variant, changed) {
-        const formKeys = this.dataset.getFormKeysFromGrouped(forms);
+    applySelectorSettings(forms, variant, changed) {
+        const formKeys = this.subset.getFormKeysFromGrouped(forms);
 
         if (!changed || changed === "forms") {
             this.selector.updateButtonContents(content => {
@@ -153,22 +176,21 @@ export default class DatasetMediator extends Observable {
         }
 
         this.selector.setDisabled(
-            (item, index) => !this.dataset.isItemIncluded(index, variant) || item.countQuizItems(formKeys) === 0
+            (item, index) => !this.subset.isItemIncluded(index, variant) || item.countQuizItems(formKeys) === 0
         );
-        this.selector.callObservers();
     }
 
     /**
      * @returns {string[]}
      */
     getActiveForms() {
-        if (!this.dataset.hasSetting("forms")) return Object.keys(this.dataset.forms.data);
+        if (!this.subset.hasSetting("forms")) return Object.keys(this.subset.forms.data);
 
-        return this.dataset.getFormKeysFromGrouped(this.selectorSettings.getValue("forms"));
+        return this.subset.getFormKeysFromGrouped(this.selectorSettings.getValue("forms"));
     }
 
     getActiveProperties() {
-        return this.gameSettings.getDefault("properties", Object.keys(this.dataset.properties));
+        return this.gameSettings.getDefault("properties", Object.keys(this.subset.properties));
     }
 
     /**
@@ -176,7 +198,7 @@ export default class DatasetMediator extends Observable {
      */
     getGameParams() {
         const params = {};
-        if (this.dataset.hasVariants()) params.variant = this.getVariant();
+        if (this.dataset.variants) params.variant = this.getVariant();
         if (this.dataset.hasSetting("language")) params.language = this.getLanguage();
         return params;
     }
@@ -186,7 +208,7 @@ export default class DatasetMediator extends Observable {
      */
     getCardFactory() {
         const attrs = this.dataset.getLetterNodeAttrs(this.getVariant());
-        const property = Object.keys(this.dataset.properties)[0];
+        const property = Object.keys(this.subset.properties)[0];
 
         const factory = new CardFactory(
             (card, item, ...args) => {
@@ -206,8 +228,8 @@ export default class DatasetMediator extends Observable {
         const forms = this.getActiveForms();
         const properties = this.getActiveProperties();
         const params = this.getGameParams();
-        const items = this.dataset.getQuizItems(this.getCheckedItems(), properties, forms, params);
-        const referenceItems = this.dataset.getReferenceItems(properties, forms, params);
+        const items = this.subset.getQuizItems(this.getCheckedItems(), properties, forms, params);
+        const referenceItems = this.subset.getReferenceItems(properties, forms, params);
 
         const dealer = new QuizDealer(items);
         const cardFactory = this.getCardFactory();
@@ -221,7 +243,7 @@ export default class DatasetMediator extends Observable {
         game.setupCardSettings(this.getCardSettings(), this.cardSettingsCallback(params.variant));
 
         game.setupAnswerInputs(
-            properties.map(key => {return {key: key, label: this.dataset.properties[key].label}}),
+            properties.map(key => {return {key: key, label: this.subset.properties[key].label}}),
             {lang: params.language}
         );
 
@@ -281,6 +303,7 @@ export default class DatasetMediator extends Observable {
     teardown() {
         this.selector.teardown();
         this.selectorSettings.teardown();
+        this.gameSettings.teardown();
     }
 }
 

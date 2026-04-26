@@ -119,6 +119,9 @@ export default class ButtonGroup extends Observable {
         }
     }
 
+    /**
+     * @returns {string[]|null|string}
+     */
     get value() {
         if (this.exclusive) {
             for (const input of Object.values(this.inputs)) {

@@ -156,4 +156,12 @@ export default class Selector extends Observable {
     teardown() {
         this.blocks.forEach(block => block.teardown());
     }
+
+    /**
+     * @param {Selector} selector
+     */
+    replaceWith(selector) {
+        this.node.replaceWith(selector.node);
+        this.teardown();
+    }
 }
