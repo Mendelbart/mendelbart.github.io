@@ -95,12 +95,12 @@ export class LetterCombination {
 
 /**
  * @param {string} template
- * @param {number | (string | RegExp)[]} sourceRegExps - if number `n`, will use default RegExp `/[\t+]*\/` `n` times
+ * @param {number | (string | RegExp)[]} sourceRegExps - if number `n`, will use default RegExp `/.*?/` `n` times
  * @returns {function(string[]): string}
  */
 export function stringComponentCombiner(template, sourceRegExps) {
     if (typeof sourceRegExps === 'number') {
-        sourceRegExps = new Array(sourceRegExps).fill('[\\t+]*');
+        sourceRegExps = new Array(sourceRegExps).fill('.*?');
     }
 
     const pattern = sourceRegExps.map((regex, index) => {

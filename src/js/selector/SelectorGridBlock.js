@@ -1,6 +1,6 @@
 import SelectorBlock from "./SelectorBlock";
-import {DOMUtils, Matrix} from '../utils';
-import {rangeBetween, sum} from "../utils/array";
+import {DOMUtils, ElementFitter, Matrix} from '../utils';
+import {cumSums, rangeBetween, sum} from "../utils/array";
 import {label} from "../utils/dom";
 import {matrixIndices} from "../utils/indices";
 
@@ -60,30 +60,53 @@ export default class SelectorGridBlock extends SelectorBlock {
 
     setupNode() {
         this.node = DOMUtils.createElement("div.selector-block.selector-block-grid");
-        this.node.append(...this.elements.values());
+        this.node.append(...this.elements.values().filter(e => e != null));
         this.setGridTemplateColumns();
+    }
+
+    setupGridLabelFitter() {
+        this.gridLabelFitter = new ElementFitter({
+            dimension: "width",
+            scalingProperty: "font-size"
+        });
+        this.gridLabelFitter.fitAll(Array.from(this.node.querySelectorAll(".grid-label span")));
+    }
+
+    finishSetup() {
+        super.finishSetup();
+        this.setupGridLabelFitter();
     }
 
     /**
      * @param {"row" | "column"} type
      * @param {string[]} contents
-     * @param {"start" | "end" | "both"} position
+     * @param {"start" | "end" | "both"} [position]
+     * @param {number[]} [spans]
      */
-    setGridLabels(type, contents, position = "start") {
-        const labelCount = type === "row" ? this.grid.n : this.grid.m;
-        if (contents.length !== labelCount) {
-            throw new Error(`Number of labels ${contents.length} and rows/columns ${labelCount} don't match.`);
-        }
-
+    setGridLabels(type, contents, {position = "start", spans}) {
         if (position === "both") {
-            this.setGridLabels(type, contents, "start");
-            this.setGridLabels(type, contents, "end");
+            this.setGridLabels(type, contents, {position: "start", spans: spans});
+            this.setGridLabels(type, contents, {position: "end", spans: spans});
             return;
         }
 
-        const labels = contents.map((content, index) => {
-            return content ? this.createGridLabel(type, content, index) : this.createGap("label");
+        const labelCount = type === "row" ? this.grid.n : this.grid.m;
+        spans ??= new Array(contents.length).fill(1);
+        const indices = cumSums(spans);
+        indices.splice(0, 0, 0);
+        const labels = contents.map((content, i) => {
+            return content ? this.createGridLabel(type, content, indices[i], spans[i]) : this.createGap("label");
         });
+
+        let i = 0;
+        for (const span of spans) {
+            if (span > 1) labels.splice(i + 1, 0, ...(new Array(span - 1).fill(null)));
+            i += span;
+        }
+
+        if (labels.length !== labelCount) {
+            throw new Error(`Number of labels ${labels.length} and rows/columns ${labelCount} don't match.`);
+        }
 
         const otherType = type === "row" ? "column" : "row";
         if (this.labelPositions.has(otherType + "start")) {
@@ -107,13 +130,19 @@ export default class SelectorGridBlock extends SelectorBlock {
      * @param {"row" | "column"} type
      * @param {string} content
      * @param {number} index
+     * @param {number} span
      * @returns {HTMLElement}
      */
-    createGridLabel(type, content, index) {
+    createGridLabel(type, content, index, span = 1) {
         const element = DOMUtils.createElement(`span.grid-label.grid-${type}-label`);
         element.setAttribute("tabindex", 0);
-        element.textContent = content;
+        element.append(DOMUtils.createElement("span", content));
         element.dataset[type] = index.toString();
+
+        if (span > 1) {
+            element.dataset.span = span;
+            element.style.setProperty("grid-" + type, "span " + span);
+        }
 
         return element;
     }
@@ -213,9 +242,16 @@ export default class SelectorGridBlock extends SelectorBlock {
         const element = event.target.closest(".grid-label");
         if (!element) return;
 
-        const indices = element.classList.contains("grid-row-label")
-            ? this.grid.getRow(parseInt(element.dataset.row))
-            : this.grid.getColumn(parseInt(element.dataset.column));
+        const isRowLabel = element.classList.contains("grid-row-label");
+        const callback = isRowLabel ? this.grid.getRow.bind(this.grid) : this.grid.getColumn.bind(this.grid);
+        const index = isRowLabel ? parseInt(element.dataset.row) : parseInt(element.dataset.column);
+        const indices = callback(index);
+
+        if (element.dataset.span) {
+            for (let i = 1; i < element.dataset.span; i++) {
+                indices.push(...callback(index + i));
+            }
+        }
 
         return indices.filter(x => x != null);
     }

@@ -63,12 +63,15 @@ $selectorBorderRadius: .25rem;
 
       .selector-label-gap {
         visibility: hidden;
+        width: 0;
+        height: 0;
       }
 
       .grid-label {
         display: flex;
         justify-content: center;
         align-items: center;
+        text-align: center;
         border-radius: $selectorBorderRadius;
         padding: .1rem .2rem;
         cursor: pointer;

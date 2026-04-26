@@ -1,4 +1,5 @@
 import {Observable} from "../utils";
+import {createElement} from "../utils/dom";
 
 
 export default class SettingCollection extends Observable {
@@ -8,6 +9,7 @@ export default class SettingCollection extends Observable {
          * @type {Map<*, Setting>}
          */
         this.map = new Map();
+        this.node = createElement("div.settings");
     }
 
     /**
@@ -28,6 +30,10 @@ export default class SettingCollection extends Observable {
         return this.map.get(key);
     }
 
+    /**
+     * @param key
+     * @returns {boolean}
+     */
     has(key) {
         return this.map.has(key);
     }
@@ -56,6 +62,7 @@ export default class SettingCollection extends Observable {
         }
 
         this.map.set(key, setting);
+        this.node.append(setting.node);
         setting.observers.push(() => this.observers.call(this.getValues(), key));
     }
 
@@ -68,6 +75,7 @@ export default class SettingCollection extends Observable {
     }
 
     removeAll() {
+        this.node.replaceChildren();
         this.map.clear();
     }
     /**
@@ -79,14 +87,6 @@ export default class SettingCollection extends Observable {
         this.get(key).node.replaceWith(setting.node);
         this.get(key).remove();
         this.set(key, setting);
-    }
-
-    /**
-     * @param {SettingCollection} settingsCollection
-     */
-    replaceSelf(settingsCollection) {
-        this.removeAll();
-        this.put(settingsCollection.map);
     }
 
     /**
@@ -137,14 +137,22 @@ export default class SettingCollection extends Observable {
         return this.get(key).node;
     }
 
-    /**
-     * @returns {HTMLElement[]}
-     */
-    nodeList() {
-        return Array.from(this.map.values()).map(setting => setting.node);
-    }
-
     addObserverTo(key, ...observers) {
         this.get(key).observers.push(...observers);
+    }
+
+    /**
+     * @param {SettingCollection} sc
+     */
+    replaceWith(sc) {
+        this.node.replaceWith(sc.node);
+        this.teardown();
+    }
+
+    teardown() {
+        for (const setting of this.map.values()) {
+            setting.teardown();
+        }
+        super.teardown();
     }
 }

@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/env python3
 import json
 from subprocess import run
 from os import listdir
@@ -66,7 +66,11 @@ def main():
 
         print("Processing dataset", dataset["name"])
 
-        dataset_fonts = dataset["fonts"]["data"]
+        try:
+            dataset_fonts = dataset["fonts"]["data"]
+        except KeyError:
+            print("No fonts specified.")
+            continue
 
         if not contains_subsettable_fonts(dataset_fonts, fonts):
             continue
@@ -74,21 +78,32 @@ def main():
         default_font = get_default_font(dataset_fonts)
         dataset_chars = set()
 
-        game_heading = dataset["metadata"]["gameHeading"]
-        game_heading_font = default_font
-        if "font" in game_heading:
-            game_heading_font = get_family(game_heading["font"], dataset_fonts, default_font)
+        try:
+            game_heading = dataset["metadata"]["gameHeading"]
+            game_heading_font = default_font
+            if "font" in game_heading:
+                game_heading_font = get_family(game_heading["font"], dataset_fonts, default_font)
 
-        update_charset(game_heading_font, game_heading["string"])
+            update_charset(game_heading_font, game_heading["string"])
+        except KeyError:
+            print("No game heading found.")
 
+        if "items" in dataset:
+            items = dataset["items"]["data"]
+        elif "subsets" in dataset:
+            items = []
+            for subset in dataset["subsets"].values():
+                if "items" in subset and "data" in subset["items"]:
+                    items.extend(subset["items"]["data"])
+        else:
+            print("No items set in dataset.")
+            continue
 
-        items = dataset["items"]["data"]
         if not isinstance(items, list):
             items = items.values()
 
         for item in items:
-            dataset_chars.update(list("".join(item[0])))
-
+            dataset_chars.update(list("".join([i for i in item[0] if i is not None])))
 
         for font_data in dataset_fonts.values():
             family = font_data["family"]

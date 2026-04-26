@@ -1,4 +1,4 @@
-import {DOMUtils, ElementFitter, SizeWatcher, Observable} from "../utils";
+import {DOMUtils, ElementFitter, Observable} from "../utils";
 import {rangeBetween, range} from "../utils/array";
 
 const STYLE_PROPERTIES = {
@@ -68,30 +68,15 @@ export default class SelectorBlock extends Observable {
         this.node.append(...this.buttons);
     }
 
-    setupButtonWatcher() {
-        this.buttonWatcher = new SizeWatcher();
-        this.buttonWatcher.watchAll(this.buttons);
-    }
-
     setupContentFitter() {
-        if (!this.buttonWatcher) {
-            this.setupButtonWatcher();
-        }
         this.contentFitter = new ElementFitter({
-            watcher: this.buttonWatcher,
-            uniformFactor: 1.5,
-            dimension: "width",
-            scalingProperty: "font-size"
+            uniformFactor: 1.5
         });
         this.contentFitter.fitAll(this.buttons.map(button => button.querySelector(".selector-button-content")));
     }
 
     setupLabelFitter() {
-        this.labelFitter = new ElementFitter({
-            watcher: this.buttonWatcher,
-            dimension: "width",
-            scalingProperty: "font-size"
-        });
+        this.labelFitter = new ElementFitter();
         this.labelFitter.fitAll(this.buttons.map(button => button.querySelector(".selector-button-label")));
     }
 
@@ -142,7 +127,6 @@ export default class SelectorBlock extends Observable {
          */
         this.setupNode();
         this.setupListeners();
-        this.setupButtonWatcher();
         this.setupContentFitter();
     }
 
@@ -469,10 +453,8 @@ export default class SelectorBlock extends Observable {
 
     teardown() {
         this.removeListeners();
-        this.buttonWatcher.teardown();
         this.contentFitter.teardown();
-        if (this.labelFitter) {
-            this.labelFitter.teardown();
-        }
+        if (this.labelFitter) this.labelFitter.teardown();
+        super.teardown();
     }
 }

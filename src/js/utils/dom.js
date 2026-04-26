@@ -521,6 +521,22 @@ export function setSearchParams(params) {
     }
 }
 
+export function unsetSearchParam(...keys) {
+    const url = new URL(location);
+    let hasChanged = false;
+
+    for (const key of keys) {
+        if (url.searchParams.has(key)) {
+            url.searchParams.delete(key);
+            hasChanged = true;
+        }
+    }
+
+    if (hasChanged) {
+        history.pushState({}, "", url);
+    }
+}
+
 
 /**
  * @param func

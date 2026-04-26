@@ -77,16 +77,14 @@ window.sizeWatcher = new SizeWatcher();
 
 export default class ElementFitter {
     /**
-     * @param {SizeWatcher} [watcher]
      * @param {number} [uniformFactor=Infinity]
      * @param {"width" | "height" | "both"} [dimension]
      */
     constructor({
-        watcher,
         uniformFactor = Infinity,
         dimension = "width"
     } = {}) {
-        this.watcher = watcher ?? window.sizeWatcher;
+        this.watcher = window.sizeWatcher;
         this.updateParents = this.updateParents.bind(this);
         this.watcher.observers.push(this.updateParents);
 

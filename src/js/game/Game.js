@@ -67,7 +67,7 @@ export default class Game {
             }
         });
 
-        document.getElementById("font-settings").replaceChildren(...this.cardSettings.nodeList());
+        document.getElementById("font-settings").replaceChildren(this.cardSettings.node);
 
         for (const card of this.allCards()) {
             this.applyCardSettings(card);

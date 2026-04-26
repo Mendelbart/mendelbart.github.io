@@ -29,7 +29,7 @@ export function setup() {
     window.addEventListener("popstate", () => DOMUtils.transition(readFromSearchParams));
 
     DOMUtils.transition(() => {
-        document.getElementById("generic-game-settings").append(...GENERIC_GAME_SETTINGS.nodeList());
+        document.getElementById("generic-game-settings").append(GENERIC_GAME_SETTINGS.node);
 
         setupDatasetSelect();
         readFromSearchParams(false);
@@ -100,7 +100,7 @@ function setupPageSettings() {
         if (changedKey) window.localStorage.setItem(changedKey, values[changedKey]);
     });
 
-    document.querySelector("#page-settings .settings").replaceChildren(...PAGE_SETTINGS.nodeList());
+    document.querySelector("#page-settings .settings").replaceChildren(PAGE_SETTINGS.node);
 
     document.getElementById("page-settings").addEventListener("cancel", (event) => {
         event.preventDefault();
@@ -241,11 +241,8 @@ function selectDataset(dataset) {
     DOMUtils.setSearchParams({dataset: dataset.key});
     updateDocumentTitle();
 
-    const cachedSettings = getCachedSettings();
-    const gameHeading = DATASET.metadata.gameHeading;
-
     return Promise.all([
-        DATASET.getFont(gameHeading.font).load(),
+        DATASET.getFont(DATASET.metadata.gameHeading.font).load(),
         DATASET.getSelectorDisplayFont().load()
     ]).then(() => {
         setupTerms();
@@ -253,7 +250,7 @@ function selectDataset(dataset) {
         DOMUtils.showPage(document.getElementById('game-filters'));
 
         setupDSM();
-        DSM.setSettings(cachedSettings);
+        DSM.setSettings(getCachedSettings());
         checkPagesNextButton();
         setupGameHeading(DSM.selectorSettings.getDefault("variant"));
     }).catch(err => console.error(err));
@@ -279,9 +276,13 @@ function setupDSM() {
 
     DSM.selector.observers.push(checkPagesNextButton);
     DSM.observers.push(saveSettings);
+    if (DSM.subsetSetting) DSM.subsetSetting.observers.push(() => {
+        DSM.setSettings(getCachedSettings());
+    });
 
-    document.getElementById('dataset-filter-settings').replaceChildren(...DSM.selectorSettings.nodeList(), DSM.selector.node);
-    document.getElementById("dataset-game-settings").replaceChildren(...DSM.gameSettings.nodeList());
+    document.getElementById('dataset-filter-settings').replaceChildren(DSM.selectorSettings.node, DSM.selector.node);
+    if (DSM.subsetSetting) document.getElementById('dataset-filter-settings').prepend(DSM.subsetSetting.node);
+    document.getElementById("dataset-game-settings").replaceChildren(DSM.gameSettings.node);
 
     if (DSM.selectorSettings.has("variant")) {
         DSM.selectorSettings.addObserverTo("variant", variant => {
@@ -297,7 +298,6 @@ function setupGameHeading(variant) {
 }
 
 function checkPagesNextButton() {
-    console.log(DSM.checkedCount());
     document.querySelector('#game-settings-pages .pages-next-button').disabled = DSM.checkedCount() === 0;
 }
 
@@ -343,15 +343,23 @@ function readFromSearchParams() {
 }
 
 /**
- * @param {string?} [datasetKey]
  * @returns {string}
  */
-function localStorageSettingsKey(datasetKey) {
-    return "settings_" + (datasetKey || DATASET.key);
+function localStorageSettingsKey() {
+    if (DATASET.hasSetting("subset")) {
+        return "script_" + DATASET.key + "_" + DSM.subset.key;
+    }
+
+    return "script_" + DATASET.key;
 }
 
 function saveSettings(values) {
     DOMUtils.setSearchParams({dataset: DATASET.key});
+    if (DATASET.hasSetting("subset")) {
+        DOMUtils.setSearchParams({subset: DSM.subset.key});
+    } else {
+        DOMUtils.unsetSearchParam("subset");
+    }
 
     if (values.checked) {
         values.checked = encodeBase64BoolArray(values.checked);
